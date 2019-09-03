@@ -49,7 +49,7 @@ def cigar_party(cigars, is_weekend):
 def date_fashion(you, date):
   return 0 if you<= 2 or date <= 2 else 2 if you>=8 or date >= 8 else 1
 def squirrel_play(temp, is_summer):
-  return 60 <= temp and 90 >= temp if not is_summer else 60 <= temp and 100 >= temp
+    return 60 <= temp and 90 >= temp if not is_summer else 60 <= temp and 100 >= temp
 def caught_speeding(speed, is_birthday):
   return 2 if is_birthday and 86<=speed else 0 if speed<66 and is_birthday else 1 if is_birthday else 2 if 81<=speed else 0 if speed<61 else 1
 def sorta_sum(a, b):
