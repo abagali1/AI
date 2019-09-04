@@ -63,7 +63,7 @@ def count_code(str):
 
 
 def end_other(a, b):
-  return a.lower()[-len(b.lower()):] == b.lower() or b.lower()[-len(a.lower()):] == a.lower()
+  return a.lower()[-len(b.lower()) :] == b.lower() or b.lower()[-len(a.lower()) :] == a.lower()
 
 
 ## MISSING PROBLEM  
