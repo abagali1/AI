@@ -28,6 +28,8 @@ def first_two(str):
   return str[0:2]
 def first_half(str):
   return str[:(len(str) // 2)]
+def without_end(str):
+  return str[1:-1]
 def first_last6(nums):
   return (nums[0]) == 6 or (nums[-1]) == 6 or nums[0] == "6" or nums[-1] == "6"
 def same_first_last(nums):
