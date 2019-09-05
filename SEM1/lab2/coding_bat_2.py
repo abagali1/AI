@@ -38,7 +38,17 @@ def centered_average(nums):
   return (sum(nums) - (min(nums) + max(nums)) )//(len(nums)-2)
 def sum13(nums):
   return sum([y for x,y in enumerate(nums) if y!=13 and (nums[x-1] != 13)])
-  ## MISSING PROBLEM
+def sum67(nums):
+  six_index = [x for x,y in enumerate(nums) if y == 6]
+  seven_index = [x for x,y in enumerate(nums) if y == 7]
+  if not six_index:
+    return sum(nums)
+  else:
+    sums = 0
+    for i in range(len(six_index)-1):
+      part = nums[:six_index[i]] + nums[seven_index[i]+1:] 
+      sums += sum(part)
+      return i
 def has22(nums):
   return len([x for x,y in zip(nums,nums[1:]) if x == 2 and y == 2]) > 0
 
