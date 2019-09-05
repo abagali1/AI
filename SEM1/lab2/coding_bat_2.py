@@ -37,7 +37,7 @@ def big_diff(nums):
 def centered_average(nums):
   return (sum(nums) - (min(nums) + max(nums)) )//(len(nums)-2)
 def sum13(nums):
-  return sum([y for x,y in enumerate(nums) if y!=13 and (nums[x-1] != 13)])
+  return 0 if len(nums)==0 else sum([y for x,y in enumerate(nums+[0]) if y!=13 and ((nums+[0])[x-1] != 13)])
 def sum67(nums):
   six_index = [x for x,y in enumerate(nums) if y == 6]
   seven_index = [x for x,y in enumerate(nums) if y == 7]
@@ -54,7 +54,15 @@ def has22(nums):
 
 
 # Logic 2
+def make_bricks(small, big, goal):
+  return small >= goal-(big*5) and small >= goal%5
 def lone_sum(a, b, c):
   return 0 if a==b and b==c else c if a==b and b!=c else b if a==c else a if b==c else a+b+c
 def lucky_sum(a, b, c):
   return 0 if a==13 else a if b==13 else a+b if c==13 else a+b+c
+def no_teen_sum(a, b, c):
+  return sum([x for x in [a,b,c] if x>19 or x<13 or x==15 or x==16 ])
+def round_sum(a, b, c):
+  return int(sum([round(x,-1) for x in [a,b,c]]))
+def close_far(a, b, c):
+  return (abs(b-a)<=1 and abs(c-a)>=2 and abs(c-b) >=2) or (abs(c-a)<=1 and abs(b-a)>=2 and abs(b-c)>=2)
