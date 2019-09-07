@@ -55,8 +55,7 @@ def has22(nums):
 
 # Logic 2
 def make_bricks(small, big, goal):
-  return small >= goal-(big*5) and small >= goal%5
-def lone_sum(a, b, c):
+0def lone_sum(a, b, c):
   return 0 if a==b and b==c else c if a==b and b!=c else b if a==c else a if b==c else a+b+c
 def lucky_sum(a, b, c):
   return 0 if a==13 else a if b==13 else a+b if c==13 else a+b+c
