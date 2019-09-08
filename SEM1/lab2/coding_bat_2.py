@@ -1,4 +1,3 @@
-
 def string_times(str, n):
   return str*n
 def front_times(str, n):
@@ -29,7 +28,6 @@ def end_other(a, b):
   return a.lower()[-len(b.lower()) :] == b.lower() or b.lower()[-len(a.lower()) :] == a.lower()
 def xyz_there(str):
   return len([x for x in range(1,len(str)-2) if str[x-1] != "." and str[x:x+3] == "xyz"]) != 0 or str[:3] == "xyz"
-# List 2
 def count_evens(nums):
   return len([x for x in nums if x%2==0])
 def big_diff(nums):
@@ -39,23 +37,18 @@ def centered_average(nums):
 def sum13(nums):
   return 0 if len(nums)==0 else sum([y for x,y in enumerate(nums+[0]) if y!=13 and ((nums+[0])[x-1] != 13)])
 def sum67(nums):
-  six_index = [x for x,y in enumerate(nums) if y == 6]
-  seven_index = [x for x,y in enumerate(nums) if y == 7]
-  if not six_index:
-    return sum(nums)
-  else:
-    sums = 0
-    for i in range(len(six_index)-1):
-      part = nums[:six_index[i]] + nums[seven_index[i]+1:] 
-      sums += sum(part)
-      return i
+  inside = False
+  s=0
+  for i in nums:
+    if i==6: inside =True
+    elif not inside: s += i
+    elif i == 7: inside = False
+  return s
 def has22(nums):
   return len([x for x,y in zip(nums,nums[1:]) if x == 2 and y == 2]) > 0
-
-
-# Logic 2
 def make_bricks(small, big, goal):
-0def lone_sum(a, b, c):
+  return small >= goal-(big*5) and small >= goal%5
+def lone_sum(a, b, c):
   return 0 if a==b and b==c else c if a==b and b!=c else b if a==c else a if b==c else a+b+c
 def lucky_sum(a, b, c):
   return 0 if a==13 else a if b==13 else a+b if c==13 else a+b+c
@@ -65,3 +58,5 @@ def round_sum(a, b, c):
   return sum([x-x%10 if x%10<5 else x+(10-x%10) for x in [a,b,c] ])
 def close_far(a, b, c):
   return (abs(b-a)<=1 and abs(c-a)>=2 and abs(c-b) >=2) or (abs(c-a)<=1 and abs(b-a)>=2 and abs(b-c)>=2)
+def make_chocolate(small, big, goal):
+  return -1 if goal%5>small or goal>small+big*5 else goal-big*5 if not big*5>goal else goal%5
