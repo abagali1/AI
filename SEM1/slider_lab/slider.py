@@ -1,14 +1,8 @@
 import sys
 
 
-class Graph
-	
-	def __init__():
+
 		
-
-
-
-
 def solve(puzzle, goal):
 	if(puzzle == goal):
 		return 0
