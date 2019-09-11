@@ -27,7 +27,7 @@ def backtrack(visited_nodes, goal, d):
         if i in visited_nodes.keys() and visited_nodes[i] != '':
             tmp = visited_nodes[i]
             path.append(tmp)
-    return path[::-1], len(path), d
+    return path[::-1] + [goal], len(path), d
 
 
 def solve(puzzle, goal="12345678_"):
