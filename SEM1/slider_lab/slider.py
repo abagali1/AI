@@ -51,11 +51,10 @@ def solve(puzzle, goal="12345678_"):
 
 
 def print_formatted(solved, dimensions):
-    line_count = 0
     for i in range(dimensions):
         for s in solved:
             print(s[dimensions * i:dimensions + (dimensions * i)], end="\t")
-        print()
+        print("")
 
 
 def main():
