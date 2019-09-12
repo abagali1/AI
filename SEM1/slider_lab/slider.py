@@ -47,7 +47,7 @@ def solve(puzzle, goal="12345678_"):
             elif n not in visited.keys():
                 visited[''.join([str(item) for i in n for item in i])] = elem
                 parent.append(n)
-    return ['NULL'], -1
+    return ['NULL'], -1, dim
 
 
 def print_formatted(solved, dimensions):
@@ -73,21 +73,23 @@ def main():
     start_time = time.time()
     if not goal:
         solved = solve(puzzle)
-        print(solved)
+        if solved[1] != -1:
+            arr = [solved[0][i:i + 12] for i in range(0, len(solved[0]), 12)]
+            for i in arr:
+                print_formatted(i,solved[2])
+        else:
+            print_formatted([puzzle], solved[2])
         print("Steps: %d" % solved[1])
-        print_formatted(solved[0], solved[2])
     else:
         solved = solve(puzzle, goal)
-        arr = [solved[0][i:i + 12] for i in range(0, len(solved[0]), 12)]
+        if solved[1] != -1:
+            arr = [solved[0][i:i + 12] for i in range(0, len(solved[0]), 12)]
+            for i in arr:
+                print_formatted(i,solved[2])
+        else:
+            print_formatted([puzzle], solved[2])
         print("Steps: %d" % solved[1])
-        for i in arr:
-            print_formatted(i,solved[2])
-        # if solved[1] >= 12:
-        #     for i in range(0,solved[1],12):
-        #         print_formatted(solved[0][i:i+12], solved[2])
-        # else:
-        #     print_formatted(solved[0],solved[2])
-    print("Time: %ds" % (time.time() - start_time))
+    print("Time: %lfs" % (time.time() - start_time))
 
 
 if __name__ == '__main__':
