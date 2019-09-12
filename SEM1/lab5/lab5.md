@@ -16,3 +16,7 @@
 	* Degree Distribution List
 	* Give an example word of 2nd highest degree
 	* Distribution of connection component sizes
+
+### Dates
+ - Rought Draft: Tuesday 09/17
+ - Final: Thursday 09/19
