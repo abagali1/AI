@@ -1,6 +1,6 @@
 import sys
-import time
-
+from time import time
+from math import sqrt
 
 def get_children(parent):
     index = [(index, row.index('_')) for index, row in enumerate(parent) if '_' in row][0]
@@ -36,16 +36,21 @@ def solve(puzzle, goal="12345678_"):
         return backtrack({}, goal, dim)
     parent = [puzzle]
     visited = {parent[0]: ''}
+    index = 0
 
     while parent:
-        elem = parent.pop(0)
+        # elem = parent.pop(0)
+        elem, index = pop(parent,index)
+        if elem == -1:
+            break
         neighbors = get_children([list(elem[0:dim]), list(elem[dim:dim * 2]), list(elem[dim * 2:dim * 3])])
         for n in neighbors:
+            key = ''.join([str(item) for i in n for item in i])
             if n == goal:
-                visited[''.join([str(item) for i in n for item in i])] = elem
+                visited[key] = elem
                 return backtrack(visited, goal, dim)
             elif n not in visited.keys():
-                visited[''.join([str(item) for i in n for item in i])] = elem
+                visited[key] = elem
                 parent.append(n)
     return ['NULL'], -1, dim
 
@@ -57,20 +62,17 @@ def print_formatted(solved, dimensions):
         print("")
 
 
+def pop(arr,i):
+    if i >= len(arr):
+        return -1,-1
+    return arr[i], i + 1
+
+
 def main():
-    try:
-        puzzle = sys.argv[1]
-    except IndexError:
-        print("Usage: \"python3 slider.py <puzzle> <goal(optional)>\"")
-        print("Missing Puzzle Parameter")
-        return
+    puzzle = sys.argv[1]
+    goal = sys.argv[2] if len(sys.argv) > 2 else None
 
-    try:
-        goal = sys.argv[2]
-    except IndexError:
-        goal = None
-
-    start_time = time.time()
+    start_time = time()
     if not goal:
         solved = solve(puzzle)
         if solved[1] != -1:
@@ -79,7 +81,7 @@ def main():
                 print_formatted(i,solved[2])
         else:
             print_formatted([puzzle], solved[2])
-        print("Steps: %d" % solved[1])
+        print("Steps: {0}".format(solved[1]))
     else:
         solved = solve(puzzle, goal)
         if solved[1] != -1:
@@ -88,8 +90,8 @@ def main():
                 print_formatted(i,solved[2])
         else:
             print_formatted([puzzle], solved[2])
-        print("Steps: %d" % solved[1])
-    print("Time: %lfs" % (time.time() - start_time))
+        print("Steps: {0}".format(solved[1]))
+    print("Time: %.2lfs" % (time() - start_time))
 
 
 if __name__ == '__main__':
