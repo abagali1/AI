@@ -78,8 +78,15 @@ def main():
         print_formatted(solved[0], solved[2])
     else:
         solved = solve(puzzle, goal)
+        arr = [solved[0][i:i + 12] for i in range(0, len(solved[0]), 12)]
         print("Steps: %d" % solved[1])
-        print_formatted(solved[0], solved[2])
+        for i in arr:
+            print_formatted(i,solved[2])
+        # if solved[1] >= 12:
+        #     for i in range(0,solved[1],12):
+        #         print_formatted(solved[0][i:i+12], solved[2])
+        # else:
+        #     print_formatted(solved[0],solved[2])
     print("Time: %ds" % (time.time() - start_time))
 
 
