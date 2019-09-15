@@ -2,11 +2,10 @@ import sys
 from time import time
 from math import sqrt
 
+
 def get_children(parent):
     index = [(index, row.index('_')) for index, row in enumerate(parent) if '_' in row][0]
-    neighbors = [(x, y) for x, y in [(index[0], index[1] - 1), (index[0], index[1] + 1), (index[0] + 1, index[1]),
-                                     (index[0] - 1, index[1])] if
-                 0 <= x < len(parent) and 0 <= y < len(parent[0])]
+    neighbors = [(x, y) for x, y in [(index[0], index[1] - 1), (index[0], index[1] + 1), (index[0] + 1, index[1]), (index[0] - 1, index[1])] if 0 <= x < len(parent) and 0 <= y < len(parent[0])]
     return [(''.join(str(item) for inList in m for item in inList)) for m in gen_swaps(parent, neighbors, index)]
 
 
@@ -31,7 +30,7 @@ def backtrack(visited_nodes, goal, d):
 
 
 def solve(puzzle, goal="12345678_"):
-    dim = int(len(puzzle) ** 0.5)
+    dim = int(sqrt(len(puzzle)))
     if puzzle == goal:
         return backtrack({}, goal, dim)
     parent = [puzzle]
@@ -39,11 +38,12 @@ def solve(puzzle, goal="12345678_"):
     index = 0
 
     while parent:
-        # elem = parent.pop(0)
-        elem, index = pop(parent,index)
+        elem, index = pop(parent, index)
         if elem == -1:
             break
-        neighbors = get_children([list(elem[0:dim]), list(elem[dim:dim * 2]), list(elem[dim * 2:dim * 3])])
+        tmp = [list(elem[i:i + 6]) for i in range(0, len(elem), dim)]
+        # neighbors = get_children([list(elem[0:dim]), list(elem[dim:dim * 2]), list(elem[dim * 2:dim * 3])])
+        neighbors = get_children(tmp)
         for n in neighbors:
             key = ''.join([str(item) for i in n for item in i])
             if n == goal:
@@ -62,9 +62,9 @@ def print_formatted(solved, dimensions):
         print("")
 
 
-def pop(arr,i):
+def pop(arr, i):
     if i >= len(arr):
-        return -1,-1
+        return -1, -1
     return arr[i], i + 1
 
 
@@ -78,7 +78,7 @@ def main():
         if solved[1] != -1:
             arr = [solved[0][i:i + 12] for i in range(0, len(solved[0]), 12)]
             for i in arr:
-                print_formatted(i,solved[2])
+                print_formatted(i, solved[2])
         else:
             print_formatted([puzzle], solved[2])
         print("Steps: {0}".format(solved[1]))
@@ -87,7 +87,7 @@ def main():
         if solved[1] != -1:
             arr = [solved[0][i:i + 12] for i in range(0, len(solved[0]), 12)]
             for i in arr:
-                print_formatted(i,solved[2])
+                print_formatted(i, solved[2])
         else:
             print_formatted([puzzle], solved[2])
         print("Steps: {0}".format(solved[1]))
