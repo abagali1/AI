@@ -7,7 +7,7 @@ def string_bits(str):
 def string_splosion(str):
   return ''.join(str[:i] for i in range(0,len(str)+1))
 def last2(str):
-  return len([i for i in ([str[x:x+2] for x in range(len(str)-1)]) if i==str[-2:]])-1 if len(str) > 2 else 0
+  return  sum( [ len([i for i in ([str[x:x+2] for x in range(len(str)-1)]) if i==str[-2:]])-1 for x in [0] if len(str)>1]) + sum([0 for x in [0] if not len(str)>2 ])
 def array_count9(nums):
   return nums.count(9)
 def array_front9(nums):
@@ -35,7 +35,7 @@ def big_diff(nums):
 def centered_average(nums):
   return (sum(nums) - (min(nums) + max(nums)) )//(len(nums)-2)
 def sum13(nums):
-  return 0 if len(nums)==0 else sum([y for x,y in enumerate(nums+[0]) if y!=13 and ((nums+[0])[x-1] != 13)])
+  return sum([0 for x in [0] if len(nums)==0]) + sum([y for x,y in enumerate(nums+[0]) if len(nums)!=0 and y!=13 and ((nums+[0])[x-1] != 13)])
 def sum67(nums):
   inside = False
   s=0
