@@ -41,9 +41,7 @@ def solve(puzzle, goal="12345678_"):
         elem, index = pop(parent, index)
         if elem == -1:
             break
-        tmp = [list(elem[i:i + 6]) for i in range(0, len(elem), dim)]
-        # neighbors = get_children([list(elem[0:dim]), list(elem[dim:dim * 2]), list(elem[dim * 2:dim * 3])])
-        neighbors = get_children(tmp)
+        neighbors = get_children([list(elem[i:i + 6]) for i in range(0, len(elem), dim)])
         for n in neighbors:
             key = ''.join([str(item) for i in n for item in i])
             if n == goal:
