@@ -40,7 +40,7 @@ def solve(puzzle, goal="12345678_"):
     while parent:
         elem, index = pop(parent, index)
         if elem == -1:
-            break
+            return ['NULL'], -1, dim
         neighbors = get_children([list(elem[i:i + dim]) for i in range(0, len(elem), dim)])
         for n in neighbors:
             key = ''.join([str(item) for i in n for item in i])
