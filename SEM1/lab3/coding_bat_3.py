@@ -55,7 +55,7 @@ def lucky_sum(a, b, c):
 def no_teen_sum(a, b, c):
   return sum([x for x in [a,b,c] if x>19 or x<13 or x==15 or x==16 ])
 def round_sum(a, b, c):
-  return sum([x-x%10 if x%10<5 else x+(10-x%10) for x in [a,b,c] ])
+  return sum([x-x%10 for x in [a,b,c] if x%10<5]) + sum([x+(10-x%10) for x in [a,b,c] if not x%10<5])
 def close_far(a, b, c):
   return (abs(b-a)<=1 and abs(c-a)>=2 and abs(c-b) >=2) or (abs(c-a)<=1 and abs(b-a)>=2 and abs(b-c)>=2)
 def make_chocolate(small, big, goal):
