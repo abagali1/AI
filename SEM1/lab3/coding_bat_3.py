@@ -49,9 +49,9 @@ def has22(nums):
 def make_bricks(small, big, goal):
   return small >= goal-(big*5) and small >= goal%5
 def lone_sum(a, b, c):
-  return 0 if a==b and b==c else c if a==b and b!=c else b if a==c else a if b==c else a+b+c
+  return sum([0 for x in [a] if a==b and b==c]) + sum([c for x in [a] if a==b and b!=c]) + sum([b for x in [a] if a==c and a!=b and b!=c]) + sum([a for x in [a] if a!=b and b==c and a!=c]) + sum([a+b+c for x in [a] if a!=b and b!=c and a!=c])
 def lucky_sum(a, b, c):
-  return 0 if a==13 else a if b==13 else a+b if c==13 else a+b+c
+  return sum([0 for x in [a] if x==13]) + sum([a for x in [b] if a!=13 and b==13]) + sum([a+b for x in [c] if a!=13 and b!=13 and c==13]) + sum([a+b+c for x in [a] if a!=13 and b!=13 and c!=13])
 def no_teen_sum(a, b, c):
   return sum([x for x in [a,b,c] if x>19 or x<13 or x==15 or x==16 ])
 def round_sum(a, b, c):
