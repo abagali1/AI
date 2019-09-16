@@ -5,7 +5,12 @@ from math import sqrt
 
 def get_children(parent, d):
     index = parent.find('_')
-    neighbors = [i for i in [index-1, index+1, index+d, index-d] if 0 <= i < len(parent)]
+    row = index // d
+    neighbors = [i for i in [index+d, index-d] if 0 <= i < len(parent)]
+    if (index + 1) // d == row:
+        neighbors.append(index+1)
+    if (index -1) //d  == row:
+        neighbors.append(index-1)
     return gen_swaps(parent, neighbors, index)
 
 
