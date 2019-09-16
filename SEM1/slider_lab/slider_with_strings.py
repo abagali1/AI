@@ -3,18 +3,18 @@ from time import time
 from math import sqrt
 
 
-def get_children(parent):
-    index = [(index, row.index('_')) for index, row in enumerate(parent) if '_' in row][0]
-    neighbors = [(x, y) for x, y in [(index[0], index[1] - 1), (index[0], index[1] + 1), (index[0] + 1, index[1]), (index[0] - 1, index[1])] if 0 <= x < len(parent) and 0 <= y < len(parent[0])]
-    return [(''.join(str(item) for inList in m for item in inList)) for m in gen_swaps(parent, neighbors, index)]
+def get_children(parent, d):
+    index = parent.find('_')
+    neighbors = [i for i in [index-1, index+1, index+d, index-d] if 0 <= i < len(parent)]
+    return gen_swaps(parent, neighbors, index)
 
 
 def gen_swaps(p, n, i):
     true_neighbors = []
     for neighbor in n:
-        temp = [row[:] for row in p]
-        temp[i[0]][i[1]], temp[neighbor[0]][neighbor[1]] = temp[neighbor[0]][neighbor[1]], temp[i[0]][i[1]]
-        true_neighbors.append(temp)
+        temp = list(p[:])
+        temp[i], temp[neighbor] = temp[neighbor], temp[i]
+        true_neighbors.append(''.join(temp))
     return true_neighbors
 
 
@@ -39,17 +39,16 @@ def solve(puzzle, goal="12345678_"):
     index = 0
 
     while parent:
-        elem, index = pop(parent, index)
+        elem, index = pop(parent,index)
         if elem == -1:
             return ['NULL'], -1, dim
-        neighbors = get_children([list(elem[i:i + dim]) for i in range(0, len(elem), dim)])
+        neighbors = get_children(elem, dim)
         for n in neighbors:
-            key = ''.join([str(item) for i in n for item in i])
             if n == goal:
-                visited[key] = elem
+                visited[n] = elem
                 return backtrack(visited, goal, dim)
             elif n not in visited.keys():
-                visited[key] = elem
+                visited[n] = elem
                 parent.append(n)
     return ['NULL'], -1, dim
 
@@ -61,10 +60,10 @@ def print_formatted(solved, dimensions):
         print("")
 
 
-def pop(arr, i):
+def pop(arr,i):
     if i >= len(arr):
-        return -1, -1
-    return arr[i], i + 1
+        return -1,-1
+    return arr[i], i+1
 
 
 def main():
