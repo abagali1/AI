@@ -43,10 +43,7 @@ def solve(puzzle, goal="12345678_"):
     visited = {parent[0]: ''}
     index = 0
 
-    while parent:
-        elem, index = pop(parent,index)
-        if elem == -1:
-            return ['NULL'], -1, dim
+    for elem in parent:
         neighbors = get_children(elem, dim)
         for n in neighbors:
             if n == goal:

@@ -2,6 +2,12 @@ import sys
 from time import time
 from math import sqrt
 
+def print_formatted(solved, dimensions):
+    for i in range(dimensions):
+        for s in solved:
+            print(s[dimensions * i:dimensions + (dimensions * i)], end="\t")
+        print("")
+
 
 def get_children(parent, d):
     index = parent.find('_')
@@ -64,12 +70,11 @@ def main():
             if n == goal:
                 visited[n] = elem
                 solved, steps = backtrack(visited,goal,dim)
-                arr = [solved[0][i:i + 12] for i in range(0, len(solved[0]), 12)]
+                print(solved)
+                arr = [solved[i:i + 12] for i in range(0, len(solved[0]), 12)]
+                print(arr)
                 for x in arr:
-                    for i in range(dim):
-                        for s in x:
-                            print(s[dim * i:dim + (dim * i)], end="\t")
-                        print("")
+                    print_formatted(x,dim)
                 print("Steps: {0}".format(steps))
                 print("Time: %.2lfs" % (time() - start_time))
                 return
