@@ -11,7 +11,8 @@ def get_children(parent, d):
         neighbors.append(index+1)
     if (index -1) //d  == row:
         neighbors.append(index-1)
-    return gen_swaps(parent[0], neighbors, index, parent[1])
+    ret = gen_swaps(parent[0], neighbors, index, parent[1])
+    return ret
 
 
 def gen_swaps(p, n, i,l):
@@ -47,7 +48,6 @@ def solve(puzzle, goal="12345678_"):
         neighbors = get_children(elem, dim)
 
         for n in neighbors:
-            print(n)
             if n[0] == goal:
                 visited[n] = elem
                 return backtrack(visited, goal, dim)
@@ -55,6 +55,7 @@ def solve(puzzle, goal="12345678_"):
                 visited[n[0]] = elem
                 parent.append(n)
             distro[n[1]] += 1
+
     distro[0] = 1
     distro = str(distro)
     distro = distro[:distro.find(", 0, 0")] + "]"
