@@ -16,7 +16,7 @@ def degree_list(graph):
     ret = [0] * len(graph)
     for x, y in graph.items():
         ret[len(y)] += 1
-    return ret[0:ret.index(0,1)]
+    return list(ret[0:ret.index(0,1)])
 
 
 def create_graph(start, words):
@@ -53,16 +53,13 @@ def cc(g):
             visited = visited.union(tmp)
             v.append(tmp)
             ccs.add(len(tmp))
-    return len(ccs), max([len(x) for x in v])
+    return len(ccs), max([len(x) for x in v]), v
 
 
-def ks(g):
-    k2 = 0
-    for i in g.keys():
-        for j in g[i]:
-            if len(g[i]) == 1 and len(g[j]) == 1:
-                k2+=1
-    return k2,-1,-1
+def ks(g, s):
+    k2 = len([x for x in s if len(x) == 2])
+    k3, k4 = -1,-1
+    return k2,k3,k4
 
 
 def backtrack(visited_nodes, goal):
@@ -100,26 +97,27 @@ def path(graph,start,end):
 
     for elem in parent:
         for n in graph[elem]:
-            if n == elem:
+            if n == end:
                 visited[n] = elem
                 return backtrack(visited, end)
             elif n not in visited.keys():
                 visited[n] = elem
                 parent.append(n)
-    return False
+    return ['no path']
 
 
 def p2(graph, arg1, arg2):
     print("Second degree word: {0}".format(second_degree(graph)))
-    size, largest = cc(graph)
-    k2,k3,k4 = ks(graph)
+    sP = path(graph,arg1,arg2)
+    size, largest, stuff = cc(graph)
+    k2,k3,k4 = ks(graph, stuff)
     print("Connected component size count: {0}".format(size))
     print("Largest component size: {0}".format(largest))
     print("K2 count: {0}".format(k2))
     print("K3 count: {0}".format(k3))
     print("K4 count: {0}".format(k4))
     print("Neighbors: {0}".format(" ".join(graph[arg1])))
-    print("Shortest path: {0}".format(" ".join(path(graph,arg1,arg2))))
+    print("Shortest path: {0}".format(" ".join(sP)))
 
 
 def main():
@@ -128,7 +126,7 @@ def main():
     if len(sys.argv) >3:
         p2(g, sys.argv[2], sys.argv[3])
 
-    print(time()-start)
+    print("Time used: %.2lfs" % (time() - start))
 
 
 if __name__ == "__main__":
