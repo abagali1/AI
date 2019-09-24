@@ -59,8 +59,20 @@ def cc(g):
 
 def ks(g, s):
     k2 = len([x for x in s if len(x) == 2])
-    k3, k4 = -1, -1
-    return k2, k3, k4
+    ccs_3 = [x for x in s if len(x) == 3]
+    ccs_4 = [x for x in s if len(x) == 4]
+    k3 = 0
+    k4 = 0
+    for i in ccs_3:
+        for j in i:
+            if len(g[j]) == 2:
+                k3 += 1
+    for i in ccs_4:
+        for j in i:
+            if len(g[j]) == 3:
+                k4 += 1
+
+    return k2, k3//6, k4//8
 
 
 def backtrack(visited_nodes, goal):
@@ -132,7 +144,7 @@ def p2(graph, arg1, arg2):
     print("K4 count: {0}".format(k4))
     print("Neighbors: {0}".format(" ".join(graph[arg1])))
     print("Farthest: {0}".format(f))
-    print("Shortest path: {0}".format(" ".join(sP)))
+    print("Path: {0}".format(" ".join(sP)))
 
 
 def main():
