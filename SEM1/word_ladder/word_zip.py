@@ -16,7 +16,7 @@ def degree_list(graph):
     ret = [0] * len(graph)
     for x, y in graph.items():
         ret[len(y)] += 1
-    return list(ret[0:ret.index(0,1)])
+    return list(ret[0:ret.index(0, 1)])
 
 
 def create_graph(start, words):
@@ -26,6 +26,7 @@ def create_graph(start, words):
         for j in range(len(words)):
             if is_neighbor(words[i], words[j]):
                 graph[words[i]].append(words[j])
+
     end = time()-start
     print("Word count: {0}".format(str(len(words))))
     print("Edge count: {0}".format(
@@ -49,7 +50,7 @@ def cc(g):
     v = []
     for x in g.keys():
         if x not in visited:
-            tmp = bfs(g,x)
+            tmp = bfs(g, x)
             visited = visited.union(tmp)
             v.append(tmp)
             ccs.add(len(tmp))
@@ -58,8 +59,8 @@ def cc(g):
 
 def ks(g, s):
     k2 = len([x for x in s if len(x) == 2])
-    k3, k4 = -1,-1
-    return k2,k3,k4
+    k3, k4 = -1, -1
+    return k2, k3, k4
 
 
 def backtrack(visited_nodes, goal):
@@ -73,7 +74,7 @@ def backtrack(visited_nodes, goal):
     return path[::-1] + [goal]
 
 
-def bfs(graph,start,end=None):
+def bfs(graph, start, end=None):
     if start == end:
         return [start]
 
@@ -81,14 +82,14 @@ def bfs(graph,start,end=None):
     visited = set()
 
     for elem in parent:
-         for n in graph[elem]:
-             if n not in visited:
+        for n in graph[elem]:
+            if n not in visited:
                 parent.append(n)
                 visited.add(n)
     return visited
 
 
-def path(graph,start,end):
+def path(graph, start, end):
     if start == end:
         return [start]
 
@@ -106,24 +107,38 @@ def path(graph,start,end):
     return ['no path']
 
 
+def farthest(g, ccs, w1):
+    paths = []
+    for i in ccs:
+        if w1 in i:
+            for node in i:
+                paths.append(path(g, w1, node))
+
+    tmp = [len(x) for x in paths]
+    max1 = max(tmp)
+    return paths[tmp.index(max1)][-1]
+
+
 def p2(graph, arg1, arg2):
     print("Second degree word: {0}".format(second_degree(graph)))
-    sP = path(graph,arg1,arg2)
+    sP = path(graph, arg1, arg2)
     size, largest, stuff = cc(graph)
-    k2,k3,k4 = ks(graph, stuff)
+    k2, k3, k4 = ks(graph, stuff)
+    f = farthest(graph, stuff, arg1)
     print("Connected component size count: {0}".format(size))
     print("Largest component size: {0}".format(largest))
     print("K2 count: {0}".format(k2))
     print("K3 count: {0}".format(k3))
     print("K4 count: {0}".format(k4))
     print("Neighbors: {0}".format(" ".join(graph[arg1])))
+    print("Farthest: {0}".format(f))
     print("Shortest path: {0}".format(" ".join(sP)))
 
 
 def main():
     start = time()
     g = create_graph(start, open(sys.argv[1]).read().strip().splitlines())
-    if len(sys.argv) >3:
+    if len(sys.argv) > 3:
         p2(g, sys.argv[2], sys.argv[3])
 
     print("Time used: %.2lfs" % (time() - start))
