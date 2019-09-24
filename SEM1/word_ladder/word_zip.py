@@ -22,10 +22,10 @@ def degree_list(graph):
 def create_graph(start, words):
     graph = {}
     for i in range(len(words)):
-        graph[words[i]] = []
+        graph[words[i]] = set()
         for j in range(len(words)):
             if is_neighbor(words[i], words[j]):
-                graph[words[i]].append(words[j])
+                graph[words[i]].add(words[j])
 
     end = time()-start
     print("Word count: {0}".format(str(len(words))))
