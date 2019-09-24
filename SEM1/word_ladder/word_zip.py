@@ -43,29 +43,17 @@ def second_degree(g):
             return x
 
 
-def shortest_path(g,s,e, p=[]):
-    p = p + [s]
-    if s == e:
-        return p
-
-    shortest = []
-    for elem in g[s]:
-        if elem not in p:
-            nP = shortest_path(g,elem,e,p)
-            if nP:
-                if not shortest or len(nP) < len(shortest):
-                    shortest = nP
-    return shortest
-
-
 def cc(g):
-    ccs = 0
-    visited = []
-    for i in g.keys():
-        if i not in visited:
-            visited.extend(bfs(g,i))
-            ccs += 1
-    return ccs, -1
+    ccs = set()
+    visited = set()
+    v = []
+    for x in g.keys():
+        if x not in visited:
+            tmp = bfs(g,x)
+            visited = visited.union(tmp)
+            v.append(tmp)
+            ccs.add(len(tmp))
+    return len(ccs), max([len(x) for x in v])
 
 
 def ks(g):
@@ -100,7 +88,7 @@ def bfs(graph,start,end=None):
              if n not in visited:
                 parent.append(n)
                 visited.add(n)
-    return list(visited)
+    return visited
 
 
 def path(graph,start,end):
