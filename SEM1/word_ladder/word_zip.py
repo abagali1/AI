@@ -3,15 +3,6 @@ from time import time
 
 alpha = [*"abcdefghijklmnopqrstuvwxyz"]
 
-def is_neighbor(word1, word2):
-    count = 0
-    for x, y in zip(word1, word2):
-        if x != y:
-            count += 1
-        if count > 1:
-            return False
-    return count == 1
-
 
 def degree_list(graph):
     ret = [0] * len(graph)
@@ -37,10 +28,10 @@ def create_graph(start, words):
                     graph[tmp].add(i)
                 w[j] = orig
 
-    end = time()-start
+    end = time() - start
     print("Word count: {0}".format(str(len(words))))
     print("Edge count: {0}".format(
-        str(sum([len(graph[i]) for i in graph.keys()])//2)))
+        str(sum([len(graph[i]) for i in graph.keys()]) // 2)))
     print("Degree list: {0}".format(degree_list(graph)))
     print("Construction time: %.2lfs" % end)
 
@@ -60,29 +51,33 @@ def cc(g):
     v = []
     for x in g.keys():
         if x not in visited:
-            tmp = bfs(g, x)
-            visited = visited.union(tmp)
+            l = 0
+            parent = [x]
+            for elem in parent:
+                for n in g[elem]:
+                    if n not in visited:
+                        parent.append(n)
+                        visited.add(n)
+                        l += 1
             v.append(tmp)
-            ccs.add(len(tmp))
+            ccs.add(l)
     return len(ccs), max([len(x) for x in v]), v
 
 
 def ks(g, s):
-    k2 = len([x for x in s if len(x) == 2])
-    ccs_3 = [x for x in s if len(x) == 3]
-    ccs_4 = [x for x in s if len(x) == 4]
-    k3 = 0
-    k4 = 0
-    for i in ccs_3:
-        for j in i:
-            if len(g[j]) == 2:
-                k3 += 1
-    for i in ccs_4:
-        for j in i:
-            if len(g[j]) == 3:
-                k4 += 1
-
-    return k2, k3//6, k4//8 -1
+    k2, k3, k4 = 0, 0, 0
+    for x in s:
+        if len(x) == 2:
+            k2 += 1
+        if len(x) == 3:
+            for j in x:
+                if len(g[j]) == 2:
+                    k3 += 1
+        if len(x) == 4:
+            for j in x:
+                if len(g[j]) == 3:
+                    k4 += 1
+    return k2, k3 // 6, k4 // 8 - 1
 
 
 def backtrack(visited_nodes, goal):
