@@ -1,6 +1,7 @@
 import sys
 from time import time
 
+alpha = [*"abcdefghijklmnopqrstuvwxyz"]
 
 def is_neighbor(word1, word2):
     count = 0
@@ -21,11 +22,20 @@ def degree_list(graph):
 
 def create_graph(start, words):
     graph = {}
-    for i in range(len(words)):
-        graph[words[i]] = set()
-        for j in range(len(words)):
-            if is_neighbor(words[i], words[j]):
-                graph[words[i]].add(words[j])
+    for i in words:
+        graph[i] = set()
+        w = [*i]
+        for j in range(len(i)):
+            orig = w[j]
+            for a in alpha:
+                if a == orig:
+                    continue
+                w[j] = a
+                tmp = ''.join(w)
+                if tmp in graph:
+                    graph[i].add(tmp)
+                    graph[tmp].add(i)
+                w[j] = orig
 
     end = time()-start
     print("Word count: {0}".format(str(len(words))))
@@ -72,7 +82,7 @@ def ks(g, s):
             if len(g[j]) == 3:
                 k4 += 1
 
-    return k2, k3//6, k4//8
+    return k2, k3//6, k4//8 -1
 
 
 def backtrack(visited_nodes, goal):
