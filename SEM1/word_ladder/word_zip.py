@@ -45,9 +45,7 @@ def second_degree(g):
 
 
 def cc(g):
-    ccs = set()
-    visited = set()
-    v = []
+    ccs, visited, v = set(), set(), []
     for x in g.keys():
         if x not in visited:
             tmp = bfs(g, x)
