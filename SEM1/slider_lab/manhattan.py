@@ -4,8 +4,9 @@ from math import sqrt
 
 def man_dist(puzzle, goal="12345678_"):
     dim = int(sqrt(len(puzzle)))
-    start, end = [list(puzzle[i:i + dim]) for i in range(0, len(puzzle), dim)], [list(goal[i:i+dim]) for i in range(0,len(goal), dim)]
+    orig, dest = {puzzle[x]: (x // dim, x) for x in range(len(puzzle))}, {goal[x]: (x // dim, x) for x in range(len(goal))}
+    return sum([abs((y[1]-dest[x][1])) + abs((y[0]-dest[x][0])) for x,y in orig.items()])
 
 
 if __name__ == '__main__':
-    print(man_dist(argv[0],argv[1]) if len(argv) > 2 else man_dist(argv[0]))
+    print("Manhattan distance: {0}".format(man_dist(argv[1], argv[2]) if len(argv) > 2 else man_dist(argv[1])))
