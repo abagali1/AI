@@ -3,45 +3,35 @@ from time import time
 
 alpha = [*"abcdefghijklmnopqrstuvwxyz"]
 
-def is_neighbor(word1, word2):
-    count = 0
-    for x, y in zip(word1, word2):
-        if x != y:
-            count += 1
-        if count > 1:
-            return False
-    return count == 1
-
-
-def degree_list(graph):
-    ret = [0] * len(graph)
-    for x, y in graph.items():
-        ret[len(y)] += 1
-    return list(ret[0:ret.index(0, 1)])
-
 
 def create_graph(start, words):
-    graph = {}
+    graph, e = {}, 0
     for i in words:
         graph[i] = set()
         w = [*i]
-        for j in range(len(i)):
+        for j in [0, 1, 2, 3, 4, 5]:
             orig = w[j]
             for a in alpha:
                 if a == orig:
                     continue
-                w[j] = a
-                tmp = ''.join(w)
-                if tmp in graph:
-                    graph[i].add(tmp)
-                    graph[tmp].add(i)
-                w[j] = orig
+                else:
+                    w[j] = a
+                    tmp = ''.join(w)
+                    if tmp in graph:
+                        graph[i].add(tmp)
+                        graph[tmp].add(i)
+                        e += 1
+                    w[j] = orig
 
-    end = time()-start
-    print("Word count: {0}".format(str(len(words))))
-    print("Edge count: {0}".format(
-        str(sum([len(graph[i]) for i in graph.keys()])//2)))
-    print("Degree list: {0}".format(degree_list(graph)))
+    end = time() - start
+    ret = [0] * len(graph)
+    for x, y in graph.items():
+        ret[len(y)] += 1
+    dg = list(ret[0:ret.index(0, 1)])
+
+    print("Word count: {0}".format(len(words)))
+    print("Edge count: {0}".format(e))
+    print("Degree list: {0}".format(dg))
     print("Construction time: %.2lfs" % end)
 
     return graph
@@ -61,28 +51,26 @@ def cc(g):
     for x in g.keys():
         if x not in visited:
             tmp = bfs(g, x)
-            visited = visited.union(tmp)
+            visited = visited | tmp
             v.append(tmp)
             ccs.add(len(tmp))
     return len(ccs), max([len(x) for x in v]), v
 
 
 def ks(g, s):
-    k2 = len([x for x in s if len(x) == 2])
-    ccs_3 = [x for x in s if len(x) == 3]
-    ccs_4 = [x for x in s if len(x) == 4]
-    k3 = 0
-    k4 = 0
-    for i in ccs_3:
-        for j in i:
-            if len(g[j]) == 2:
-                k3 += 1
-    for i in ccs_4:
-        for j in i:
-            if len(g[j]) == 3:
-                k4 += 1
-
-    return k2, k3//6, k4//8 -1
+    k2, k3, k4 = 0, 0, 0
+    for x in s:
+        if len(x) == 2:
+            k2 += 1
+        elif len(x) == 3:
+            for j in x:
+                if len(g[j]) == 2:
+                    k3 += 1
+        elif len(x) == 4:
+            for j in x:
+                if len(g[j]) == 3:
+                    k4 += 1
+    return k2, k3 // 6, k4 // 8 - 1
 
 
 def backtrack(visited_nodes, goal):
@@ -126,7 +114,7 @@ def path(graph, start, end):
             elif n not in visited.keys():
                 visited[n] = elem
                 parent.append(n)
-    return ['no path']
+    return ['no', 'path']
 
 
 def farthest(g, ccs, w1):
