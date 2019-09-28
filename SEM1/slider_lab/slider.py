@@ -59,6 +59,10 @@ def pop(arr, i):
     return arr[i], i + 1
 
 
+def solveable(puzzle, goal):
+    return True
+
+
 def main():
     start_time = time()
     puzzles = open(argv[1]).read().splitlines()
