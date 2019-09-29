@@ -1,6 +1,7 @@
 from sys import argv
 from time import time
 from math import sqrt
+from random import shuffle
 
 
 def get_children(parent, d):
@@ -32,55 +33,73 @@ def steps(visited_nodes, goal, s):
     return len(path), time() - s
 
 
+def mD(puzzle, goal, dim):
+    orig, dest = {puzzle[x]: (x // dim, x) for x in range(len(puzzle))
+                  }, {goal[x]: (x // dim, x) for x in range(len(goal))}
+    return sum([abs((y[1]-dest[x][1])) + abs((y[0]-dest[x][0])) for x, y in orig.items()])
+
+
 def solve(puzzle, goal):
-    start = time()
-    dim = int(sqrt(len(puzzle)))
+    start, dim = time(), int(sqrt(len(puzzle)))
     if puzzle == goal:
         return 0, time() - start
-
-    parent = [puzzle]
-    visited = {parent[0]: ''}
+    if solveable(puzzle,goal):
+        return -1, time()-start
+    parent, visited = [(puzzle, mD(puzzle, goal, dim))], {puzzle: ''}
 
     for elem in parent:
-        neighbors = get_children(elem, dim)
-        for n in neighbors:
+        for n in get_children(elem[0], dim):
+            if n in visited:
+                continue
+            visited[n] = elem[0]
+            parent.append((n, mD(n, goal, dim)))
             if n == goal:
-                visited[n] = elem
                 return steps(visited, goal, start)
-            elif n not in visited.keys():
-                visited[n] = elem
-                parent.append(n)
     return -1, time() - start
 
 
-def pop(arr, i):
-    if i >= len(arr):
-        return -1, -1
-    return arr[i], i + 1
-
-
 def solveable(puzzle, goal):
-    return True
+    size = len(puzzle)
+    inversion_count = len([i for i in range(size) for j in range(i + 1, size) if puzzle[i] > puzzle[j]])
+    return not inversion_count % 2
 
 
 def main():
     start_time = time()
-    puzzles = open(argv[1]).read().splitlines()
-    i_c = 0
-    lengths = 0
-    for i in range(len(puzzles)):
-        goal = "ABCDEFGHIJKLMNO_" if "eckel" in argv[1].lower() else puzzles[1]
-        p = puzzles[i]
-        if solveable(p, goal):
+    if len(argv) < 2:
+        impossible_count, lengths, count, puzzle, goal = 0, 0, 0, [*"12345678_"], "12345678_"
+        for i in range(500):
+            if time()-start_time >= 90:
+                break
+            shuffle(puzzle)
+            p = ''.join(puzzle)
             solved = solve(p, goal)
-            lengths += len(p)
-            print("Pzl {0}: {1} => {2} steps\tin %.2lfs".format(i, p, solved[0]) % solved[1])
-        else:
-            i_c += 1
-    p_l = len(puzzles)
-    print("Impossible count: {0}".format(i_c))
-    print("Avg len for possibles: {0}".format(lengths / p_l - i_c))
-    print("Solved {0} puzzles in %.2lfs".format(p_l) % (time()-start_time))
+            if solved[0] == -1:
+                impossible_count += 1
+                print("Pzl {0}: {1} => unsolvable\tin %.2lfs".format(i, p) % solved[1])
+            else:
+                lengths += 9
+                print("Pzl {0}: {1} => {2} steps\tin %.2lfs".format(i, p, solved[0]) % solved[1])
+            count += 1
+        print("Impossible count: {0}".format(impossible_count))
+        print("Avg len for possibles: {0}".format(lengths / count - impossible_count))
+        print("Solved {0} puzzles in %.2lfs".format(count) % (time() - start_time))
+    else:
+        puzzles = open(argv[1]).read().splitlines()
+        impossible_count, lengths, goal = 0, 0, puzzles[1]
+        for i in range(len(puzzles)):
+            p = puzzles[i]
+            solved = solve(p, goal)
+            if solved[0] == -1:
+                impossible_count += 1
+                print("Pzl {0}: {1} => unsolvable\tin %.2lfs".format(i, p) % solved[1])
+            else:
+                lengths += 9
+                print("Pzl {0}: {1} => {2} steps\tin %.2lfs".format(i, p, solved[0]) % solved[1])
+        p_l = len(puzzles)
+        print("Impossible count: {0}".format(impossible_count))
+        print("Avg len for possibles: {0}".format(lengths / p_l - impossible_count))
+        print("Solved {0} puzzles in %.2lfs".format(p_l) % (time() - start_time))
 
 
 if __name__ == '__main__':
