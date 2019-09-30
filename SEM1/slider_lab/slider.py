@@ -40,10 +40,11 @@ def mD(puzzle, goal, dim):
 
 
 def solve(puzzle, goal):
-    start, dim = time(), int(sqrt(len(puzzle)))
+    size = len(puzzle)
+    start, dim = time(), int(sqrt(size))
     if puzzle == goal:
         return 0, time() - start
-    if solveable(puzzle,goal):
+    if not solveable(puzzle, size, dim):
         return -1, time()-start
     parent, visited = [(puzzle, mD(puzzle, goal, dim))], {puzzle: ''}
 
@@ -58,10 +59,10 @@ def solve(puzzle, goal):
     return -1, time() - start
 
 
-def solveable(puzzle, goal):
-    size = len(puzzle)
+def solveable(puzzle, size, dim):
     inversion_count = len([i for i in range(size) for j in range(i + 1, size) if puzzle[i] > puzzle[j]])
-    return not inversion_count % 2
+    pos = puzzle.index('_') // dim
+    return not inversion_count % 2 if size % 2 == 1 else inversion_count % 2 != pos % 2
 
 
 def main():
@@ -84,9 +85,9 @@ def main():
         print("Impossible count: {0}".format(impossible_count))
         print("Avg len for possibles: {0}".format(lengths / count - impossible_count))
         print("Solved {0} puzzles in %.2lfs".format(count) % (time() - start_time))
-    else:
+    elif len(argv) == 2:
         puzzles = open(argv[1]).read().splitlines()
-        impossible_count, lengths, goal = 0, 0, puzzles[1]
+        impossible_count, lengths, goal = 0, 0, puzzles[0]
         for i in range(len(puzzles)):
             p = puzzles[i]
             solved = solve(p, goal)
