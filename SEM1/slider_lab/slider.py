@@ -42,27 +42,29 @@ def mD(puzzle, goal, dim):
 def solve(puzzle, goal):
     size = len(puzzle)
     start, dim = time(), int(sqrt(size))
-    if puzzle == goal:
-        return 0, time() - start
     if not solveable(puzzle, size, dim):
         return -1, time()-start
-    parent, visited = [(puzzle, mD(puzzle, goal, dim))], {puzzle: ''}
+    if puzzle == goal:
+        return 0, time() - start
+    parent, visited = [(mD(puzzle, goal, dim),puzzle)], {puzzle: ''}
 
-    for elem in parent:
-        for n in get_children(elem[0], dim):
+    while parent:
+        elem = parent.pop(0)
+        for n in get_children(elem[1], dim):
             if n in visited:
                 continue
-            visited[n] = elem[0]
-            parent.append((n, mD(n, goal, dim)))
+            visited[n] = elem[1]
+            parent += [(mD(n, goal, dim),n)]
             if n == goal:
                 return steps(visited, goal, start)
+        parent.sort()
     return -1, time() - start
 
 
 def solveable(puzzle, size, dim):
     inversion_count = len([i for i in range(size) for j in range(i + 1, size) if puzzle[i] > puzzle[j]])
     pos = puzzle.index('_') // dim
-    return not inversion_count % 2 if size % 2 == 1 else inversion_count % 2 != pos % 2
+    return inversion_count % 2 == 0 if size % 2 == 1 else inversion_count % 2 != pos % 2
 
 
 def main():
