@@ -105,7 +105,7 @@ def main():
     elif len(argv) == 2:
         puzzles = open(argv[1]).read().splitlines()
         impossible_count, lengths, goal = 0, 0, puzzles[0]
-        for i in range(len(puzzles))
+        for i in range(len(puzzles)):
             if time() - start_time >= 90:
                 break
             p = puzzles[i]
