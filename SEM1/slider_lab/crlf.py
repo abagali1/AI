@@ -43,12 +43,11 @@ def solve(root, goal):
         return [root]
     if impossible(root, goal):
         return []
-    f = h(root, goal, width)
-    openSet = [(f, root, "")]
+    openSet = [(h(root, goal, width), 0, root, "")]
     closedSet = {}
     while openSet:
         openSet.sort()
-        f, pzl, parent = openSet.pop()
+        g, h, pzl, parent = openSet.pop()
         if pzl in closedSet:
             continue
         closedSet[pzl] = parent
@@ -58,8 +57,7 @@ def solve(root, goal):
                 print(closedSet)
             if nbr in closedSet:
                 continue
-            newF = h(nbr, goal, width) + f - h(pzl, goal, width) + 1
-            openSet.append((newF, nbr, pzl))
+            openSet.append((h(nbr, goal, width), h+1, nbr, pzl))
 
 
 def solveable(puzzle, size, dim):
