@@ -33,7 +33,7 @@ def steps(visited_nodes, goal, s):
     return len(path), time() - s
 
 
-def mD(puzzle, goal, dim):
+def manhattan_distance(puzzle, goal, dim):
     return sum([abs(goal.find(puzzle[x]) - x) // dim for x in range(len(puzzle))])
 
 
@@ -46,25 +46,29 @@ def solve(puzzle, goal):
     if not solveable(puzzle, size, dim):
         return -1, time() - start
 
-    open_set, closed_set = [(0 + mD(puzzle, goal, dim), puzzle, '')], {puzzle: ('', 0)}
+    open_set, closed_set = [(manhattan_distance(puzzle, goal, dim), 0, puzzle, '')], {}
 
     while open_set:
         elem = open_set.pop(0)
-        if elem[1] in closed_set:
+        if elem[2] in closed_set:
             continue
-        closed_set[elem[1]] = ()
-        for nbr in get_children(elem[1], dim):
+        closed_set[elem[2]] = elem[3]
+        for nbr in get_children(elem[2], dim):
             if nbr == goal:
+                closed_set[nbr] = elem[2]
                 return steps(closed_set, goal, start)
-            open_set.append((mD(nbr, goal, dim) + 1, nbr, elem))  # add distances
-            open_set.sort(key=lambda x: x[0])
+            open_set.append((manhattan_distance(nbr, goal, dim), elem[1] + 1, nbr, elem[2]))  # add distances
+        if elem[0] + elem[1] == open_set[0][0] + open_set[0][1]:
+            open_set.sort(key=lambda x: x[0] + x[1])
 
 
 def solveable(puzzle, size, dim):
-    inversion_count = len([i for i in range(size)
-                           for j in range(i + 1, size) if puzzle[i] > puzzle[j]])
-    pos = puzzle.index('_') // dim
-    return inversion_count % 2 == 0 if size % 2 == 1 else inversion_count % 2 != pos % 2
+    pzl = puzzle.replace("_", "")
+    inversion_count = len([i for i in range(size - 1)
+                           for j in range(i + 1, size - 1) if pzl[i] > pzl[j]])
+    pos = size - (puzzle.find("_") // dim)
+    return not (inversion_count % 2) if size % 2 == 1 else not (inversion_count % 2) if pos % 2 == 1 else bool(
+        inversion_count % 2)
 
 
 def main():
