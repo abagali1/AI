@@ -8,13 +8,12 @@ def man_dist(puzzle, goal="12345678_"):
 
 
 def manhattan_distance(r, g):
-    w = 4
-    lr = [*r]
-    count = 0
-    for i in range(len(lr)):
-        indg = g.index(str(lr[i]))
-        count += abs(indg - i) // w
-    return count
+    w = int(sqrt(len(r)))
+    md = 0
+    for i in range(len(r)):
+        ig = g.index(r[i])
+        md += abs(i//w - ig//w) + abs(i%w - ig%w)
+    return md
 
 
 if __name__ == '__main__':

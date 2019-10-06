@@ -41,26 +41,25 @@ def solve(root, goal):
     width = len(root)**.5
     if root == goal:
         return [root]
-    print("not equal to goal")
-    if not solveable(root, 16, width):
+    if impossible(root, goal):
         return []
-    print("not impossible")
-    f = manhattan_distance(root, goal, width)
-    print(f)
+    f = h(root, goal, width)
     openSet = [(f, root, "")]
     closedSet = {}
-    while open:
+    while openSet:
         openSet.sort()
         f, pzl, parent = openSet.pop()
         if pzl in closedSet:
             continue
         closedSet[pzl] = parent
-        for nbr in get_children(pzl,width):
+        for nbr in neighbor(pzl):
+            print("here")
             if nbr == goal:
                 print(closedSet)
-            if nbr not in closedSet:
-                newF = manhattan_distance(nbr, goal, width) + f - manhattan_distance(pzl, goal, width) + 1
-                openSet.append((newF, nbr, pzl))
+            if nbr in closedSet:
+                continue
+            newF = h(nbr, goal, width) + f - h(pzl, goal, width) + 1
+            openSet.append((newF, nbr, pzl))
 
 
 def solveable(puzzle, size, dim):
@@ -80,6 +79,7 @@ def main():
         p = puzzles[i]
         solved = solve(p, goal)
         print(solved)
+
 
 if __name__ == '__main__':
     main()

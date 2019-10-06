@@ -34,7 +34,11 @@ def steps(visited_nodes, goal, s):
 
 
 def manhattan_distance(puzzle, goal, dim):
-    return sum([abs(goal.find(puzzle[x]) - x) // dim for x in range(len(puzzle))])
+    md = 0
+    for i in range(len(puzzle)):
+        ig = goal.index(puzzle[i])
+        md += abs(i//dim - ig//dim) + abs(i % dim - ig % dim)
+    return md
 
 
 def solve(puzzle, goal):
@@ -46,7 +50,8 @@ def solve(puzzle, goal):
     if not solveable(puzzle, size, dim):
         return -1, time() - start
 
-    open_set, closed_set = [(manhattan_distance(puzzle, goal, dim), 0, puzzle, '')], {}
+    open_set, closed_set = [
+        (manhattan_distance(puzzle, goal, dim), 0, puzzle, '')], {}
 
     while open_set:
         elem = open_set.pop(0)
@@ -57,7 +62,8 @@ def solve(puzzle, goal):
             if nbr == goal:
                 closed_set[nbr] = elem[2]
                 return steps(closed_set, goal, start)
-            open_set.append((manhattan_distance(nbr, goal, dim), elem[1] + 1, nbr, elem[2]))  # add distances
+            open_set.append((manhattan_distance(nbr, goal, dim),
+                             elem[1] + 1, nbr, elem[2]))  # add distances
         if elem[0] + elem[1] == open_set[0][0] + open_set[0][1]:
             open_set.sort(key=lambda x: x[0] + x[1])
 
