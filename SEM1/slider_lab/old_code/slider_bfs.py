@@ -38,31 +38,29 @@ def mD(puzzle, goal, dim):
 
 
 def solve(puzzle, goal):
-    start = time()
-    if puzzle == goal:
-        return 0, time() - start
     size = len(puzzle)
-    dim = int(sqrt(size))
+    start, dim = time(), int(sqrt(size))
     if not solveable(puzzle, size, dim):
         return -1, time() - start
+    if puzzle == goal:
+        return 0, time() - start
+    parent, visited = [(mD(puzzle, goal, dim), puzzle)], {puzzle: ''}
 
-    open_set, closed_set = [(0 + mD(puzzle, goal, dim), puzzle, '')], {puzzle: ('', 0)}
-
-    while open_set:
-        elem = open_set.pop(0)
-        if elem[1] in closed_set:
-            continue
-        closed_set[elem[1]] = ()
-        for nbr in get_children(elem[1], dim):
-            if nbr == goal:
-                return steps(closed_set, goal, start)
-            open_set.append((mD(nbr, goal, dim) + 1, nbr, elem))  # add distances
-            open_set.sort(key=lambda x: x[0])
+    while parent:
+        elem = parent.pop(0)
+        for n in get_children(elem[1], dim):
+            if n in visited:
+                continue
+            visited[n] = elem[1]
+            parent += [(mD(n, goal, dim), n)]
+            if n == goal:
+                return steps(visited, goal, start)
+        parent.sort(key=lambda x: x[0])
+    return -1, time() - start
 
 
 def solveable(puzzle, size, dim):
-    inversion_count = len([i for i in range(size)
-                           for j in range(i + 1, size) if puzzle[i] > puzzle[j]])
+    inversion_count = len([i for i in range(size) for j in range(i + 1, size) if puzzle[i] > puzzle[j]])
     pos = puzzle.index('_') // dim
     return inversion_count % 2 == 0 if size % 2 == 1 else inversion_count % 2 != pos % 2
 
@@ -70,8 +68,7 @@ def solveable(puzzle, size, dim):
 def main():
     start_time = time()
     if len(argv) < 2:
-        impossible_count, lengths, count, puzzle, goal = 0, 0, 0, [
-            *"12345678_"], "12345678_"
+        impossible_count, lengths, count, puzzle, goal = 0, 0, 0, [*"12345678_"], "12345678_"
         for i in range(500):
             if time() - start_time >= 90:
                 break
@@ -80,18 +77,14 @@ def main():
             solved = solve(p, goal)
             if solved[0] == -1:
                 impossible_count += 1
-                print("Pzl {0}: {1} => unsolvable\tin %.2lfs".format(
-                    i, p) % solved[1])
+                print("Pzl {0}: {1} => unsolvable\tin %.2lfs".format(i, p) % solved[1])
             else:
                 lengths += 9
-                print("Pzl {0}: {1} => {2} steps\tin %.2lfs".format(
-                    i, p, solved[0]) % solved[1])
+                print("Pzl {0}: {1} => {2} steps\tin %.2lfs".format(i, p, solved[0]) % solved[1])
             count += 1
         print("Impossible count: {0}".format(impossible_count))
-        print("Avg len for possibles: {0}".format(
-            lengths / count - impossible_count))
-        print("Solved {0} puzzles in %.2lfs".format(count) %
-              (time() - start_time))
+        print("Avg len for possibles: {0}".format(lengths / count - impossible_count))
+        print("Solved {0} puzzles in %.2lfs".format(count) % (time() - start_time))
     elif len(argv) == 2:
         puzzles = open(argv[1]).read().splitlines()
         impossible_count, lengths, goal = 0, 0, puzzles[0]
@@ -100,18 +93,14 @@ def main():
             solved = solve(p, goal)
             if solved[0] == -1:
                 impossible_count += 1
-                print("Pzl {0}: {1} => unsolvable\tin %.2lfs".format(
-                    i, p) % solved[1])
+                print("Pzl {0}: {1} => unsolvable\tin %.2lfs".format(i, p) % solved[1])
             else:
                 lengths += 9
-                print("Pzl {0}: {1} => {2} steps\tin %.2lfs".format(
-                    i, p, solved[0]) % solved[1])
+                print("Pzl {0}: {1} => {2} steps\tin %.2lfs".format(i, p, solved[0]) % solved[1])
         p_l = len(puzzles)
         print("Impossible count: {0}".format(impossible_count))
-        print("Avg len for possibles: {0}".format(
-            lengths / p_l - impossible_count))
-        print("Solved {0} puzzles in %.2lfs".format(p_l) %
-              (time() - start_time))
+        print("Avg len for possibles: {0}".format(lengths / p_l - impossible_count))
+        print("Solved {0} puzzles in %.2lfs".format(p_l) % (time() - start_time))
 
 
 if __name__ == '__main__':

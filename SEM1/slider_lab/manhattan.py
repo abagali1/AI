@@ -4,8 +4,7 @@ from math import sqrt
 
 def man_dist(puzzle, goal="12345678_"):
     dim = int(sqrt(len(puzzle)))
-    orig, dest = {puzzle[x]: (x // dim, x) for x in range(len(puzzle))}, {goal[x]: (x // dim, x) for x in range(len(goal))}
-    return sum([abs((y[1]-dest[x][1])) + abs((y[0]-dest[x][0])) for x,y in orig.items()])
+    return sum([abs(goal.find(puzzle[x]) - x) // dim for x in range(len(puzzle))])
 
 
 if __name__ == '__main__':
