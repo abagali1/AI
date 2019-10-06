@@ -60,9 +60,11 @@ def solve(puzzle, goal):
 
 
 def solveable(puzzle, size, dim):
-    inversion_count = len([i for i in range(size) for j in range(i + 1, size) if puzzle[i] > puzzle[j]])
-    pos = puzzle.index('_') // dim
-    return inversion_count % 2 == 0 if size % 2 == 1 else inversion_count % 2 != pos % 2
+    pzl = puzzle.replace("_", "")
+    inversion_count = len([i for i in range(size-1)
+                           for j in range(i + 1, size-1) if pzl[i] > pzl[j]])
+    pos = size - (puzzle.find("_") // dim)
+    return not (inversion_count % 2) if size % 2 == 1 else not (inversion_count % 2) if pos % 2 == 1 else bool(inversion_count % 2)
 
 
 def main():
