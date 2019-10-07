@@ -52,11 +52,7 @@ def solve(puzzle, goal):
     open_set, closed_set = [(manhattan_distance(puzzle, goal, dim), 0, puzzle, '')], {}
 
     while index < len(open_set):
-<<<<<<< Updated upstream
         elem, index = open_set[index], index + 1
-=======
-        elem, index = open_set.pop(0), index+1
->>>>>>> Stashed changes
         if elem[2] in closed_set:
             continue
         closed_set[elem[2]] = elem[3]
