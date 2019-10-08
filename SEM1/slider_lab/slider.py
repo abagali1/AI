@@ -52,8 +52,9 @@ def solve(puzzle, goal):
     open_set, closed_set = [(manhattan_distance(puzzle, goal, dim), 0, puzzle, '')], {}
 
     while open_set:
-        elem = open_set.pop(0)
+        elem = open_set[0]
         if elem[2] in closed_set:
+            del open_set[0]
             continue
         closed_set[elem[2]] = elem[3]
         for nbr in get_children(elem[2], dim):
@@ -61,6 +62,7 @@ def solve(puzzle, goal):
                 closed_set[nbr] = elem[2]
                 return steps(closed_set, goal, start)
             open_set.append((manhattan_distance(nbr, goal, dim), elem[1] + 1, nbr, elem[2]))  # add distances
+        open_set.remove(elem)
         if elem[0] + elem[1] != open_set[0][0] + open_set[0][1]:
             open_set.sort(key=lambda x: x[0] + x[1])
 
