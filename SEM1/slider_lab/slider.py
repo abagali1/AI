@@ -48,8 +48,6 @@ def solve(puzzle, goal):
     bucket[manhattan_distance(puzzle, dim)].append((puzzle, 0, ''))
 
     for pos, open_set in enumerate(bucket):
-        if len(open_set) == 0:
-            continue
         index = 0
         while index < len(open_set):
             elem, index = open_set[index], index + 1
