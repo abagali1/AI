@@ -31,15 +31,6 @@ def gen_swaps(p, n, i):
     return true_neighbors
 
 
-def steps(visited_nodes, goal, s):
-    path = [visited_nodes[goal]]
-    for i in path:
-        if i in visited_nodes.keys() and visited_nodes[i] != '':
-            tmp = visited_nodes[i]
-            path.append(tmp)
-    return len(path), time() - s
-
-
 def manhattan_distance(puzzle, dim):
     return sum([minty_lookup_table[dim][(i, find_table[j])] for i,j in enumerate(puzzle) if puzzle[i] != SPACE])
 
@@ -68,7 +59,7 @@ def solve(puzzle, goal):
             for nbr in get_children(elem[0], dim):
                 if nbr == goal:
                     closed_set[nbr] = elem[0]
-                    return steps(closed_set, goal, start)
+                    return elem[1]+1, time()-start
                 bucket[manhattan_distance(nbr, dim) + (elem[1] + 1)].append((nbr, elem[1]+1, elem[0]))
 
 
