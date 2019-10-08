@@ -41,7 +41,7 @@ def steps(visited_nodes, goal, s):
 
 
 def manhattan_distance(puzzle, dim):
-    return sum([minty_lookup_table[dim][(i, find_table[puzzle[i]])] for i in range(len(puzzle)) if puzzle[i] != SPACE])
+    return sum([minty_lookup_table[dim][(i, find_table[j])] for i,j in enumerate(puzzle) if puzzle[i] != SPACE])
 
 
 def solve(puzzle, goal):
