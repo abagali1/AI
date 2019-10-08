@@ -44,8 +44,8 @@ def solve(puzzle, goal):
     if not solveable(puzzle, size, dim):
         return -1, time() - start
 
-    bucket, closed_set = [[] for _ in range(mintier_lookup_table[dim])], {}
-    bucket[manhattan_distance(puzzle, dim)].append((puzzle, 0, ''))
+    bucket, closed_set = [[] for _ in range(mintier_lookup_table[dim])], set()
+    bucket[manhattan_distance(puzzle, dim)].append([puzzle, 0])
 
     for pos, open_set in enumerate(bucket):
         index = 0
@@ -53,12 +53,12 @@ def solve(puzzle, goal):
             elem, index = open_set[index], index + 1
             if elem[0] in closed_set:
                 continue
-            closed_set[elem[0]] = elem[2]
+            closed_set.add(elem[0])
             for nbr in get_children(elem[0], dim):
                 if nbr == goal:
-                    closed_set[nbr] = elem[0]
+                    closed_set.add(nbr)
                     return elem[1]+1, time()-start
-                bucket[manhattan_distance(nbr, dim) + (elem[1] + 1)].append((nbr, elem[1]+1, elem[0]))
+                bucket[manhattan_distance(nbr, dim) + (elem[1] + 1)].append([nbr, elem[1] + 1])
 
 
 def solveable(puzzle, size, dim):
