@@ -29,3 +29,16 @@ arg[2:] -> end city
     
 #### Dummy Check
 * output of going from Point A to Point B is the same as going from Point B to Point A
+
+#### Planning
+
+1. Read sys args
+2. load data from files
+```json
+"identifier":{
+  (name, (lat,long), [neighbors] )
+}
+```
+3. Run A* alongside with Tkinter
+* g=level
+* h=Great Circle Distance from current node to goal
