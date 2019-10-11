@@ -3,7 +3,7 @@ from time import time
 from math import sqrt
 
 SPACE = "_"
-minty_lookup_table = {
+manhattan_table = {
     3: {(0, 0): 0, (0, 1): 1, (0, 2): 2, (0, 3): 1, (0, 4): 2, (0, 5): 3, (0, 6): 2, (0, 7): 3, (0, 8): 4, (1, 0): 1,
         (1, 1): 0, (1, 2): 1, (1, 3): 2, (1, 4): 1, (1, 5): 2, (1, 6): 3, (1, 7): 2, (1, 8): 3, (2, 0): 2, (2, 1): 1,
         (2, 2): 0, (2, 3): 3, (2, 4): 2, (2, 5): 1, (2, 6): 4, (2, 7): 3, (2, 8): 2, (3, 0): 1, (3, 1): 2, (3, 2): 3,
@@ -42,16 +42,8 @@ minty_lookup_table = {
         (14, 11): 2, (14, 12): 2, (14, 13): 1, (14, 14): 0, (14, 15): 1, (15, 0): 6, (15, 1): 5, (15, 2): 4, (15, 3): 3,
         (15, 4): 5, (15, 5): 4, (15, 6): 3, (15, 7): 2, (15, 8): 4, (15, 9): 3, (15, 10): 2, (15, 11): 1, (15, 12): 3,
         (15, 13): 2, (15, 14): 1, (15, 15): 0}}
-mintier_lookup_table = {3: 31, 4: 82}
+length_table = {3: 31, 4: 82}
 find_table = {}
-space_table = {
-    3: {
-        0: 2, 1: 3, 2: 2, 3: 3, 4: 4, 5: 3, 6: 2, 7: 3, 8: 2
-    },
-    4: {
-        0: 2, 1: 3, 2: 3, 3: 2, 4: 3, 5: 4, 6: 4, 7: 3, 8: 3, 9: 4, 10: 4, 11: 3, 12: 2, 13: 3, 14: 3, 15: 2
-    }
-}
 
 
 def get_children(parent, d):
@@ -72,7 +64,7 @@ def get_children(parent, d):
 
 
 def manhattan_distance(puzzle, dim):
-    return sum([minty_lookup_table[dim][(i, find_table[j])] for i, j in enumerate(puzzle) if puzzle[i] != SPACE])
+    return sum([manhattan_table[dim][(i, find_table[j])] for i, j in enumerate(puzzle) if puzzle[i] != SPACE])
 
 
 def solve(puzzle, goal):
@@ -84,13 +76,12 @@ def solve(puzzle, goal):
     if not solveable(puzzle, size, dim):
         return -1, time() - start
 
-    bucket, closed_set = [[] for _ in range(mintier_lookup_table[dim])], set()
+    bucket, closed_set = [[] for _ in range(length_table[dim])], set()
     bucket[manhattan_distance(puzzle, dim)].append([(puzzle, puzzle.find(SPACE)), 0])
 
     for pos, open_set in enumerate(bucket):
-        index = 0
-        while index < len(open_set):
-            elem, index = open_set[index], index + 1
+        while open_set:
+            elem = open_set.pop(-1)
             if elem[0] in closed_set:
                 continue
             closed_set.add(elem[0])
