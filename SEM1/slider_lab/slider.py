@@ -2,7 +2,9 @@ from sys import argv
 from time import time
 from math import sqrt
 
-SPACE = "_"
+# character representing empty space and time limit are constants
+SPACE, TIME_LIMIT = "_", 90
+# Lookup table for all possible manhattan distances (puzzle_dim: {(x,y): manhattan_distance})
 MANHATTAN_TABLE = {
     3: {(0, 0): 0, (0, 1): 1, (0, 2): 2, (0, 3): 1, (0, 4): 2, (0, 5): 3, (0, 6): 2, (0, 7): 3, (0, 8): 4, (1, 0): 1,
         (1, 1): 0, (1, 2): 1, (1, 3): 2, (1, 4): 1, (1, 5): 2, (1, 6): 3, (1, 7): 2, (1, 8): 3, (2, 0): 2, (2, 1): 1,
@@ -42,90 +44,128 @@ MANHATTAN_TABLE = {
         (14, 11): 2, (14, 12): 2, (14, 13): 1, (14, 14): 0, (14, 15): 1, (15, 0): 6, (15, 1): 5, (15, 2): 4, (15, 3): 3,
         (15, 4): 5, (15, 5): 4, (15, 6): 3, (15, 7): 2, (15, 8): 4, (15, 9): 3, (15, 10): 2, (15, 11): 1, (15, 12): 3,
         (15, 13): 2, (15, 14): 1, (15, 15): 0}}
+# Lookup table storing maximum length of path for puzzle (puzzle_dim: max_path)
 LENGTH_TABLE = {3: 31, 4: 82}
+# Lookup table storing the letter: position of the goal puzzle (letter: index_of_letter)
 GOAL_TABLE = {}
+# Lookup table storing all possible neighbors at a given index (index: [index1,index2...])
 NEIGHBOR_TABLE = {}
+
+"""
+Generates neighbors for a specific puzzle
+@:param parent (puzzle, position of space in puzzle)
+"""
 
 
 def get_children(parent):
-    index = parent[1]
-    neighbors = NEIGHBOR_TABLE[index]
+    true_neighbors = []  # list to store final neighbors
 
-    true_neighbors = []
-    for neighbor in neighbors:
-        temp = list(parent[0][:])
-        temp[index], temp[neighbor] = temp[neighbor], temp[index]
-        true_neighbors.append((''.join(temp), neighbor))
+    # iterate through all indices of possible neighbors
+    for neighbor in NEIGHBOR_TABLE[parent[1]]:
+        temp = list(parent[0][:])  # copy string into temp list
+        temp[parent[1]], temp[neighbor] = temp[neighbor], temp[parent[1]]  # swap space and neighboring characters
+        true_neighbors.append((''.join(temp), neighbor))  # join swapped list back into string
     return true_neighbors
+
+
+"""
+Generates the manhattan puzzle for a puzzle assuming the goal state is the default end state
+@:param puzzle (puzzle, position of space in puzzle)
+@:param dim dimensions of puzzle
+"""
 
 
 def manhattan_distance(puzzle, dim):
     return sum([MANHATTAN_TABLE[dim][(i, GOAL_TABLE[j])] for i, j in enumerate(puzzle) if puzzle[i] != SPACE])
 
 
+"""
+Uses the A* algorithm to determine the optimal solve path for a given puzzle to a goal state
+@:param puzzle starting puzzle
+@:param goal desired end state
+@:param size total length of puzzle string
+@:param dimensions of the given puzzle
+"""
+
+
 def solve(puzzle, goal, size, dim):
-    start = time()
-    if puzzle == goal:
+    start = time()  # record starting time
+    if puzzle == goal:  # already at goal state
         return 0, time() - start
-    if not solveable(puzzle, size, dim):
+    if not solveable(puzzle, size, dim):  # goal state unreachable
         return -1, time() - start
 
-    bucket, closed_set = [[] for _ in range(LENGTH_TABLE[dim])], set()
-    bucket[manhattan_distance(puzzle, dim)].append([(puzzle, puzzle.find(SPACE)), 0])
+    bucket = [[] for _ in range(LENGTH_TABLE[dim])]  # list of open_sets indexed by F value (g+h)
+    closed_set = set()  # set of all visited nodes
+    bucket[manhattan_distance(puzzle, dim)].append(
+        [(puzzle, puzzle.find(SPACE)), 0])  # append starting puzzle to appropriate index
 
-    for pos, open_set in enumerate(bucket):
-        while open_set:
-            elem = open_set.pop(-1)
-            if elem[0] in closed_set:
+    for pos, open_set in enumerate(bucket):  # iterate through buckets
+        while open_set:  # while current open_set is not empty
+            elem = open_set.pop(-1)  # pop from end of open_set(eliminates manual indexing and expensive reindexing)
+            if elem[0] in closed_set:  # continue if already visited
                 continue
-            closed_set.add(elem[0])
-            for nbr in get_children(elem[0]):
-                if nbr[0] == goal:
+            closed_set.add(elem[0])  # add to visited
+            for nbr in get_children(elem[0]):  # iterate through neighbors of current puzzle
+                if nbr[0] == goal:  # goal state has been reached
                     closed_set.add(nbr)
                     return elem[1] + 1, time() - start
-                bucket[manhattan_distance(nbr[0], dim) + (elem[1] + 1)].append([nbr, elem[1] + 1])
+                bucket[manhattan_distance(
+                    nbr[0], dim) + (elem[1] + 1)].append([nbr, elem[1] + 1])  # add new puzzle to appropriate bucket
+
+
+"""
+Uses inversion counts to determine if a puzzle is able to reach its default goal state
+@:param puzzle puzzle string
+@:param size total length of the puzzle string
+@:param dim dimensions of puzzle 
+"""
 
 
 def solveable(puzzle, size, dim):
-    pzl = puzzle.replace(SPACE, "")
+    pzl = puzzle.replace(SPACE, "")  # space value does not contribute to inversion counts
     inversion_count = len([i for i in range(size - 1)
-                           for j in range(i + 1, size - 1) if pzl[i] > pzl[j]])
-    pos = size - (puzzle.find(SPACE) // dim)
+                           for j in range(i + 1, size - 1) if pzl[i] > pzl[j]])  # determine inversion counts
+    pos = size - (puzzle.find(SPACE) // dim)  # determine position of space character relative to bottom of puzzle
     return not (inversion_count % 2) if size % 2 == 1 else not (inversion_count % 2) if pos % 2 == 1 else bool(
-        inversion_count % 2)
+        inversion_count % 2)  # if the puzzle size is odd, puzzle is solveable if inversion count is even
+    # if the puzzle size is even, puzzle is solveable if inversion count is even and position is odd or vice versa
 
 
 def main():
     start_time = time()
     puzzles = open(argv[1]).read().splitlines()
-    impossible_count, count, lengths, goal = 0, 0, 0, puzzles[0]
-    for x, y in enumerate(goal):
+    impossible_count, count, lengths, goal = 0, 0, 0, puzzles[0]  # statistical variables and constants
+
+    # start initializing lookup tables
+    for x, y in enumerate(goal):  # indexes goal state
         GOAL_TABLE[y] = x
     s = len(goal)
     d = int(sqrt(s))
-    for index in range(0, s):
+    for index in range(0, s):  # saves all possible neighbors for all indices
         row = index // d
         neighbors = [i for i in [index + d, index - d] if 0 <= i < s]
         if (index + 1) // d == row and index + 1 < s:
             neighbors.append(index + 1)
-        if (index - 1) // d == row and index -1 >= 0:
+        if (index - 1) // d == row and index - 1 >= 0:
             neighbors.append(index - 1)
         NEIGHBOR_TABLE[index] = neighbors
+        # end initializing lookup tables
 
     for i in range(len(puzzles)):
-        if time() - start_time >= 90:
+        if time() - start_time >= TIME_LIMIT:  # watch out for time limit
             break
-        p = puzzles[i]
-        solved = solve(p, goal, s, d)
-        if solved[0] == -1:
-            impossible_count += 1
+        solved = solve(puzzles[i], goal, s, d)  # get solved puzzle and time to solve
+        if solved[0] == -1:  # puzzle was unsolvable
+            impossible_count += 1  # record puzzle as impossible
             print("Pzl {0}: {1} => unsolvable\tin %.2lfs".format(
-                i, p) % solved[1])
-        else:
-            lengths += len(p)
+                i, puzzles[i]) % solved[1])  # output acknowledgement of impossible state
+        else:  # puzzle was solveable
+            lengths += len(puzzles[i])  # statistical
             print("Pzl {0}: {1} => {2} steps\tin %.2lfs".format(
-                i, p, solved[0]) % solved[1])
-        count += 1
+                i, puzzles[i], solved[0]) % solved[1])  # output acknowledgement of solvable puzzle and time used
+        count += 1  # increment amount of puzzles finished
+    # statistical outputs
     print("Impossible count: {0}".format(impossible_count))
     print("Avg len for possibles: {0}".format(
         lengths / count - impossible_count))
