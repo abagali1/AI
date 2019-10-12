@@ -3,7 +3,7 @@ from time import time
 from math import sqrt
 
 SPACE = "_"
-manhattan_table = {
+MANHATTAN_TABLE = {
     3: {(0, 0): 0, (0, 1): 1, (0, 2): 2, (0, 3): 1, (0, 4): 2, (0, 5): 3, (0, 6): 2, (0, 7): 3, (0, 8): 4, (1, 0): 1,
         (1, 1): 0, (1, 2): 1, (1, 3): 2, (1, 4): 1, (1, 5): 2, (1, 6): 3, (1, 7): 2, (1, 8): 3, (2, 0): 2, (2, 1): 1,
         (2, 2): 0, (2, 3): 3, (2, 4): 2, (2, 5): 1, (2, 6): 4, (2, 7): 3, (2, 8): 2, (3, 0): 1, (3, 1): 2, (3, 2): 3,
@@ -42,18 +42,14 @@ manhattan_table = {
         (14, 11): 2, (14, 12): 2, (14, 13): 1, (14, 14): 0, (14, 15): 1, (15, 0): 6, (15, 1): 5, (15, 2): 4, (15, 3): 3,
         (15, 4): 5, (15, 5): 4, (15, 6): 3, (15, 7): 2, (15, 8): 4, (15, 9): 3, (15, 10): 2, (15, 11): 1, (15, 12): 3,
         (15, 13): 2, (15, 14): 1, (15, 15): 0}}
-length_table = {3: 31, 4: 82}
-find_table = {}
+LENGTH_TABLE = {3: 31, 4: 82}
+GOAL_TABLE = {}
+NEIGHBOR_TABLE = {}
 
 
-def get_children(parent, d):
+def get_children(parent):
     index = parent[1]
-    row = index // d
-    neighbors = [i for i in [index + d, index - d] if 0 <= i < len(parent[0])]
-    if (index + 1) // d == row and index + 1 < len(parent[0]):
-        neighbors.append(index + 1)
-    if (index - 1) // d == row and index -1 >= 0:
-        neighbors.append(index - 1)
+    neighbors = NEIGHBOR_TABLE[index]
 
     true_neighbors = []
     for neighbor in neighbors:
@@ -64,19 +60,17 @@ def get_children(parent, d):
 
 
 def manhattan_distance(puzzle, dim):
-    return sum([manhattan_table[dim][(i, find_table[j])] for i, j in enumerate(puzzle) if puzzle[i] != SPACE])
+    return sum([MANHATTAN_TABLE[dim][(i, GOAL_TABLE[j])] for i, j in enumerate(puzzle) if puzzle[i] != SPACE])
 
 
-def solve(puzzle, goal):
+def solve(puzzle, goal, size, dim):
     start = time()
     if puzzle == goal:
         return 0, time() - start
-    size = len(puzzle)
-    dim = int(sqrt(size))
     if not solveable(puzzle, size, dim):
         return -1, time() - start
 
-    bucket, closed_set = [[] for _ in range(length_table[dim])], set()
+    bucket, closed_set = [[] for _ in range(LENGTH_TABLE[dim])], set()
     bucket[manhattan_distance(puzzle, dim)].append([(puzzle, puzzle.find(SPACE)), 0])
 
     for pos, open_set in enumerate(bucket):
@@ -85,12 +79,11 @@ def solve(puzzle, goal):
             if elem[0] in closed_set:
                 continue
             closed_set.add(elem[0])
-            for nbr in get_children(elem[0], dim):
+            for nbr in get_children(elem[0]):
                 if nbr[0] == goal:
                     closed_set.add(nbr)
                     return elem[1] + 1, time() - start
-                bucket[manhattan_distance(
-                    nbr[0], dim) + (elem[1] + 1)].append([nbr, elem[1] + 1])
+                bucket[manhattan_distance(nbr[0], dim) + (elem[1] + 1)].append([nbr, elem[1] + 1])
 
 
 def solveable(puzzle, size, dim):
@@ -107,12 +100,23 @@ def main():
     puzzles = open(argv[1]).read().splitlines()
     impossible_count, count, lengths, goal = 0, 0, 0, puzzles[0]
     for x, y in enumerate(goal):
-        find_table[y] = x
+        GOAL_TABLE[y] = x
+    s = len(goal)
+    d = int(sqrt(s))
+    for index in range(0, s):
+        row = index // d
+        neighbors = [i for i in [index + d, index - d] if 0 <= i < s]
+        if (index + 1) // d == row and index + 1 < s:
+            neighbors.append(index + 1)
+        if (index - 1) // d == row and index -1 >= 0:
+            neighbors.append(index - 1)
+        NEIGHBOR_TABLE[index] = neighbors
+
     for i in range(len(puzzles)):
         if time() - start_time >= 90:
             break
         p = puzzles[i]
-        solved = solve(p, goal)
+        solved = solve(p, goal, s, d)
         if solved[0] == -1:
             impossible_count += 1
             print("Pzl {0}: {1} => unsolvable\tin %.2lfs".format(
