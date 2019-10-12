@@ -133,44 +133,76 @@ def solveable(puzzle, size, dim):
 
 
 def main():
-    start_time = time()
-    puzzles = open(argv[1]).read().splitlines()
-    impossible_count, count, lengths, goal = 0, 0, 0, puzzles[0]  # statistical variables and constants
+    if len(argv) == 2:
+        start_time = time()
+        puzzles = open(argv[1]).read().splitlines()
+        impossible_count, count, lengths, goal = 0, 0, 0, puzzles[0]  # statistical variables and constants
+        s = len(goal)  # length of puzzle string
+        d = int(sqrt(s))  # dimensions of puzzle
 
-    # start initializing lookup tables
-    for x, y in enumerate(goal):  # indexes goal state
-        GOAL_TABLE[y] = x
-    s = len(goal)
-    d = int(sqrt(s))
-    for index in range(0, s):  # saves all possible neighbors for all indices
-        row = index // d
-        neighbors = [i for i in [index + d, index - d] if 0 <= i < s]
-        if (index + 1) // d == row and index + 1 < s:
-            neighbors.append(index + 1)
-        if (index - 1) // d == row and index - 1 >= 0:
-            neighbors.append(index - 1)
-        NEIGHBOR_TABLE[index] = neighbors
-        # end initializing lookup tables
+        # start initializing lookup tables
+        for x, y in enumerate(goal):  # indexes goal state
+            GOAL_TABLE[y] = x
+        for index in range(0, s):  # saves all possible neighbors for all indices
+            row = index // d
+            neighbors = [i for i in [index + d, index - d] if 0 <= i < s]
+            if (index + 1) // d == row and index + 1 < s:
+                neighbors.append(index + 1)
+            if (index - 1) // d == row and index - 1 >= 0:
+                neighbors.append(index - 1)
+            NEIGHBOR_TABLE[index] = neighbors
+            # end initializing lookup tables
 
-    for i in range(len(puzzles)):
-        if time() - start_time >= TIME_LIMIT:  # watch out for time limit
-            break
-        solved = solve(puzzles[i], goal, s, d)  # get solved puzzle and time to solve
+        for i in range(len(puzzles)):
+            if time() - start_time >= TIME_LIMIT:  # watch out for time limit
+                break
+            solved = solve(puzzles[i], goal, s, d)  # get solved puzzle and time to solve
+            if solved[0] == -1:  # puzzle was unsolvable
+                impossible_count += 1  # record puzzle as impossible
+                print("Pzl {0}: {1} => unsolvable\tin %.2lfs".format(
+                    i, puzzles[i]) % solved[1])  # output acknowledgement of impossible state
+            else:  # puzzle was solveable
+                lengths += len(puzzles[i])  # statistical
+                print("Pzl {0}: {1} => {2} steps\tin %.2lfs".format(
+                    i, puzzles[i], solved[0]) % solved[1])  # output acknowledgement of solvable puzzle and time used
+            count += 1  # increment amount of puzzles finished
+        # statistical outputs
+        print("Impossible count: {0}".format(impossible_count))
+        print("Avg len for possibles: {0}".format(
+            lengths / count - impossible_count))
+        print("Solved {0} puzzles in %.2lfs".format(count) %
+              (time() - start_time))
+    elif len(argv) == 3:
+        start_time = time()
+        puzzle = argv[1]
+        goal = argv[2]
+        s = len(goal)  # length of puzzle string
+        d = int(sqrt(s))  # dimensions of puzzle
+
+        # start initializing lookup tables
+        for x, y in enumerate(goal):  # indexes goal state
+            GOAL_TABLE[y] = x
+        for index in range(0, s):  # saves all possible neighbors for all indices
+            row = index // d
+            neighbors = [i for i in [index + d, index - d] if 0 <= i < s]
+            if (index + 1) // d == row and index + 1 < s:
+                neighbors.append(index + 1)
+            if (index - 1) // d == row and index - 1 >= 0:
+                neighbors.append(index - 1)
+            NEIGHBOR_TABLE[index] = neighbors
+            # end initializing lookup tables
+        solved = solve(puzzle, goal, s, d)  # get solved puzzle and time to solve
         if solved[0] == -1:  # puzzle was unsolvable
-            impossible_count += 1  # record puzzle as impossible
-            print("Pzl {0}: {1} => unsolvable\tin %.2lfs".format(
-                i, puzzles[i]) % solved[1])  # output acknowledgement of impossible state
+            print("Pzl {0} => unsolvable\tin %.2lfs".format(
+                puzzle) % solved[1])  # output acknowledgement of impossible state
         else:  # puzzle was solveable
-            lengths += len(puzzles[i])  # statistical
-            print("Pzl {0}: {1} => {2} steps\tin %.2lfs".format(
-                i, puzzles[i], solved[0]) % solved[1])  # output acknowledgement of solvable puzzle and time used
-        count += 1  # increment amount of puzzles finished
-    # statistical outputs
-    print("Impossible count: {0}".format(impossible_count))
-    print("Avg len for possibles: {0}".format(
-        lengths / count - impossible_count))
-    print("Solved {0} puzzles in %.2lfs".format(count) %
-          (time() - start_time))
+            print("Pzl {0} => {1} steps\tin %.2lfs".format(
+                puzzle, solved[0]) % solved[1])  # output acknowledgement of solvable puzzle and time used
+        print("Time used: %.2lfs" % (time()-start_time))
+    else:
+        print("Error: {0} arguments".format("Too many" if len(argv) > 2 else "Missing"))
+        print("Usage: python slider.py <puzzle> <goal>")
+        print("Usage: python slider.py <filename>")
 
 
 if __name__ == '__main__':
