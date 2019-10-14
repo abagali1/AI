@@ -1,9 +1,12 @@
 from sys import argv
 from math import sin, cos, acos, pi
 from heapq import heappush, heappop
+from matplotlib import collections as mc
+import matplotlib.pyplot as plt
 
 names = {}  # name -> station code
 graph = {}  # station code -> [ (lat,long), [neighbors] ]
+edges = []
 
 
 def backtrack(visited_nodes, goal):
@@ -26,6 +29,20 @@ def load_table():
         parts = x.split(" ")
         graph[parts[0]][1].append(parts[1])
         graph[parts[1]][1].append(parts[0])
+    for i in graph:
+        for n in graph[i][1]:
+            edges.append([graph[i][0], graph[n][0]])
+
+
+def load_map():
+    m = mc.LineCollection(edges, linewidths=1)
+    figure, plot = plt.subplots()
+
+    plot.add_collection(m)
+    plot.autoscale()
+    plot.margins(0.1)
+
+    plt.show()
 
 
 def a_star(root, dest):
@@ -48,7 +65,6 @@ def a_star(root, dest):
             else:
                 h = gcd(graph[elem][0][0], graph[elem][0][1], graph[nbr][0][0], graph[nbr][0][1])
                 heappush(open_set,(g+h, h, nbr, elem))
-
 
 
 def gcd(x1, y1, x2, y2):
