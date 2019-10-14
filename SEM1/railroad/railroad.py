@@ -1,5 +1,6 @@
 from sys import argv
 from math import sin, cos, acos, pi
+from heapq import heappush, heappop
 
 names = {}  # name -> station code
 graph = {}  # station code -> [ (lat,long), [neighbors] ]
@@ -34,7 +35,7 @@ def a_star(root, dest):
     h = gcd(graph[root][0][0], graph[root][0][1], graph[dest][0][0], graph[dest][0][1])
     open_set.append((0, h, root, ''))
     while open_set:
-        g, h, elem, parent = open_set.pop(0)
+        g, h, elem, parent = heappop(open_set)
         if elem in closed_set:
             continue
         closed_set[elem] = parent
@@ -46,9 +47,7 @@ def a_star(root, dest):
                 return backtrack(closed_set, dest)
             else:
                 h = gcd(graph[elem][0][0], graph[elem][0][1], graph[nbr][0][0], graph[nbr][0][1])
-                open_set.append((g, h, nbr, elem))
-        if g + h != open_set[0][0] + open_set[0][1]:
-            open_set.sort(key=lambda element: element[0]+element[1])
+                heappush(open_set, (g, h, nbr, elem))
 
 
 def gcd(x1, y1, x2, y2):

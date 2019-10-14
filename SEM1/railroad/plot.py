@@ -33,4 +33,4 @@ for i in graph:
 
 
 
-plt.savefig('map.png', dpi=1440)
+plt.savefig('map1.png', dpi=1440)
