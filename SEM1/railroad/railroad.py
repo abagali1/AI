@@ -41,7 +41,9 @@ def a_star(root, dest):
         for nbr in graph[elem][1]:
             if nbr == dest:
                 closed_set[nbr] = parent
-                return backtrack(closed_set,dest)
+                final_h = gcd(graph[nbr][0][0], graph[nbr][0][1], graph[parent][0][0],graph[parent][0][1]) + g
+                print(final_h)
+                return backtrack(closed_set, dest)
             else:
                 h = gcd(graph[elem][0][0], graph[elem][0][1], graph[nbr][0][0], graph[nbr][0][1])
                 open_set.append((g, h, nbr, elem))
@@ -74,7 +76,11 @@ def strip_cities(cities):
 def main():
     load_table()
     start, end = strip_cities(argv[1:])
-    print(a_star(start,end))
+    print(start,end)
+    first = a_star(start,end)
+    second = a_star(end,start)
+    print(len(first))
+    print(len(second))
 
 
 if __name__ == '__main__':
