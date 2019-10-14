@@ -1,7 +1,11 @@
+basemap==1.2.1
 cycler==0.10.0
 kiwisolver==1.1.0
 matplotlib==3.1.1
 numpy==1.17.2
+Pillow==6.2.0
 pyparsing==2.4.2
+pyproj==2.4.0
+pyshp==2.1.0
 python-dateutil==2.8.0
 six==1.12.0

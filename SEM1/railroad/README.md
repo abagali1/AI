@@ -42,3 +42,11 @@ arg[2:] -> end city
 3. Run A* alongside with Tkinter
 * g=level
 * h=Great Circle Distance from current node to goal
+
+#### Using Basemap
+1. Use `pip` to install dependencies from `requirements.txt`
+2. Install the [PROJ4](https://proj.org/install.html) library
+  * Available through `pacman` (`pacman -S proj`)
+3. Install the [GEOS](https://trac.osgeo.org/geos/) library
+  * Available through `pacman` (`pacman -S geos`)
+4. Run `plot.py` in the same directory as `rrNodes.txt`
