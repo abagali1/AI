@@ -49,6 +49,7 @@ arg[2:] -> end city
   * Available through `pacman` (`pacman -S proj`)
 3. Install the [GEOS](https://trac.osgeo.org/geos/) library
   * Available through `pacman` (`pacman -S geos`)
-4. Run `plot.py` in the same directory as `rrNodes.txt'
+4. Run `pip3 install git+https://github.com/matplotlib/basemap.git`
+5. Run `plot.py` in the same directory as `rrNodes.txt'
 
 **Using `venv` is recommended**
