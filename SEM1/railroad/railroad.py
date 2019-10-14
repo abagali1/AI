@@ -6,7 +6,10 @@ import matplotlib.pyplot as plt
 
 names = {}  # name -> station code
 graph = {}  # station code -> [ (lat,long), [neighbors] ]
-edges = []
+edges = []  # list of lists of tuples (specific to pyplot)
+DEFAULT_COLOR = 'red'
+PATH_COLOR = 'blue'
+FINAL_COLOR = 'green'
 
 
 def backtrack(visited_nodes, goal):
@@ -24,7 +27,7 @@ def load_table():
              for x in open('rrNodeCity.txt').read().splitlines()}
     for x in open('rrNodes.txt').read().splitlines():
         parts = x.split(" ")
-        graph[parts[0]] = [(float(parts[1]), float(parts[2])), []]
+        graph[parts[0]] = [(float(parts[2]), float(parts[1])), []]
     for x in open("rrEdges.txt").read().splitlines():
         parts = x.split(" ")
         graph[parts[0]][1].append(parts[1])
@@ -35,7 +38,7 @@ def load_table():
 
 
 def load_map():
-    m = mc.LineCollection(edges, linewidths=1)
+    m = mc.LineCollection(edges, linewidths=1, color=DEFAULT_COLOR)
     figure, plot = plt.subplots()
 
     plot.add_collection(m)
@@ -50,7 +53,7 @@ def a_star(root, dest):
         return root
 
     open_set, closed_set = [], {}
-    h = gcd(graph[root][0][0], graph[root][0][1], graph[dest][0][0], graph[dest][0][1])
+    h = gcd(graph[root][0][1], graph[root][0][0], graph[dest][0][1], graph[dest][0][0])
     open_set.append((0, h, root, ''))
     while open_set:
         g, h, elem, parent = heappop(open_set)
@@ -60,10 +63,10 @@ def a_star(root, dest):
         for nbr in graph[elem][1]:
             if nbr == dest:
                 closed_set[nbr] = parent
-                final_h = gcd(graph[nbr][0][0], graph[nbr][0][1], graph[parent][0][0],graph[parent][0][1]) + g
+                final_h = gcd(graph[nbr][0][1], graph[nbr][0][0], graph[parent][0][1],graph[parent][0][0]) + g
                 return backtrack(closed_set, dest), final_h
             else:
-                h = gcd(graph[elem][0][0], graph[elem][0][1], graph[nbr][0][0], graph[nbr][0][1])
+                h = gcd(graph[elem][0][1], graph[elem][0][0], graph[nbr][0][1], graph[nbr][0][0])
                 heappush(open_set,(g+h, h, nbr, elem))
 
 
@@ -91,6 +94,7 @@ def strip_cities(cities):
 
 def main():
     load_table()
+    load_map()
     start, end = strip_cities(argv[1:])
     path = a_star(end,start)
     print(len(path[0]), path[1])
