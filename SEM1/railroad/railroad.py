@@ -26,35 +26,27 @@ def load_table():
         graph[parts[1]][1].append(parts[0])
 
 
-def a_star(cities):
-    global names, graph
-    root, dest = '', ''
-    tmp = ''
-    for x in range(len(cities)):
-        tmp += cities[x] + " "
-        if tmp.strip() in names:
-            if root == '':
-                root = names[tmp.strip()]
-            elif dest == '':
-                dest = names[tmp.strip()]
-            tmp = ''
+def a_star(root, dest):
+    if root == dest:
+        return root
 
     open_set, closed_set = [], {}
     h = gcd(graph[root][0][0], graph[root][0][1], graph[dest][0][0], graph[dest][0][1])
     open_set.append((0, h, root, ''))
     while open_set:
-        elem = open_set.pop(0)
+        g, h, elem, parent = open_set.pop(0)
         if elem in closed_set:
             continue
-        closed_set[elem] = elem[3]
-        for nbr in graph[elem[2]][1]:
+        closed_set[elem] = parent
+        for nbr in graph[elem][1]:
             if nbr == dest:
-                return backtrack(closed_set, dest)
+                closed_set[nbr] = parent
+                return backtrack(closed_set,dest)
             else:
-                h = gcd(graph[elem[2]][0][0], graph[elem[2]][0][1], graph[nbr][0][0], graph[nbr][0][1])
-                open_set.append((elem[0]+1, h, nbr, elem[3]))
-        if elem[0] + elem[1] != open_set[0][0] + open_set[0][1]:
-            open_set.sort(key=lambda a: a[0]+a[1])
+                h = gcd(graph[elem][0][0], graph[elem][0][1], graph[nbr][0][0], graph[nbr][0][1])
+                open_set.append((g, h, nbr, elem))
+        if g + h != open_set[0][0] + open_set[0][1]:
+            open_set.sort(key=lambda element: element[0]+element[1])
 
 
 def gcd(x1, y1, x2, y2):
@@ -65,10 +57,24 @@ def gcd(x1, y1, x2, y2):
     return acos(sin(y1)*sin(y2) + cos(y1)*cos(y2)*cos(x2-x1)) * 3958.76
 
 
+def strip_cities(cities):
+    root, dest = '', ''
+    tmp = ''
+    for x in range(len(cities)):
+        tmp += cities[x] + " "
+        if tmp.strip() in names:
+            if root == '':
+                root = names[tmp.strip()]
+            elif dest == '':
+                dest = names[tmp.strip()]
+            tmp = ''
+    return root, dest
+
+
 def main():
-    cities = argv[1:]
     load_table()
-    print(a_star(cities))
+    start, end = strip_cities(argv[1:])
+    print(a_star(start,end))
 
 
 if __name__ == '__main__':
