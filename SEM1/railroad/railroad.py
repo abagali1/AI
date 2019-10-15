@@ -3,6 +3,8 @@ from math import sin, cos, acos, pi
 from heapq import heappush, heappop
 from matplotlib import collections as mc
 import matplotlib.pyplot as plt
+from tkinter import *
+
 
 names = {}  # name -> station code
 graph = {}  # station code -> [ (lat,long), [neighbors] ]
@@ -38,17 +40,35 @@ def load_table():
 
 
 def load_map():
-    m = mc.LineCollection(edges, linewidths=1, color=DEFAULT_COLOR)
-    figure, plot = plt.subplots()
+    pass
+    # m = mc.LineCollection(edges, linewidths=1, color=DEFAULT_COLOR)
+    # figure, plot = plt.subplots()
+    #
+    # plot.add_collection(m)
+    # plot.autoscale()
+    # plot.margins(0.1)
+    #
+    # plt.show()
 
-    plot.add_collection(m)
-    plot.autoscale()
-    plot.margins(0.1)
 
-    plt.show()
+def draw_edges(r, c):
+    r.geometry("1200x800")
+    c.pack(fill=BOTH, expand=1)
+    for i in edges:
+        line(c,i[0][0],i[0][1],i[1][0],i[1][1], 'white')
+    r.update()
+
+
+def line(c, x1,y1,x2,y2, color):
+    x1, y1, x2, y2 = float(x1), float(y1), float(x2), float(y2)
+    c.create_line((x1)*10+1500, (50-y1)*10+400, (x2)*10+1500, (50-y2)*10+400, fil=color)
 
 
 def a_star(root, dest):
+    ROOT = Tk()
+    ROOT.title("railroad")
+    canvas = Canvas(ROOT,background='black')
+    draw_edges(ROOT,canvas)
     if root == dest:
         return root
 
@@ -60,6 +80,8 @@ def a_star(root, dest):
         if elem in closed_set:
             continue
         closed_set[elem] = parent
+        if parent != '':
+            line(canvas, graph[elem][0][0], graph[elem][0][1], graph[parent][0][0], graph[parent][0][1],'red')
         for nbr in graph[elem][1]:
             if nbr == dest:
                 closed_set[nbr] = parent
@@ -68,6 +90,7 @@ def a_star(root, dest):
             else:
                 h = gcd(graph[elem][0][1], graph[elem][0][0], graph[nbr][0][1], graph[nbr][0][0])
                 heappush(open_set,(g+h, h, nbr, elem))
+        ROOT.update()
 
 
 def gcd(x1, y1, x2, y2):
@@ -79,8 +102,18 @@ def gcd(x1, y1, x2, y2):
 
 
 def strip_cities(cities):
-    return [(names[' '.join(cities[:pos]).strip()], names[' '.join(cities[pos:]).strip()]) \
-            for pos in range(len(cities)) if ' '.join(cities[:pos]).strip() in names][0]
+    root, dest = '', ''
+    tmp = ''
+    for x in range(len(cities)):
+        tmp += cities[x] + " "
+        if tmp.strip() in names:
+            if root == '':
+                root = names[tmp.strip()]
+            elif dest == '':
+                dest = names[tmp.strip()]
+            tmp = ''
+    return root, dest
+
 
 
 def main():
@@ -88,7 +121,7 @@ def main():
     load_map()
     start, end = strip_cities(argv[1:])
     path = a_star(end,start)
-    print(len(path[0]), path[1])
+    print(path)
 
 
 if __name__ == '__main__':
