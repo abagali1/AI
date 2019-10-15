@@ -1,4 +1,5 @@
 from sys import argv
+from time import time, sleep
 from math import sin, cos, acos, pi
 from heapq import heappush, heappop
 from matplotlib import collections as mc
@@ -40,57 +41,57 @@ def load_table():
 
 
 def load_map():
-    pass
-    # m = mc.LineCollection(edges, linewidths=1, color=DEFAULT_COLOR)
-    # figure, plot = plt.subplots()
-    #
-    # plot.add_collection(m)
-    # plot.autoscale()
-    # plot.margins(0.1)
-    #
-    # plt.show()
+    ROOT = Tk()
+    ROOT.title("railroad")
+    canvas = Canvas(ROOT, background='black')
+    draw_edges(ROOT, canvas)
+
+    return ROOT, canvas
 
 
 def draw_edges(r, c):
     r.geometry("1200x800")
     c.pack(fill=BOTH, expand=1)
     for i in edges:
-        line(c,i[0][0],i[0][1],i[1][0],i[1][1], 'white')
+        line(c, i[0][0], i[0][1], i[1][0], i[1][1], 'white')
     r.update()
 
 
-def line(c, x1,y1,x2,y2, color):
+def line(c, x1, y1, x2, y2, color, **kwargs):
     x1, y1, x2, y2 = float(x1), float(y1), float(x2), float(y2)
-    c.create_line((x1)*10+1500, (50-y1)*10+400, (x2)*10+1500, (50-y2)*10+400, fil=color)
+    c.create_line((x1)*10+1500, (50-y1)*10+400, (x2)
+                  * 10+1500, (50-y2)*10+400, fil=color, **kwargs)
 
 
-def a_star(root, dest):
-    ROOT = Tk()
-    ROOT.title("railroad")
-    canvas = Canvas(ROOT,background='black')
-    draw_edges(ROOT,canvas)
+def a_star(ROOT, canvas, root, dest):
     if root == dest:
         return root
 
     open_set, closed_set = [], {}
-    h = gcd(graph[root][0][1], graph[root][0][0], graph[dest][0][1], graph[dest][0][0])
-    open_set.append((0, h, root, ''))
+    h = gcd(graph[root][0][1], graph[root][0][0],
+            graph[dest][0][1], graph[dest][0][0])
+    open_set.append((h, 0, h, root, ''))
     while open_set:
-        g, h, elem, parent = heappop(open_set)
+        f, g, h, elem, parent = heappop(open_set)
         if elem in closed_set:
             continue
         closed_set[elem] = parent
         if parent != '':
-            line(canvas, graph[elem][0][0], graph[elem][0][1], graph[parent][0][0], graph[parent][0][1],'red')
+            line(canvas, graph[elem][0][0], graph[elem][0][1], graph[parent][0][0], graph[parent][0][1], 'white', width=10 )
         for nbr in graph[elem][1]:
             if nbr == dest:
                 closed_set[nbr] = parent
-                final_h = gcd(graph[nbr][0][1], graph[nbr][0][0], graph[parent][0][1],graph[parent][0][0]) + g
-                return backtrack(closed_set, dest), final_h
+                print(backtrack(closed_set, dest))
+                print(g)
             else:
-                h = gcd(graph[elem][0][1], graph[elem][0][0], graph[nbr][0][1], graph[nbr][0][0])
-                heappush(open_set,(g+h, h, nbr, elem))
+                g += gcd(graph[elem][0][1], graph[elem][0][0],
+                        graph[nbr][0][1], graph[nbr][0][0])
+                h = gcd(graph[nbr][0][1], graph[nbr][0][0], graph[dest][0][1], graph[dest][0][0])
+                heappush(open_set, (g+h, g, h, nbr, elem))
+                line(canvas, graph[nbr][0][0], graph[nbr][0][1],
+                     graph[elem][0][0], graph[elem][0][1], color='red')
         ROOT.update()
+    ROOT.mainloop()
 
 
 def gcd(x1, y1, x2, y2):
@@ -115,12 +116,11 @@ def strip_cities(cities):
     return root, dest
 
 
-
 def main():
     load_table()
-    load_map()
+    ROOT, canvas = load_map()
     start, end = strip_cities(argv[1:])
-    path = a_star(end,start)
+    path = a_star(ROOT, canvas, start, end)
     print(path)
 
 
