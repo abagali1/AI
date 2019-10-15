@@ -79,17 +79,8 @@ def gcd(x1, y1, x2, y2):
 
 
 def strip_cities(cities):
-    root, dest = '', ''
-    tmp = ''
-    for x in range(len(cities)):
-        tmp += cities[x] + " "
-        if tmp.strip() in names:
-            if root == '':
-                root = names[tmp.strip()]
-            elif dest == '':
-                dest = names[tmp.strip()]
-            tmp = ''
-    return root, dest
+    return [(names[' '.join(cities[:pos]).strip()], names[' '.join(cities[pos:]).strip()]) \
+            for pos in range(len(cities)) if ' '.join(cities[:pos]).strip() in names][0]
 
 
 def main():
