@@ -15,12 +15,15 @@ PATH_COLOR = 'blue'
 FINAL_COLOR = 'green'
 
 
-def backtrack(visited_nodes, goal):
+def backtrack(ROOT, canvas, visited_nodes, goal):
     path = [visited_nodes[goal]]
     for i in path:
         if i in visited_nodes.keys() and visited_nodes[i] != '':
             path.append(visited_nodes[i])
     path.append(goal)
+    for i in range(1, len(path)-1):
+        line(canvas, graph[path[i-1]][0][0], graph[path[i-1]][0][1], graph[path[i]][0][0], graph[path[i]][0][1], color='green', width=10)
+    ROOT.update()
     return path
 
 
@@ -81,8 +84,10 @@ def a_star(ROOT, canvas, root, dest):
         for nbr in graph[elem][1]:
             if nbr == dest:
                 closed_set[nbr] = parent
-                print(backtrack(closed_set, dest))
+                print(backtrack(ROOT, canvas, closed_set, dest))
                 print(g)
+                while True:
+                    sleep(1)
             else:
                 g += gcd(graph[elem][0][1], graph[elem][0][0],
                         graph[nbr][0][1], graph[nbr][0][0])
