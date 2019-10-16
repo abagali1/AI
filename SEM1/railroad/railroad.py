@@ -1,18 +1,16 @@
-from sys import argv
+from sys import argv, exit
 from time import time, sleep
 from math import sin, cos, acos, pi
 from heapq import heappush, heappop
-from matplotlib import collections as mc
-import matplotlib.pyplot as plt
 from tkinter import *
 
 
 names = {}  # name -> station code
+codes = {}  # station code -> name
 graph = {}  # station code -> [ (lat,long), [neighbors] ]
 edges = []  # list of lists of tuples (specific to pyplot)
-DEFAULT_COLOR = 'red'
-PATH_COLOR = 'blue'
-FINAL_COLOR = 'green'
+PATH_COLOR, FRINGE_COLOR, CLOSED_COLOR, FINAL_COLOR = 'black', 'red', 'blue', 'yellow'
+LINE_WIDTH = 2
 
 
 def backtrack(ROOT, canvas, visited_nodes, goal):
@@ -20,17 +18,21 @@ def backtrack(ROOT, canvas, visited_nodes, goal):
     for i in path:
         if i in visited_nodes.keys() and visited_nodes[i] != '':
             path.append(visited_nodes[i])
+    path = list(reversed(path))
     path.append(goal)
     for i in range(1, len(path)-1):
-        line(canvas, graph[path[i-1]][0][0], graph[path[i-1]][0][1], graph[path[i]][0][0], graph[path[i]][0][1], color='green', width=10)
+        line(canvas, graph[path[i-1]][0][0], graph[path[i-1]][0][1], graph[path[i]][0][0], graph[path[i]][0][1],
+             FINAL_COLOR, width=4)
     ROOT.update()
     return path
 
 
 def load_table():
-    global names, graph
+    global names, graph, codes
     names = {' '.join(x.split(" ")[1:]): x.split(" ")[0]
              for x in open('rrNodeCity.txt').read().splitlines()}
+    codes = dict((y, x) for x, y in names.items())
+
     for x in open('rrNodes.txt').read().splitlines():
         parts = x.split(" ")
         graph[parts[0]] = [(float(parts[2]), float(parts[1])), []]
@@ -46,17 +48,17 @@ def load_table():
 def load_map():
     ROOT = Tk()
     ROOT.title("railroad")
-    canvas = Canvas(ROOT, background='black')
+    canvas = Canvas(ROOT, background='white')
     draw_edges(ROOT, canvas)
 
     return ROOT, canvas
 
 
 def draw_edges(r, c):
-    r.geometry("1200x800")
+    r.geometry("950x950")
     c.pack(fill=BOTH, expand=1)
     for i in edges:
-        line(c, i[0][0], i[0][1], i[1][0], i[1][1], 'white')
+        line(c, i[0][0], i[0][1], i[1][0], i[1][1], 'black')
     r.update()
 
 
@@ -71,32 +73,31 @@ def a_star(ROOT, canvas, root, dest):
         return root
 
     open_set, closed_set = [], {}
-    h = gcd(graph[root][0][1], graph[root][0][0],
-            graph[dest][0][1], graph[dest][0][0])
+    h = gcd(graph[root][0][0], graph[root][0][1],
+            graph[dest][0][0], graph[dest][0][1])
     open_set.append((h, 0, h, root, ''))
     while open_set:
         f, g, h, elem, parent = heappop(open_set)
         if elem in closed_set:
             continue
-        closed_set[elem] = parent
-        if parent != '':
-            line(canvas, graph[elem][0][0], graph[elem][0][1], graph[parent][0][0], graph[parent][0][1], 'white', width=10 )
+        else:
+            closed_set[elem] = parent
+            if parent != '':
+                line(canvas, graph[elem][0][0], graph[elem][0][1], graph[parent][0][0], graph[parent][0][1],
+                     CLOSED_COLOR, width=LINE_WIDTH)
         for nbr in graph[elem][1]:
             if nbr == dest:
                 closed_set[nbr] = parent
-                print(backtrack(ROOT, canvas, closed_set, dest))
-                print(g)
-                while True:
-                    sleep(1)
+                return backtrack(ROOT, canvas, closed_set, dest), f
             else:
-                g += gcd(graph[elem][0][1], graph[elem][0][0],
-                        graph[nbr][0][1], graph[nbr][0][0])
-                h = gcd(graph[nbr][0][1], graph[nbr][0][0], graph[dest][0][1], graph[dest][0][0])
-                heappush(open_set, (g+h, g, h, nbr, elem))
-                line(canvas, graph[nbr][0][0], graph[nbr][0][1],
-                     graph[elem][0][0], graph[elem][0][1], color='red')
+                new_g = g + gcd(graph[elem][0][0], graph[elem][0][1],
+                        graph[nbr][0][0], graph[nbr][0][1])
+                new_h = gcd(graph[nbr][0][0], graph[nbr][0][1], graph[dest][0][0], graph[dest][0][1])
+                heappush(open_set, (new_g+new_h, new_g, new_h, nbr, elem))
+                if nbr not in closed_set:
+                    line(canvas, graph[nbr][0][0], graph[nbr][0][1], graph[elem][0][0], graph[elem][0][1],
+                         FRINGE_COLOR, width=LINE_WIDTH)
         ROOT.update()
-    ROOT.mainloop()
 
 
 def gcd(x1, y1, x2, y2):
@@ -124,9 +125,24 @@ def strip_cities(cities):
 def main():
     load_table()
     ROOT, canvas = load_map()
+    ROOT.protocol("WM_DELETE_WINDOW", lambda: ROOT.destroy())
+
     start, end = strip_cities(argv[1:])
     path = a_star(ROOT, canvas, start, end)
-    print(path)
+    station_list = ""
+    for station in path[0]:
+        if station in codes:
+            station_list += "{0} -> ".format(codes[station])
+        else:
+            station_list += "{0} -> ".format(station)
+    print(station_list[:-3])
+    print("The distance from {0} to {1} is %.2lf miles".format(codes[start], codes[end]) % path[1])
+
+    try:
+        while True:
+            sleep(1)  # allow Tkinter canvas to persist after A* termination
+    except KeyboardInterrupt:  # exit quietly
+        exit(0)
 
 
 if __name__ == '__main__':
