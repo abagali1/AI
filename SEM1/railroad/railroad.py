@@ -1,5 +1,5 @@
 from sys import argv, exit
-from time import time, sleep
+from time import sleep
 from math import sin, cos, acos, pi
 from heapq import heappush, heappop
 from tkinter import *
