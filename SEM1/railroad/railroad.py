@@ -20,10 +20,10 @@ def backtrack(ROOT, canvas, visited_nodes, goal, f):
             path.append(visited_nodes[i[0]])
     path = list(reversed(path))
     path.append((goal, f))
-    path = path[1:]
     for i in range(1, len(path)-1):
-        line(canvas, graph[path[i-1][0]][0][0], graph[path[i-1][0]][0][1], graph[path[i][0]][0][0], graph[path[i][0]][0][1],
-             FINAL_COLOR, width=4)
+        if path[i-1][0] != '':
+            line(canvas, graph[path[i-1][0]][0][0], graph[path[i-1][0]][0][1], graph[path[i][0]][0][0], graph[path[i][0]][0][1],
+                 FINAL_COLOR, width=4)
     ROOT.update()
     return path
 
@@ -82,14 +82,14 @@ def a_star(ROOT, canvas, root, dest):
         if elem in closed_set:
             continue
         else:
-            closed_set[elem] = (parent, f)
+            closed_set[elem] = (parent, g)
             if parent != '':
                 line(canvas, graph[elem][0][0], graph[elem][0][1], graph[parent][0][0], graph[parent][0][1],
                      CLOSED_COLOR, width=LINE_WIDTH)
         for nbr in graph[elem][1]:
             if nbr == dest:
-                closed_set[nbr] = (parent, f)
-                return backtrack(ROOT, canvas, closed_set, dest, f), f
+                closed_set[nbr] = (parent, g)
+                return backtrack(ROOT, canvas, closed_set, dest, g), g
             else:
                 new_g = g + gcd(graph[elem][0][0], graph[elem][0][1],
                         graph[nbr][0][0], graph[nbr][0][1])
@@ -130,11 +130,11 @@ def main():
 
     start, end = strip_cities(argv[1:])
     path = a_star(ROOT, canvas, start, end)
-    for pos, i in enumerate(path[0]):
-        if i in codes:
-            print("Station {0}: {1} %.2lf miles".format(pos, codes[i[0]]) % i[1])
+    for i in range(1, len(path[0])):
+        if path[0][i][0] in codes:
+            print("Station {0}: {1} %.2lf miles".format(i-1, codes[path[0][i][0]]) % path[0][i-1][1])
         else:
-            print("Station {0}: {1} %.2lf miles".format(pos, i[0]) % i[1])
+            print("Station {0}: {1} %.2lf miles".format(i-1, path[0][i][0]) % path[0][i-1][1])
     print("The distance from {0} to {1} is %.2lf miles".format(codes[start], codes[end]) % path[1])
 
 
