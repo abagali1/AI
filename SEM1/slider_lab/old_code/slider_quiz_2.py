@@ -54,7 +54,4 @@ if __name__ == '__main__':
     pathz = bfs(sys.argv[1])
     m = max([x[1] for x in pathz])
     hardest = [x[0] for x in pathz if x[1] == m]
-    d = len([x for x in pathz if x[1] == 10])
-    print("MAX: {0}".format(m))
-    print("HARDEST: {0}".format(hardest))
-    print("NUM_D: {0}".format(d))
+    print(f"{m}\n{hardest}")
