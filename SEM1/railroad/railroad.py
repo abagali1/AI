@@ -1,3 +1,4 @@
+from random import randint
 from sys import argv, exit
 from time import sleep
 from math import sin, cos, acos, pi
@@ -79,26 +80,28 @@ def a_star(ROOT, canvas, root, dest):
     open_set.append((h, 0, h, root, ''))
     while open_set:
         f, g, h, elem, parent = heappop(open_set)
+        if parent != '':
+            line(canvas, graph[elem][0][0], graph[elem][0][1], graph[parent][0][0], graph[parent][0][1],
+                 CLOSED_COLOR, width=LINE_WIDTH)
         if elem in closed_set:
             continue
         else:
             closed_set[elem] = (parent, g)
-            if parent != '':
-                line(canvas, graph[elem][0][0], graph[elem][0][1], graph[parent][0][0], graph[parent][0][1],
-                     CLOSED_COLOR, width=LINE_WIDTH)
         for nbr in graph[elem][1]:
             if nbr == dest:
                 closed_set[nbr] = (parent, g)
-                return backtrack(ROOT, canvas, closed_set, dest, g), g
+                return backtrack(ROOT, canvas, closed_set, dest, f), f
             else:
                 new_g = g + gcd(graph[elem][0][0], graph[elem][0][1],
-                        graph[nbr][0][0], graph[nbr][0][1])
-                new_h = gcd(graph[nbr][0][0], graph[nbr][0][1], graph[dest][0][0], graph[dest][0][1])
+                                graph[nbr][0][0], graph[nbr][0][1])
+                new_h = gcd(graph[nbr][0][0], graph[nbr][0][1],
+                            graph[dest][0][0], graph[dest][0][1])
                 heappush(open_set, (new_g+new_h, new_g, new_h, nbr, elem))
                 if nbr not in closed_set:
                     line(canvas, graph[nbr][0][0], graph[nbr][0][1], graph[elem][0][0], graph[elem][0][1],
                          FRINGE_COLOR, width=LINE_WIDTH)
-        ROOT.update()
+        if randint(0, int(f)) <= 65:
+            ROOT.update()
 
 
 def gcd(x1, y1, x2, y2):
@@ -132,12 +135,13 @@ def main():
     path = a_star(ROOT, canvas, start, end)
     for i in range(1, len(path[0])):
         if path[0][i][0] in codes:
-            print("Station {0}: {1} %.2lf miles".format(i-1, codes[path[0][i][0]]) % path[0][i-1][1])
+            print("Station {0}: {1} %.2lf miles".format(
+                i-1, codes[path[0][i][0]]) % path[0][i][1])
         else:
-            print("Station {0}: {1} %.2lf miles".format(i-1, path[0][i][0]) % path[0][i-1][1])
-    print("The distance from {0} to {1} is %.2lf miles".format(codes[start], codes[end]) % path[1])
-
-
+            print("Station {0}: {1} %.2lf miles".format(
+                i-1, path[0][i][0]) % path[0][i][1])
+    print("The distance from {0} to {1} is %.2lf miles".format(
+        codes[start], codes[end]) % path[1])
 
     try:
         while True:
