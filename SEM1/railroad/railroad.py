@@ -8,7 +8,6 @@ from tkinter import *
 names = {}  # name -> station code
 codes = {}  # station code -> name
 graph = {}  # station code -> [ (lat,long), [neighbors] ]
-edges = []  # list of lists of tuples (specific to pyplot)
 PATH_COLOR, FRINGE_COLOR, CLOSED_COLOR, FINAL_COLOR, BACKGROUND_COLOR = 'white', 'deep pink', 'green2', 'yellow', 'black'
 LINE_WIDTH = 2
 
@@ -41,9 +40,6 @@ def load_table():
         parts = x.split(" ")
         graph[parts[0]][1].append(parts[1])
         graph[parts[1]][1].append(parts[0])
-    for i in graph:
-        for n in graph[i][1]:
-            edges.append([graph[i][0], graph[n][0]])
 
 
 def load_map():
