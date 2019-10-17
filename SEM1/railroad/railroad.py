@@ -8,6 +8,7 @@ from tkinter import *
 names = {}  # name -> station code
 codes = {}  # station code -> name
 graph = {}  # station code -> [ (lat,long), [neighbors] ]
+edges = []
 PATH_COLOR, FRINGE_COLOR, CLOSED_COLOR, FINAL_COLOR, BACKGROUND_COLOR = 'white', 'deep pink', 'green2', 'yellow', 'black'
 LINE_WIDTH = 2
 
