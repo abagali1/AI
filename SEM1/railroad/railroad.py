@@ -13,15 +13,16 @@ PATH_COLOR, FRINGE_COLOR, CLOSED_COLOR, FINAL_COLOR, BACKGROUND_COLOR = 'white',
 LINE_WIDTH = 2
 
 
-def backtrack(ROOT, canvas, visited_nodes, goal):
+def backtrack(ROOT, canvas, visited_nodes, goal, f):
     path = [visited_nodes[goal]]
     for i in path:
-        if i in visited_nodes.keys() and visited_nodes[i] != '':
-            path.append(visited_nodes[i])
+        if i[0] in visited_nodes.keys() and visited_nodes[i[0]] != '':
+            path.append(visited_nodes[i[0]])
     path = list(reversed(path))
-    path.append(goal)
+    path.append((goal, f))
+    path = path[1:]
     for i in range(1, len(path)-1):
-        line(canvas, graph[path[i-1]][0][0], graph[path[i-1]][0][1], graph[path[i]][0][0], graph[path[i]][0][1],
+        line(canvas, graph[path[i-1][0]][0][0], graph[path[i-1][0]][0][1], graph[path[i][0]][0][0], graph[path[i][0]][0][1],
              FINAL_COLOR, width=4)
     ROOT.update()
     return path
@@ -81,14 +82,14 @@ def a_star(ROOT, canvas, root, dest):
         if elem in closed_set:
             continue
         else:
-            closed_set[elem] = parent
+            closed_set[elem] = (parent, f)
             if parent != '':
                 line(canvas, graph[elem][0][0], graph[elem][0][1], graph[parent][0][0], graph[parent][0][1],
                      CLOSED_COLOR, width=LINE_WIDTH)
         for nbr in graph[elem][1]:
             if nbr == dest:
-                closed_set[nbr] = parent
-                return backtrack(ROOT, canvas, closed_set, dest), f
+                closed_set[nbr] = (parent, f)
+                return backtrack(ROOT, canvas, closed_set, dest, f), f
             else:
                 new_g = g + gcd(graph[elem][0][0], graph[elem][0][1],
                         graph[nbr][0][0], graph[nbr][0][1])
@@ -129,14 +130,14 @@ def main():
 
     start, end = strip_cities(argv[1:])
     path = a_star(ROOT, canvas, start, end)
-    station_list = ""
-    for station in path[0]:
-        if station in codes:
-            station_list += "{0} -> ".format(codes[station])
+    for pos, i in enumerate(path[0]):
+        if i in codes:
+            print("Station {0}: {1} %.2lf miles".format(pos, codes[i[0]]) % i[1])
         else:
-            station_list += "{0} -> ".format(station)
-    print(station_list[:-3])
+            print("Station {0}: {1} %.2lf miles".format(pos, i[0]) % i[1])
     print("The distance from {0} to {1} is %.2lf miles".format(codes[start], codes[end]) % path[1])
+
+
 
     try:
         while True:
