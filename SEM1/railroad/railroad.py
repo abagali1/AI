@@ -100,7 +100,7 @@ def a_star(ROOT, canvas, root, dest):
                 if nbr not in closed_set:
                     line(canvas, graph[nbr][0][0], graph[nbr][0][1], graph[elem][0][0], graph[elem][0][1],
                          FRINGE_COLOR, width=LINE_WIDTH)
-        if randint(0, int(f)) <= 65:
+        if randint(0, int(f)) <= 15:
             ROOT.update()
 
 
