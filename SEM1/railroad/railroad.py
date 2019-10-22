@@ -136,10 +136,10 @@ def main():
     for i in range(1, len(path[0])):
         if path[0][i][0] in codes:
             print("Station {0}: {1} %.2lf miles".format(
-                i-1, codes[path[0][i][0]]) % path[0][i][1])
+                i, codes[path[0][i][0]]) % path[0][i][1])
         else:
             print("Station {0}: {1} %.2lf miles".format(
-                i-1, path[0][i][0]) % path[0][i][1])
+                i, path[0][i][0]) % path[0][i][1])
     print("The distance from {0} to {1} is %.2lf miles".format(
         codes[start], codes[end]) % path[1])
 
