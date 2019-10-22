@@ -43,7 +43,14 @@ def is_invalid(p, q):
 
 def is_solved(pzl, question):
     global hexagons, rows
-
+    for d in [x.count(i) for x in hexagons for i in nums[q]]:
+        if d > 1:
+            return True
+    if question == 'B':
+        for d in [x.count(i) for x in rows for i in nums[question]]:
+            if d != 1:
+                return False
+    return True
 
 
 def brute_force(pzl, question):
@@ -51,6 +58,15 @@ def brute_force(pzl, question):
         return ""
     if is_solved(pzl, question):
         return pzl
+
+    set_o_choices = find_choices()
+    for choice in set_o_choices:
+        b = brute_force(choice,question)
+        if b:
+            return b
+    return ""
+
+
 
 
 if __name__ == '__main__':
