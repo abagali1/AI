@@ -1,9 +1,11 @@
 from sys import argv
 
 nums = {'A': ['1', '2', '3', '4', '5', '6'], 'B': ['1', '2', '3', '4', '5', '6', '7']}
+hexagons, rows = [], []
 
 
 def is_invalid(p, q):
+    global hexagons, rows
     hexagons = [
         [p[0], p[1], p[2], p[6], p[7], p[8]],
         [p[2], p[3], p[4], p[8], p[9], p[10]],
@@ -39,10 +41,15 @@ def is_invalid(p, q):
     return False
 
 
+def is_solved(pzl, question):
+    global hexagons, rows
+
+
+
 def brute_force(pzl, question):
     if is_invalid(pzl, question):
         return ""
-    if isSolved(pzl, question):
+    if is_solved(pzl, question):
         return pzl
 
 
