@@ -47,7 +47,7 @@ def brute_force(pzl, question):
     
 
 if __name__ == '__main__':
-    sol = brute_force(argv[2], argv[1])
+    sol = brute_force(argv[2] if len(argv) == 3 else argv[1], argv[1] if len(argv) == 3 else 'A')
     if sol is None:
         print("No Solution Possible")
     else:
