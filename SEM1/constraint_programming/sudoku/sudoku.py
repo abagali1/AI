@@ -55,6 +55,10 @@ def is_solved(pzl):
     return False if pzl.find(".") != -1 else True
 
 
+def check_sum(pzl):
+    return sum([ord(x) for x in pzl]) - 48*length*length
+
+
 def brute_force(pzl):
     if is_invalid(pzl):
         return ""
@@ -79,3 +83,4 @@ if __name__ == '__main__':
             print("{0}: {1} => No Solution Possible".format(index, puzzle))
         else:
             print("{0}: {1} => {2}".format(index, puzzle, solution))
+            print(check_sum(solution))
