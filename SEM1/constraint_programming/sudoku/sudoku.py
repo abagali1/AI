@@ -3,7 +3,17 @@ from sys import argv
 
 def string_to_pzl(p, dim, size):
     pzls = []
-    
+    for i in range(0,size,dim):
+        for j in range(i,i+dim):
+            tmp = []
+            tmp.append(p[j])
+        pzls.append(tmp)
+    for i in range(0,dim):
+        for j in range(i,size,dim):
+            tmp = []
+            tmp.append(p[j])
+        pzls.append(tmp)
+    return pzls
 
 
 
