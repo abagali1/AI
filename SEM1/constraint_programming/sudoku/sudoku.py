@@ -1,4 +1,5 @@
 from sys import argv
+from math import sqrt
 
 
 def string_to_pzl(p, dim, size):
@@ -18,10 +19,10 @@ def string_to_pzl(p, dim, size):
 
 
 def is_invalid(p, q):
-    hex_dict = string_to_pzl(p)
-    for hex in range(len(hex_dict)):
-        for i in range(1, 7):
-            if hex_dict[hex].count(str(i)) > 1:
+    puzzle_list = string_to_pzl(p, int(sqrt(len(p)), len(p))
+    for pzl in range(len(puzzle_list)):
+        for i in range(1, 10):
+            if puzzle_list[pzl].count(str(i)) > 1:
                 return True
     return False
 
@@ -45,8 +46,12 @@ def brute_force(pzl, question):
 
 
 if __name__ == '__main__':
-    sol = brute_force(argv[1])
-    if sol is None:
-        print("No Solution Possible")
-    else:
-        print(sol)
+    filename = 'puzzles.txt' if len(argv) == 1 else argv[1]
+    puzzles = open(filename).read().splitlines()
+    for index, puzzle in enumerate(puzzles):
+        solution = brute_force(puzzle)
+        if solution is None:
+            print("{0}: {1} => No Solution Possible".format(index, puzzle)
+        else:
+            print("{0}: {1} => {2}".format(index, puzzle, solution)
+
