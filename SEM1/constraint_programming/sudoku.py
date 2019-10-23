@@ -18,8 +18,8 @@ def pzl_to_hexagons(p):
 def is_invalid(p, q):
     hex_dict = pzl_to_hexagons(p)
     for hex in range(len(hex_dict)):
-        for i in range(1,7):
-            if hex_dict[hex].count(str(i)) >1:
+        for i in range(1, 7):
+            if hex_dict[hex].count(str(i)) > 1:
                 return True
     return False
 
@@ -37,12 +37,12 @@ def brute_force(pzl, question):
         return pzl
 
     i = pzl.find(".")
-    new_pzls = [pzl[:i] + str(j) + pzl[i+1:] for j in nums[question]]
+    new_pzls = [pzl[:i] + str(j) + pzl[i + 1:] for j in nums[question]]
     for new_pzl in new_pzls:
         b_f = brute_force(new_pzl, question)
         if b_f:
             return b_f
-    
+
 
 if __name__ == '__main__':
     sol = brute_force(argv[2] if len(argv) == 3 else argv[1], argv[1] if len(argv) == 3 else 'A')
@@ -51,16 +51,16 @@ if __name__ == '__main__':
     else:
         print(sol)
         print(" ", end="")
-        for i in range(0,5):
+        for i in range(0, 5):
             print(sol[i], end="")
         print("")
-        for i in range(6,6+7):
+        for i in range(6, 6 + 7):
             print(sol[i], end="")
         print("")
-        for i in range(6+7,13+7):
+        for i in range(6 + 7, 13 + 7):
             print(sol[i], end="")
         print("")
         print(" ", end="")
-        for i in range(20,24):
+        for i in range(20, 24):
             print(sol[i], end="")
         print("")
