@@ -56,7 +56,7 @@ def is_solved(pzl):
 
 
 def check_sum(pzl):
-    return sum([ord(x) for x in pzl]) - 48*N
+    return sum([ord(x) for x in pzl]) - 48*dim*dim
 
 
 def brute_force(pzl):
