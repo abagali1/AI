@@ -2,6 +2,11 @@ from sys import argv
 from math import sqrt
 
 length, dim, col, row = 0, 0, 0, 0
+size_table = {
+    9:  ['1', '2', '3', '4', '5', '6', '7', '8', '9'],
+    12: ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C'],
+    16: ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 'G']
+}
 
 
 def string_to_pzl(p):
@@ -66,7 +71,7 @@ def brute_force(pzl):
         return pzl
 
     i = pzl.find(".")
-    new_pzls = [pzl[:i] + str(j) + pzl[i + 1:] for j in range(1, 10)]
+    new_pzls = [pzl[:i] + j + pzl[i + 1:] for j in size_table[dim]]
     for new_pzl in new_pzls:
         b_f = brute_force(new_pzl)
         if b_f:
