@@ -1,76 +1,61 @@
-from sys import argv
+from time import time
 from math import sqrt
+from sys import argv
 
-length, dim, col, row = 0, 0, 0, 0
+
 size_table = {
     9:  ['1', '2', '3', '4', '5', '6', '7', '8', '9'],
     12: ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C'],
     16: ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 'G']
 }
+size, dim, sub_pzl_row, sub_pzl_col = 0, 0, 0, 0
+constraint_table = []
 
 
-def string_to_pzl(p):
-    global length, dim, col, row
-    # list of all rows, columns, and sub puzzles
-    pzls = {'rows': [], 'columns': [], 'sub_puzzles': []}
-    for i in range(0, length, dim):  # populate rows
-        tmp = []
-        for j in range(i, i+dim):
-            tmp.append(p[j])
-        pzls['rows'].append(tmp)
+def set_globals(pzl):
+    global size, dim, sub_pzl_row, sub_pzl_col, constraint_table
+    size = len(pzl)
+    dim = int(sqrt(size))
+    sub_pzl_row = int(sqrt(dim))
+    sub_pzl_col = dim // sub_pzl_row
+    constraint_table = gen_constraints()
+
+
+def gen_constraints():
+    rows = []
+    for i in range(0, size, dim):  # populate rows
+        rows.append(list(range(i, i+dim)))
+
+    cols = []
     for i in range(0, dim):  # populate columns
-        tmp = []
-        for j in range(i, length, dim):
-            tmp.append(p[j])
-        pzls['columns'].append(tmp)
-    sub_puzzles = []
-    for i in range(0, dim, row):  # populate sub puzzles
-        tmp = []
-        for x in pzls['rows']:
-            tmp.append(x[i:i+row])
-        sub_puzzles.append(tmp)
-    for i in sub_puzzles:
-        for j in range(0, len(i), col):
-            tmp = []
-            for k in i[j:j+col]:
-                tmp += k
-            pzls['sub_puzzles'].append(tmp)
-    pzls = list(pzls.values())
-    return pzls[0] + pzls[1] + pzls[2]
+        cols.append(list(range(i, size, dim)))
+
+    tmp = []
+    for i in range(0, size, sub_pzl_row):
+        tmp.append(list(range(i, i+sub_pzl_row)))
+
+    for i in range(0, , )
 
 
-def is_invalid(p):
-    puzzle_list = string_to_pzl(p)
-    for pzl in range(len(puzzle_list)):
-        for i in range(1, 10):
-            if puzzle_list[pzl].count(str(i)) > 1:
-                return True
-    return False
+    return sub_pzls
 
 
-def set_sizes(pzl):
-    global length, dim, col, row
-    length = len(pzl)
-    dim = int(sqrt(length))
-    row = int(sqrt(dim))
-    col = dim // row
 
-
-def is_solved(pzl):
-    return False if pzl.find(".") != -1 else True
-
-
-def check_sum(pzl):
+def checksum(pzl):
     return sum([ord(x) for x in pzl]) - 48*dim*dim
+
+
+def is_invalid(pzl):
+    pass
 
 
 def brute_force(pzl):
     if is_invalid(pzl):
         return ""
-    if is_solved(pzl):
+    i = pzl.find('.')
+    if i == -1:
         return pzl
 
-    i = pzl.find(".")
     new_pzls = [pzl[:i] + j + pzl[i + 1:] for j in size_table[dim]]
     for new_pzl in new_pzls:
         b_f = brute_force(new_pzl)
@@ -79,13 +64,17 @@ def brute_force(pzl):
 
 
 if __name__ == '__main__':
-    filename = 'puzzles.txt' if len(argv) == 1 else argv[1]
-    puzzles = open(filename).read().splitlines()
-    set_sizes(puzzles[0])
-    for index, puzzle in enumerate(puzzles):
-        solution = brute_force(puzzle)
-        if solution is None:
-            print("{0}: {1} => No Solution Possible".format(index, puzzle))
+    pzls = open('puzzles.txt' if len(argv) <
+                2 else argv[1]).read().splitlines()
+    for pos, pzl in enumerate(pzls):
+        set_globals(pzl)
+        start = time()
+        sol = brute_force(pzl)
+        check = checksum(sol)
+        end = time() - start
+        if sol:
+            print("Pzl {0}: {1} => {2} Checksum: {3} Solved in %.2lfs".format(
+                pos, pzl, sol, check) % end)
         else:
-            print("{0}: {1} => {2}".format(index, puzzle, solution))
-            print(check_sum(solution))
+            print("Pzl {0}: {1} => Unsolvable Solved in %.2lfs".format(
+                pos, pzl) % end)

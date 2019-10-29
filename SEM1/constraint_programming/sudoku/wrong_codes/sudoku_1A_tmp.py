@@ -1,5 +1,6 @@
 from sys import argv
 from math import sqrt
+from time import time
 
 
 length, dim, col, row = 0, 0, 0, 0
@@ -96,8 +97,12 @@ if __name__ == '__main__':
     filename = 'puzzles.txt' if len(argv) == 1 else argv[1]
     puzzles = open(filename).read().splitlines()
     set_sizes(puzzles[0])
+    start = time()
     for index, puzzle in enumerate(puzzles):
         solution = brute_force(puzzle)
+        if index == 50:
+            print(time() - start)
+            break
         if solution is None:
             print("{0}: {1} => No Solution Possible".format(index, puzzle))
         else:
