@@ -52,35 +52,27 @@ def string_to_pzls(pos, pzl):
     return [row_tmp] + [col_tmp] + [sub_tmp]
 
 
-def is_invalid(pzl, changed=None):
-    if changed is None:
-        for pos, char in enumerate(pzl):
-            if char != '.':
-                pzls_list = string_to_pzls(pos, pzl)
-                for p in pzls_list:
-                    for i in range(1, 10):
-                        if p.count(str(i)) > 1:
-                            return True
-        return False
-    else:
-        pzls_list = string_to_pzls(changed, pzl)
-        for p in pzls_list:
-            for i in range(1, 10):
-                if p.count(str(i)) > 1:
-                    return True
-        return False
+def is_invalid(pzl):
+    for pos, char in enumerate(pzl):
+        if char != '.':
+            pzls_list = string_to_pzls(pos, pzl)
+            for p in pzls_list:
+                for i in range(1, 10):
+                    if p.count(str(i)) > 1:
+                        return True
+    return False
 
 
-def brute_force(pzl, changed=None):
-    if is_invalid(pzl, changed=None):
+def brute_force(pzl):
+    if is_invalid(pzl):
         return ""
     i = pzl.find('.')
     if i == -1:
         return pzl
 
-    new_pzls = [(pzl[:i] + j + pzl[i + 1:], pos) for pos, j in enumerate(size_table[dim])]
+    new_pzls = [pzl[:i] + j + pzl[i + 1:] for j in size_table[dim]]
     for new_pzl in new_pzls:
-        b_f = brute_force(new_pzl[0], changed=new_pzl[1])
+        b_f = brute_force(new_pzl)
         if b_f:
             return b_f
 
