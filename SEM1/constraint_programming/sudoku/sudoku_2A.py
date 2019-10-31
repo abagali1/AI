@@ -63,11 +63,13 @@ def string_to_pzls(pos, pzl):
     return [row_tmp] + [col_tmp] + [sub_tmp]
 
 
-def is_invalid(pzl, changed=None):
-    if changed is None:
-        sets = update_constraints(pzl)
-    else:
+def is_invalid(pzl, changed=None, con_sets=None):
+    if con_sets is not None:
+        sets = con_sets
+    elif changed is not None:
         sets = string_to_pzls(changed, pzl)
+    else:
+        sets = update_constraints(pzl)
     for i in sets:
         for j in size_table[dim]:
             if i.count(j) > 1:
@@ -81,37 +83,39 @@ def gen_possibilities(p, i):
     for i in sets:
         for j in i:
             seen_symbols.add(j)
-    return size_table[dim] - seen_symbols
+    return size_table[dim] - seen_symbols, sets
 
 
 def find_best_index(pzl):
     min_pos = (len(size_table[dim])+1, ())
     for pos, elem in enumerate(pzl):
         if elem == '.':
-            possibilities = gen_possibilities(pzl, pos)
+            possibilities, c_s = gen_possibilities(pzl, pos)
             length = len(possibilities)
             if length == 1:
-                return pos, possibilities
+                return pos, possibilities, c_s
             elif length < min_pos[0]:
-                min_pos = (length, (pos, possibilities))
+                min_pos = (length, (pos, possibilities, c_s))
     return min_pos[1]
 
 
-def brute_force(pzl, changed=None):
-    if is_invalid(pzl, changed):
+def brute_force(pzl, changed=None, con_sets=None):
+    if is_invalid(pzl, changed, con_sets):
         return ""
     if '.' not in pzl:
         return pzl
 
-    index, possibilities = find_best_index(pzl)
-    new_pzls = [(pzl[:index] + j + pzl[index + 1:], index) for j in possibilities]
+    index, possibilities, c_s = find_best_index(pzl)
+    new_pzls = [(pzl[:index] + j + pzl[index + 1:], index, c_s) for j in possibilities]
     for new_pzl in new_pzls:
-        b_f = brute_force(new_pzl[0], changed=new_pzl[1])
+        b_f = brute_force(new_pzl[0], changed=new_pzl[1], con_sets=new_pzl[2])
         if b_f:
             return b_f
 
 
 if __name__ == '__main__':
+
+    VERBOSE = False # manually unset this variable for verbose output
     pzls = open('puzzles.txt' if len(argv) <
                 2 else argv[1]).read().splitlines()
     start_all = time()
@@ -119,12 +123,19 @@ if __name__ == '__main__':
         set_globals(pzl)
         start = time()
         sol = brute_force(pzl)
-        check = checksum(sol)
-        end = time() - start
         if sol:
-            print("Pzl {0}: {1} => {2} Checksum: {3} Solved in %.2lfs".format(
-                pos, pzl, sol, check) % end)
+            check = checksum(sol)
+        end = time() - start
+        if VERBOSE:
+            if sol:
+                print("Pzl {0}: {1} => {2} Checksum: {3} Solved in %.2lfs".format(
+                    pos, pzl, sol, check) % end)
+            else:
+                print("Pzl {0}: {1} => Unsolvable Solved in %.2lfs".format(
+                    pos, pzl) % end)
         else:
-            print("Pzl {0}: {1} => Unsolvable Solved in %.2lfs".format(
-                pos, pzl) % end)
+            if sol:
+                print("Pzl {0} Checksum {1} Solved in %.2lfs".format(pos, check) % end)
+            else:
+                print("Pzl {0} Unsolveable Solved in %.2lfs".format(pos) % end)
     print("Total Time: %.2lfs" % (time()-start_all))
