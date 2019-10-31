@@ -11,7 +11,6 @@ size_table = {
 size, dim, sub_pzl_row, sub_pzl_col = 0, 0, 0, 0
 constraint_table = {}
 rows, cols, sub_pzls = [], [], []
-constraint_sets = []
 
 
 def set_globals(pzl):
@@ -35,7 +34,7 @@ def gen_constraints():
             r = index // dim
             c = index % dim
             s = (int(index // (dim * sub_pzl_col) * sub_pzl_col + (index % dim) // sub_pzl_row))
-            constraint_table[index] = (r,c,s)
+            constraint_table[index] = (r, c, s)
             rows[r].append(index)
             cols[c].append(index)
             sub_pzls[s].append(index)
@@ -46,8 +45,8 @@ def update_constraints(pzl):
     for pos, elem in enumerate(pzl):
         indexes = constraint_table[pos]
         constraint_sets.append([pzl[i] for i in rows[indexes[0]]])
-        constraint_sets.append([pzl[i] for i in cols[indexes[0]]])
-        constraint_sets.append([pzl[i] for i in sub_pzls[indexes[0]]])
+        constraint_sets.append([pzl[i] for i in cols[indexes[1]]])
+        constraint_sets.append([pzl[i] for i in sub_pzls[indexes[2]]])
     return constraint_sets
 
 

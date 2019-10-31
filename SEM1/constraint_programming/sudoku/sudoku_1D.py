@@ -11,7 +11,6 @@ size_table = {
 size, dim, sub_pzl_row, sub_pzl_col = 0, 0, 0, 0
 constraint_table = {}
 rows, cols, sub_pzls = [], [], []
-constraint_sets = []
 
 
 def set_globals(pzl):
@@ -35,7 +34,7 @@ def gen_constraints():
             r = index // dim
             c = index % dim
             s = (int(index // (dim * sub_pzl_col) * sub_pzl_col + (index % dim) // sub_pzl_row))
-            constraint_table[index] = (r,c,s)
+            constraint_table[index] = (r, c, s)
             rows[r].append(index)
             cols[c].append(index)
             sub_pzls[s].append(index)
@@ -46,8 +45,8 @@ def update_constraints(pzl):
     for pos, elem in enumerate(pzl):
         indexes = constraint_table[pos]
         constraint_sets.append([pzl[i] for i in rows[indexes[0]]])
-        constraint_sets.append([pzl[i] for i in cols[indexes[0]]])
-        constraint_sets.append([pzl[i] for i in sub_pzls[indexes[0]]])
+        constraint_sets.append([pzl[i] for i in cols[indexes[1]]])
+        constraint_sets.append([pzl[i] for i in sub_pzls[indexes[2]]])
     return constraint_sets
 
 
@@ -64,7 +63,10 @@ def string_to_pzls(pos, pzl):
 
 
 def is_invalid(pzl, changed=None):
-    sets = update_constraints(pzl)
+    if changed is None:
+        sets = update_constraints(pzl)
+    else:
+        sets = string_to_pzls(changed, pzl)
     for i in sets:
         for j in size_table[dim]:
             if i.count(j) > 1:
@@ -79,7 +81,7 @@ def brute_force(pzl, changed=None):
     if i == -1:
         return pzl
 
-    new_pzls = [(pzl[:i] + j + pzl[i + 1:], pos) for pos, j in enumerate(size_table[dim])]
+    new_pzls = [(pzl[:i] + j + pzl[i + 1:], i) for j in size_table[dim]]
     for new_pzl in new_pzls:
         b_f = brute_force(new_pzl[0], changed=new_pzl[1])
         if b_f:
