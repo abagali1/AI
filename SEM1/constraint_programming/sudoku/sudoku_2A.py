@@ -137,5 +137,5 @@ if __name__ == '__main__':
                 check = checksum(sol)
                 print("Pzl {0} Checksum {1} Solved in %.2lfs".format(pos, check) % end)
             else:
-                print("Pzl {0} Unsolveable Solved in %.2lfs".format(pos) % end)
+                print("Pzl {0} Unsolvable Solved in %.2lfs".format(pos) % end)
     print("Total Time: %.2lfs" % (time()-start_all))
