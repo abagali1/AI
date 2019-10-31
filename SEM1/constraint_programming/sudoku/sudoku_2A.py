@@ -115,7 +115,7 @@ def brute_force(pzl, changed=None, con_sets=None):
 
 if __name__ == '__main__':
 
-    VERBOSE = False # manually unset this variable for verbose output
+    VERBOSE = False  # manually unset this variable for verbose output
     pzls = open('puzzles.txt' if len(argv) <
                 2 else argv[1]).read().splitlines()
     start_all = time()
@@ -123,11 +123,10 @@ if __name__ == '__main__':
         set_globals(pzl)
         start = time()
         sol = brute_force(pzl)
-        if sol:
-            check = checksum(sol)
         end = time() - start
         if VERBOSE:
             if sol:
+                check = checksum(sol)
                 print("Pzl {0}: {1} => {2} Checksum: {3} Solved in %.2lfs".format(
                     pos, pzl, sol, check) % end)
             else:
@@ -135,6 +134,7 @@ if __name__ == '__main__':
                     pos, pzl) % end)
         else:
             if sol:
+                check = checksum(sol)
                 print("Pzl {0} Checksum {1} Solved in %.2lfs".format(pos, check) % end)
             else:
                 print("Pzl {0} Unsolveable Solved in %.2lfs".format(pos) % end)
