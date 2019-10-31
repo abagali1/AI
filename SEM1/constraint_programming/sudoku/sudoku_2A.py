@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from time import time
 from math import sqrt
 from sys import argv
