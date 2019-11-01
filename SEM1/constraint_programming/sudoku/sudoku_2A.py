@@ -42,7 +42,7 @@ def gen_constraints():
             sub_pzls[s].append(index)
 
 
-def update_constraints(pzl):
+def all_constaint_sets(pzl):
     return set(pzl[i] for pos in range(len(pzl)) for i in rows[constraint_table[pos][0]]
                + cols[constraint_table[pos][1]] + sub_pzls[constraint_table[pos][1]])
 
@@ -51,18 +51,18 @@ def checksum(pzl):
     return sum([ord(x) for x in pzl]) - 48*dim*dim
 
 
-def string_to_pzls(pos, pzl):
+def neighbors(pos, pzl):
     constraint_indexes = constraint_table[pos]
     return set(pzl[i] for i in rows[constraint_indexes[0]] + cols[constraint_indexes[1]] + sub_pzls[constraint_indexes[2]])
 
 
-def is_invalid(pzl, changed=None, con_sets=None):
-    if con_sets is not None:
-        sets = con_sets
+def is_invalid(pzl, changed=None, neighbors=None):
+    if neighbors is not None:
+        sets = neighbors
     elif changed is not None:
-        sets = string_to_pzls(changed, pzl)
+        sets = neighbors(changed, pzl)
     else:
-        sets = update_constraints(pzl)
+        sets = all_constaint_sets(pzl)
     for i in sets:
         for j in size_table[dim]:
             if i.count(j) > 1:
@@ -71,11 +71,8 @@ def is_invalid(pzl, changed=None, con_sets=None):
 
 
 def gen_possibilities(p, i):
-    seen_symbols = set()
-    sets = string_to_pzls(i, p)
-    for i in sets:
-        for j in i:
-            seen_symbols.add(j)
+    sets = neighbors(i, p)
+    seen_symbols = set(j for i in sets for j in i)
     return size_table[dim] - seen_symbols, sets
 
 
