@@ -63,30 +63,26 @@ def is_invalid(pzl, changed=None, neighbors=None):
         sets = neighbors(changed, pzl)
     else:
         sets = all_constraint_sets(pzl)
-    for i in sets:
-        for j in size_table[dim]:
-            if i.count(j) > 1:
-                return True
-    return False
+    return len([j for i in sets for j in size_table[dim] if i.count(j) > 1]) != 0
 
 
 def gen_possibilities(p, i):
     sets = neighbors(i, p)
     seen_symbols = set(j for i in sets for j in i)
-    return size_table[dim] - seen_symbols, sets
+    return seen_symbols, sets
 
 
 def find_best_index(pzl):
-    min_pos = (len(size_table[dim])+1, ())
+    max_pos = (-1, ())
     for pos, elem in enumerate(pzl):
         if elem == '.':
             possibilities, c_s = gen_possibilities(pzl, pos)
             length = len(possibilities)
-            if length == 1:
-                return pos, possibilities, c_s
-            elif length < min_pos[0]:
-                min_pos = (length, (pos, possibilities, c_s))
-    return min_pos[1]
+            if length == len(size_table[dim]):
+                return pos, size_table[dim] - possibilities, c_s
+            elif length > max_pos[0]:
+                max_pos = (length, (pos, possibilities, c_s))
+    return max_pos[1][0], size_table[dim] - max_pos[1][1], max_pos[1][2]
 
 
 def brute_force(pzl, changed=None, con_sets=None):
