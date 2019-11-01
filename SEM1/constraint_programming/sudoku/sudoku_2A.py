@@ -43,13 +43,8 @@ def gen_constraints():
 
 
 def update_constraints(pzl):
-    constraint_sets = []
-    for pos, elem in enumerate(pzl):
-        indexes = constraint_table[pos]
-        constraint_sets.append([pzl[i] for i in rows[indexes[0]]])
-        constraint_sets.append([pzl[i] for i in cols[indexes[1]]])
-        constraint_sets.append([pzl[i] for i in sub_pzls[indexes[2]]])
-    return constraint_sets
+    return set(pzl[i] for pos in range(len(pzl)) for i in rows[constraint_table[pos][0]]
+               + cols[constraint_table[pos][1]] + sub_pzls[constraint_table[pos][1]])
 
 
 def checksum(pzl):
@@ -58,10 +53,7 @@ def checksum(pzl):
 
 def string_to_pzls(pos, pzl):
     constraint_indexes = constraint_table[pos]
-    row_tmp = [pzl[i] for i in rows[constraint_indexes[0]]]
-    col_tmp = [pzl[j] for j in cols[constraint_indexes[1]]]
-    sub_tmp = [pzl[k] for k in sub_pzls[constraint_indexes[2]]]
-    return [row_tmp] + [col_tmp] + [sub_tmp]
+    return set(pzl[i] for i in rows[constraint_indexes[0]] + cols[constraint_indexes[1]] + sub_pzls[constraint_indexes[2]])
 
 
 def is_invalid(pzl, changed=None, con_sets=None):
