@@ -55,22 +55,18 @@ def checksum(pzl):
     return sum([ord(x) for x in pzl]) - 48*dim*dim
 
 
-def neighbors(pos, pzl):
-    return set(pzl[i] for i in NEIGHBORS[pos])
-
-
 def is_invalid(pzl, changed=None, neighbors=None):
     if neighbors is not None:
         sets = neighbors
     elif changed is not None:
-        sets = neighbors(changed, pzl)
+        sets = set(pzl[i] for i in NEIGHBORS[changed])
     else:
         sets = all_constraint_sets(pzl)
     return len([j for i in sets for j in size_table[dim] if i.count(j) > 1]) != 0
 
 
 def gen_possibilities(p, i):
-    sets = neighbors(i, p)
+    sets = set(p[j] for j in NEIGHBORS[i])
     seen_symbols = set(j for i in sets for j in i)
     return seen_symbols, sets
 
