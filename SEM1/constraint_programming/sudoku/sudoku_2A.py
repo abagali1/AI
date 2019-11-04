@@ -12,6 +12,7 @@ size_table = {
 size, dim, sub_pzl_row, sub_pzl_col = 0, 0, 0, 0
 constraint_table = {}
 rows, cols, sub_pzls = [], [], []
+NEIGHBORS = {}
 
 
 def set_globals(pzl):
@@ -40,6 +41,9 @@ def gen_constraints():
             rows[r].append(index)
             cols[c].append(index)
             sub_pzls[s].append(index)
+    for i in range(0, size):
+        constraint_indexes = constraint_table[i]
+        NEIGHBORS[i] = set(i for i in rows[constraint_indexes[0]] + cols[constraint_indexes[1]] + sub_pzls[constraint_indexes[2]])
 
 
 def all_constraint_sets(pzl):
@@ -52,8 +56,7 @@ def checksum(pzl):
 
 
 def neighbors(pos, pzl):
-    constraint_indexes = constraint_table[pos]
-    return set(pzl[i] for i in rows[constraint_indexes[0]] + cols[constraint_indexes[1]] + sub_pzls[constraint_indexes[2]])
+    return set(pzl[i] for i in NEIGHBORS[pos])
 
 
 def is_invalid(pzl, changed=None, neighbors=None):
