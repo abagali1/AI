@@ -41,14 +41,10 @@ def gen_constraints():
             rows[r].append(index)
             cols[c].append(index)
             sub_pzls[s].append(index)
+
     for i in range(0, size):
         constraint_indexes = constraint_table[i]
         NEIGHBORS[i] = set(i for i in rows[constraint_indexes[0]] + cols[constraint_indexes[1]] + sub_pzls[constraint_indexes[2]])
-
-
-def all_constraint_sets(pzl):
-    return set(pzl[i] for pos in range(len(pzl)) for i in rows[constraint_table[pos][0]]
-               + cols[constraint_table[pos][1]] + sub_pzls[constraint_table[pos][1]])
 
 
 def checksum(pzl):
@@ -61,7 +57,9 @@ def is_invalid(pzl, changed=None, neighbors=None):
     elif changed is not None:
         sets = set(pzl[i] for i in NEIGHBORS[changed])
     else:
-        sets = all_constraint_sets(pzl)
+        sets = set(pzl[i] for pos in range(len(pzl)) for i in rows[constraint_table[pos][0]]
+               + cols[constraint_table[pos][1]] + sub_pzls[constraint_table[pos][1]])
+
     return len([j for i in sets for j in size_table[dim] if i.count(j) > 1]) != 0
 
 
