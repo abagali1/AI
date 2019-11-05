@@ -44,7 +44,7 @@ def gen_constraints():
 
     for i in range(0, size):
         constraint_indexes = constraint_table[i]
-        NEIGHBORS[i] = set(i for i in rows[constraint_indexes[0]] + cols[constraint_indexes[1]] + sub_pzls[constraint_indexes[2]])
+        NEIGHBORS[i] = set(rows[constraint_indexes[0]] + cols[constraint_indexes[1]] + sub_pzls[constraint_indexes[2]])
 
 
 def checksum(pzl):
