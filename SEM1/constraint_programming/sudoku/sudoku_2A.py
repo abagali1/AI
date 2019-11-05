@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from time import time
+from time import process_time as time
 from math import sqrt
 from sys import argv
 
@@ -63,23 +63,17 @@ def is_invalid(pzl, changed=None, neighbors=None):
     return len([j for i in sets for j in size_table[dim] if i.count(j) > 1]) != 0
 
 
-def gen_possibilities(p, i):
-    sets = set(p[j] for j in NEIGHBORS[i])
-    seen_symbols = set(j for i in sets for j in i)
-    return seen_symbols, sets
-
-
 def find_best_index(pzl):
-    max_pos = (-1, ())
+    max_pos = (-1,-1,set())
     for pos, elem in enumerate(pzl):
         if elem == '.':
-            possibilities, c_s = gen_possibilities(pzl, pos)
+            possibilities = set(pzl[j] for j in NEIGHBORS[pos] if pzl[j] != '.')
             length = len(possibilities)
-            if length == len(size_table[dim]):
-                return pos, size_table[dim] - possibilities, c_s
+            if length == len(size_table[dim])-1:
+                return pos, possibilities
             elif length > max_pos[0]:
-                max_pos = (length, (pos, possibilities, c_s))
-    return max_pos[1][0], size_table[dim] - max_pos[1][1], max_pos[1][2]
+                max_pos = (length, pos, possibilities)
+    return max_pos[1], max_pos[2]
 
 
 def brute_force(pzl, changed=None, con_sets=None):
@@ -88,8 +82,8 @@ def brute_force(pzl, changed=None, con_sets=None):
     if '.' not in pzl:
         return pzl
 
-    index, possibilities, c_s = find_best_index(pzl)
-    new_pzls = [(pzl[:index] + j + pzl[index + 1:], index, c_s) for j in possibilities]
+    index, c_s = find_best_index(pzl)
+    new_pzls = [(pzl[:index] + j + pzl[index + 1:], index, c_s) for j in size_table[dim]-c_s]
     for new_pzl in new_pzls:
         b_f = brute_force(new_pzl[0], changed=new_pzl[1], con_sets=new_pzl[2])
         if b_f:
