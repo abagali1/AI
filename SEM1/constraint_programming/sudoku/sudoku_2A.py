@@ -25,7 +25,7 @@ def set_globals(pzl):
 
 
 def gen_constraints():
-    global rows, cols, sub_pzls, constraint_table
+    global rows, cols, sub_pzls, constraint_table, NEIGHBORS
     rows = [[] for i in range(dim)]
     cols = [[] for i in range(dim)]
     sub_pzls = [[] for i in range(dim)]
@@ -42,9 +42,8 @@ def gen_constraints():
             cols[c].append(index)
             sub_pzls[s].append(index)
 
-    for i in range(0, size):
-        constraint_indexes = constraint_table[i]
-        NEIGHBORS[i] = set(rows[constraint_indexes[0]] + cols[constraint_indexes[1]] + sub_pzls[constraint_indexes[2]])
+    NEIGHBORS = {i: set(rows[constraint_table[i][0]] + cols[constraint_table[i][1]]
+                        + sub_pzls[constraint_table[i][2]]) - set(str(i)) for i in range(0, size)}
 
 
 def checksum(pzl):
