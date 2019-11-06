@@ -49,7 +49,7 @@ def brute_force(pzl, question):
 
 
 if __name__ == '__main__':
-    sol = brute_force(argv[1], 'A')
+    sol = brute_force('A.......................', 'A')
     if sol is None:
         print("No Solution Possible")
     else:
