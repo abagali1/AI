@@ -26,7 +26,8 @@ def string_to_pzl(p):
         pzls['columns'].append(tmp)
     sub_puzzles = []
     for i in range(0, dim, row):  # populate sub puzzles
-        tmp = []
+        tmp = []Proof of your non-profit status (Such as a copy of your 501(c)(3) or your country's equivalent proof of non-profit status)￼
+
         for x in pzls['rows']:
             tmp.append(x[i:i+row])
         sub_puzzles.append(tmp)

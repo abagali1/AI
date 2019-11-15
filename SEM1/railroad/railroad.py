@@ -127,6 +127,10 @@ def strip_cities(cities):
 
 
 def main():
+    if len(argv) < 3:
+        print("Usage: railroad.py <start> <end>")
+        print("Missing required city")
+        return
     load_table()
     ROOT, canvas = load_map()
     ROOT.protocol("WM_DELETE_WINDOW", lambda: ROOT.destroy())
