@@ -46,20 +46,12 @@ def gen_constraints():
                         + sub_pzls[constraint_table[i][2]]) - set(str(i)) for i in range(0, size)}
 
 
+def all_constraint_sets():
+    return 
+
+
 def checksum(pzl):
     return sum([ord(x) for x in pzl]) - 48*dim*dim
-
-
-def is_invalid(pzl, changed=None, neighbors=None):
-    if neighbors is not None:
-        sets = neighbors
-    elif changed is not None:
-        sets = set(pzl[i] for i in NEIGHBORS[changed])
-    else:
-        sets = set(pzl[i] for pos in range(len(pzl)) for i in rows[constraint_table[pos][0]]
-               + cols[constraint_table[pos][1]] + sub_pzls[constraint_table[pos][1]])
-
-    return len([j for i in sets for j in size_table[dim] if i.count(j) > 1]) != 0
 
 
 def find_best_index(pzl):
@@ -75,28 +67,23 @@ def find_best_index(pzl):
     return max_pos[1], max_pos[2]
 
 
-def find_min_sym(pzl):
-    min_pos = ([],-1) # (places to go, symbol)
-    for i in size_table[dim]:
+def find_best_symbol(pzl, possibilities_2A):
+    for sym in size_table[dim]:
 
 
+     
 
 
-def brute_force(pzl, changed=None, con_sets=None, sym_chosen=None):
-    if is_invalid(pzl, changed, con_sets):
-        return ""
+def brute_force(pzl, changed=None, con_sets=None):
     if '.' not in pzl:
         return pzl
 
-    min_sym = find_min_sym(pzl)
+    
 
-    if not min_sym:
-        index, c_s = find_best_index(pzl)
-        new_pzls = [(pzl[:index] + j + pzl[index + 1:], index, c_s) for j in size_table[dim]-c_s]
-    else:
-        new_pzl =
+    index, c_s = find_best_index(pzl)
+    #index, sym = find_best_symbol(pzl)
 
-
+    new_pzls = [(pzl[:index] + j + pzl[index + 1:], index, c_s) for j in size_table[dim]-c_s]
     for new_pzl in new_pzls:
         b_f = brute_force(new_pzl[0], changed=new_pzl[1], con_sets=new_pzl[2])
         if b_f:
@@ -105,7 +92,7 @@ def brute_force(pzl, changed=None, con_sets=None, sym_chosen=None):
 
 if __name__ == '__main__':
 
-    VERBOSE = False  # manually unset this variable for verbose output
+    VERBOSE = True  # manually unset this variable for verbose output
     pzls = open('puzzles.txt' if len(argv) <
                 2 else argv[1]).read().splitlines()
     start_all = time()
@@ -117,7 +104,7 @@ if __name__ == '__main__':
         if VERBOSE:
             if sol:
                 check = checksum(sol)
-                print("Pzl {0}: {1} => {2} Checksum: {3} Solved in %.2lfs".format(
+                print("Pzl {0}: {1}\n        {2} Checksum: {3} Solved in %.2lfs".format(
                     pos, pzl, sol, check) % end)
             else:
                 print("Pzl {0}: {1} => Unsolvable Solved in %.2lfs".format(
