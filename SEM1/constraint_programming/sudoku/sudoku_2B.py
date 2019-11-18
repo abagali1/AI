@@ -82,7 +82,7 @@ if __name__ == '__main__':
                 2 else argv[1]).read().splitlines()
     start_all = time()
     prev_len = -1
-    for pos, pzl in enumerate(pzls):
+    for pos, pzl in enumerate(pzls[53:]):
         pzl_len = len(pzl)
         if prev_len != pzl_len: # only reset tables if size changes
             set_globals(pzl, pzl_len)
