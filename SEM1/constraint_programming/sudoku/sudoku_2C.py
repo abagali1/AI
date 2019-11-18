@@ -101,33 +101,33 @@ def brute_force(pzl: str) -> str:
     Given a puzzle, find its solution by judiciously placing symbols into every available position
     @param: pzl Puzzle to find solution for
     """
-    if '.' not in pzl:
-        return pzl
+    if '.' not in pzl: 
+        return pzl # This puzzle is solved
 
-    index, c_s = find_best_index(pzl)
-    set_of_choices = size_table[dim] - c_s 
-    symbol, positions = find_best_symbol(pzl, set_of_choices)
+    index, c_s = find_best_index(pzl) # 2A
+    set_of_choices = size_table[dim] - c_s  # If 2A is chosen
+    symbol, positions = find_best_symbol(pzl, set_of_choices) # 2B
 
     if symbol:
-        set_of_choices = positions
+        set_of_choices = positions # If 2B is chosen
 
     for choice in set_of_choices:
         if symbol:
-            new_pzl = pzl[:choice] + symbol + pzl[choice+1:]
+            new_pzl = pzl[:choice] + symbol + pzl[choice+1:] # Splicing specific to 2B
         else:
-            new_pzl = pzl[:index] + choice + pzl[index+1:]
-        b_f = brute_force(new_pzl)
+            new_pzl = pzl[:index] + choice + pzl[index+1:] # Splicing specific to 2A
+        b_f = brute_force(new_pzl) # recur on new puzzle
         if b_f:
-            return b_f
+            return b_f # return solution
 
 
 if __name__ == '__main__':
 
-    VERBOSE = False  # manually unset this variable for verbose output
+    VERBOSE = True  # manually unset this variable for verbose output
     pzls = open('puzzles.txt' if len(argv) <
-                2 else argv[1]).read().splitlines()
+                2 else argv[1]).read().splitlines() # Read puzzles from file
     start_all = time()
-    prev_len = -1
+    prev_len = -1 # record previous puzzle length
     for pos, pzl in enumerate(pzls):
         pzl_len = len(pzl)
         if prev_len != pzl_len: # only reset tables if size changes
@@ -140,14 +140,14 @@ if __name__ == '__main__':
             if sol:
                 check = checksum(sol)
                 print("Pzl {0}: {1}\n        {2} Checksum: {3} Solved in %.2lfs".format(
-                    pos, pzl, sol, check) % end)
+                    pos+1, pzl, sol, check) % end)
             else:
                 print("Pzl {0}: {1} => Unsolvable Solved in %.2lfs".format(
-                    pos, pzl) % end)
+                    pos+1, pzl) % end)
         else:
             if sol:
                 check = checksum(sol)
-                print("Pzl {0} Checksum {1} Solved in %.2lfs".format(pos, check) % end)
+                print("Pzl {0} Checksum {1} Solved in %.2lfs".format(pos+1, check) % end)
             else:
-                print("Pzl {0} Unsolvable Solved in %.2lfs".format(pos) % end)
+                print("Pzl {0} Unsolvable Solved in %.2lfs".format(pos+1) % end)
     print("Total Time: %.2lfs" % (time()-start_all))
