@@ -73,7 +73,9 @@ def find_best_index(pzl: str) -> tuple:
         if elem == '.':
             possibilities = set(pzl[j] for j in NEIGHBORS[pos] if pzl[j] != '.')
             length = len(possibilities)
-            if length == len(size_table[dim])-1:
+            if length == len(size_table[dim]):
+                return None, None
+            elif length == len(size_table[dim])-1:
                 return pos, possibilities
             elif length > max_pos[0]:
                 max_pos = (length, pos, possibilities)
@@ -91,7 +93,9 @@ def find_best_symbol(pzl: str, possibilities: set) -> tuple:
             valid_positions = {index for index in constraint if pzl[index]=='.' \
                               and symbol not in {pzl[i] for i in NEIGHBORS[index]}}
             length = len(valid_positions)
-            if length == 1 or length < len(possibilities):
+            if length == 0:
+                return -1, -1
+            elif length == 1 or length < len(possibilities):
                 return symbol, valid_positions
     return None, None
           
@@ -104,9 +108,13 @@ def brute_force(pzl: str) -> str:
     if '.' not in pzl: 
         return pzl # This puzzle is solved
 
-    index, c_s = find_best_index(pzl) # 2A
+    index, c_s = find_best_index(pzl) # 
+    if index is None:
+        return ""
     set_of_choices = size_table[dim] - c_s  # If 2A is chosen
     symbol, positions = find_best_symbol(pzl, set_of_choices) # 2B
+    if symbol == -1 and positions == -1:
+        return ""
 
     if symbol:
         set_of_choices = positions # If 2B is chosen
