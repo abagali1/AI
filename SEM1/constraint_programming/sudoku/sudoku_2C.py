@@ -36,8 +36,8 @@ def gen_constraints():
             index = i*dim + j
             r = index // dim
             c = index % dim
-            s = (int(index // (dim * sub_pzl_col) *
-                 sub_pzl_col + (index % dim) // sub_pzl_row))
+            s = (int(index // (dim * sub_pzl_row) *
+                sub_pzl_row + (index % dim) // sub_pzl_col))
             constraint_table[index] = (r, c, s)
             rows[r].append(index)
             cols[c].append(index)

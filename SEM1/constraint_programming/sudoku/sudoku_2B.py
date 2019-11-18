@@ -13,6 +13,7 @@ size, dim, sub_pzl_row, sub_pzl_col = 0, 0, 0, 0
 constraint_table = {}
 rows, cols, sub_pzls = [], [], []
 NEIGHBORS = {}
+ALL_CONSTRAINTS = []
 
 
 def set_globals(pzl, l ):
@@ -35,13 +36,14 @@ def gen_constraints():
             index = i*dim + j
             r = index // dim
             c = index % dim
-            s = (int(index // (dim * sub_pzl_col) *
-                 sub_pzl_col + (index % dim) // sub_pzl_row))
+            s = (int(index // (dim * sub_pzl_row) *
+                sub_pzl_row + (index % dim) // sub_pzl_col))
             constraint_table[index] = (r, c, s)
             rows[r].append(index)
             cols[c].append(index)
             sub_pzls[s].append(index)
-
+    ALL_CONSTRAINTS = [(rows[constraint_table[i][0]], cols[constraint_table[i][1]], sub_pzls[constraint_table[i][2]]) 
+                        for i in range(0,size)]
     NEIGHBORS = {i: set(rows[constraint_table[i][0]] + cols[constraint_table[i][1]]
                         + sub_pzls[constraint_table[i][2]]) - set(str(i)) for i in range(0, size)}
 
@@ -82,7 +84,7 @@ if __name__ == '__main__':
                 2 else argv[1]).read().splitlines()
     start_all = time()
     prev_len = -1
-    for pos, pzl in enumerate(pzls[53:]):
+    for pos, pzl in enumerate(pzls):
         pzl_len = len(pzl)
         if prev_len != pzl_len: # only reset tables if size changes
             set_globals(pzl, pzl_len)
