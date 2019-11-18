@@ -4,28 +4,36 @@ from math import sqrt
 from sys import argv
 
 
-size_table = {
+size_table = { # All possible symbols for each puzzle
     9:  {'1', '2', '3', '4', '5', '6', '7', '8', '9'},
     12: {'1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C'},
     16: {'1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 'G'}
 }
-size, dim, sub_pzl_row, sub_pzl_col = 0, 0, 0, 0
-constraint_table = {}
-rows, cols, sub_pzls = [], [], []
-NEIGHBORS = {}
-ALL_CONSTRAINTS = []
+size, dim, sub_pzl_row, sub_pzl_col = 0, 0, 0, 0 # global variables describing puzzle physical structure
+constraint_table = {} # index points to tuple, (row_index, col_index, sub_pzl_index)
+rows, cols, sub_pzls = [], [], [] # list of indices for each group of constraints
+NEIGHBORS = {} # index points to neighbor indices
+ALL_CONSTRAINTS = [] # rows + cols + sub_pzls
 
 
-def set_globals(pzl, l ):
+def set_globals(pzl: str, l: int) -> None:
+    """
+    Initializes global variables specific to the new puzzle
+    @param: pzl Puzzle to derive variables from
+    @param: l Length of the puzzle
+    """
     global size, dim, sub_pzl_row, sub_pzl_col, constraint_table
-    size = l
-    dim = int(sqrt(size))
-    sub_pzl_row = int(sqrt(dim))
-    sub_pzl_col = dim // sub_pzl_row
-    gen_constraints()
+    size = l # length of the puzzle
+    dim = int(sqrt(size)) # dimensions of the puzzle 
+    sub_pzl_row = int(sqrt(dim)) # row dimension of the sub puzzle 
+    sub_pzl_col = dim // sub_pzl_row # column dimension of the sub puzzle
+    gen_constraints() # sets all constraints
 
 
-def gen_constraints():
+def gen_constraints() -> None:
+    """
+    Sets all global constraint variables
+    """
     global rows, cols, sub_pzls, constraint_table, NEIGHBORS, ALL_CONSTRAINTS
     rows = [[] for i in range(dim)]
     cols = [[] for i in range(dim)]
@@ -47,11 +55,19 @@ def gen_constraints():
                         + sub_pzls[constraint_table[i][2]]) - set(str(i)) for i in range(0, size)}
 
 
-def checksum(pzl):
+def checksum(pzl: str) -> int:
+    """
+    Given a solution puzzle, generate a checksum. Used for solution verification
+    @param: pzl Puzzle to generate checksum for
+    """
     return sum([ord(x) for x in pzl]) - 48*dim*dim
 
 
-def find_best_index(pzl):
+def find_best_index(pzl: str) -> tuple:
+    """
+    Given a puzzle, find the index with the most amount of symbols able to be placed into that index
+    @param: pzl Puzzle to find index for
+    """
     max_pos = (-1,-1,set())
     for pos, elem in enumerate(pzl):
         if elem == '.':
@@ -64,7 +80,12 @@ def find_best_index(pzl):
     return max_pos[1], max_pos[2]
 
 
-def find_best_symbol(pzl, possibilities):
+def find_best_symbol(pzl: str, possibilities: set) -> tuple:
+    """
+    Given a puzzle, find the symbol with the least amount of places that symbol it can be placed into
+    @param: pzl Puzzle to find symbol for
+    @param: possibilities List of possibilities generated from find_best_index to help in optimization
+    """
     for constraint in ALL_CONSTRAINTS:
         for symbol in size_table[dim] - {pzl[i] for i in constraint if i != '.'}:
             valid_positions = {index for index in constraint if pzl[index]=='.' \
@@ -75,7 +96,11 @@ def find_best_symbol(pzl, possibilities):
     return None, None
           
 
-def brute_force(pzl):
+def brute_force(pzl: str) -> str:
+    """
+    Given a puzzle, find its solution by judiciously placing symbols into every available position
+    @param: pzl Puzzle to find solution for
+    """
     if '.' not in pzl:
         return pzl
 
