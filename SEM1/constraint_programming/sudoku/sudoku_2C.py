@@ -139,7 +139,7 @@ if __name__ == '__main__':
         if VERBOSE:
             if sol:
                 check = checksum(sol)
-                print("Pzl {0}: {1}\n        {2} Checksum: {3} Solved in %.2lfs".format(
+                print("Pzl {0}:\t{1}\n\t{2} Checksum: {3} Solved in %.2lfs".format(
                     pos+1, pzl, sol, check) % end)
             else:
                 print("Pzl {0}: {1} => Unsolvable Solved in %.2lfs".format(
