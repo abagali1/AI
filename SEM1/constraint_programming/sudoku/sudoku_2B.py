@@ -26,7 +26,7 @@ def set_globals(pzl, l ):
 
 
 def gen_constraints():
-    global rows, cols, sub_pzls, constraint_table, NEIGHBORS
+    global rows, cols, sub_pzls, constraint_table, NEIGHBORS, ALL_CONSTRAINTS
     rows = [[] for i in range(dim)]
     cols = [[] for i in range(dim)]
     sub_pzls = [[] for i in range(dim)]
@@ -42,11 +42,9 @@ def gen_constraints():
             rows[r].append(index)
             cols[c].append(index)
             sub_pzls[s].append(index)
-    ALL_CONSTRAINTS = [(rows[constraint_table[i][0]], cols[constraint_table[i][1]], sub_pzls[constraint_table[i][2]]) 
-                        for i in range(0,size)]
+    ALL_CONSTRAINTS = rows + cols + sub_pzls
     NEIGHBORS = {i: set(rows[constraint_table[i][0]] + cols[constraint_table[i][1]]
                         + sub_pzls[constraint_table[i][2]]) - set(str(i)) for i in range(0, size)}
-
 
 def checksum(pzl):
     return sum([ord(x) for x in pzl]) - 48*dim*dim
@@ -65,12 +63,36 @@ def find_best_index(pzl):
     return max_pos[1], max_pos[2]
 
 
+
+def find_best_symbol(pzl, possibilities):
+    for constraint in ALL_CONSTRAINTS:
+        for symbol in size_table[dim] - {pzl[i] for i in constraint if i != '.'}:
+            valid_positions = {index for index in constraint if pzl[index]=='.' \
+                              and symbol not in {pzl[i] for i in NEIGHBORS[index] if i != '.'}}
+            length = len(valid_positions)
+            if length == 1 or length < len(possibilities):
+                return symbol, valid_positions
+    return None, None
+          
+
 def brute_force(pzl, changed=None, con_sets=None):
     if '.' not in pzl:
         return pzl
 
     index, c_s = find_best_index(pzl)
-    new_pzls = [(pzl[:index] + j + pzl[index + 1:], index, c_s) for j in size_table[dim]-c_s]
+    set_of_choices = size_table[dim] - c_s 
+    symbol, positions = find_best_symbol(pzl, set_of_choices)
+
+    if symbol and positions:
+        set_of_choices = positions
+    
+    
+    if symbol and positions:
+        new_pzls = [(pzl[:index] + symbol + pzl[index + 1:], index, c_s) for index in set_of_choices]
+    else:
+        new_pzls = [(pzl[:index] + symbol + pzl[index + 1:], index, c_s) for symbol in set_of_choices]
+
+
     for new_pzl in new_pzls:
         b_f = brute_force(new_pzl[0], changed=new_pzl[1], con_sets=new_pzl[2])
         if b_f:
