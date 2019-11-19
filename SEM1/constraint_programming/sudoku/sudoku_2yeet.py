@@ -122,8 +122,6 @@ ALL_CONSTRAINTS = [[0, 1, 2, 3, 4, 5, 6, 7, 8], [9, 10, 11, 12, 13, 14, 15, 16, 
                    [30, 31, 32, 39, 40, 41, 48, 49, 50], [33, 34, 35, 42, 43, 44, 51, 52, 53],
                    [54, 55, 56, 63, 64, 65, 72, 73, 74], [57, 58, 59, 66, 67, 68, 75, 76, 77],
                    [60, 61, 62, 69, 70, 71, 78, 79, 80]]
-DEL_TABLE= {('1'): {'5', '2', '3', '4', '6', '7', '8', '9'}, ('2', '1'): {'5', '3', '4', '6', '7', '8', '9'}, ('2', '1', '3'): {'5', '4', '6', '7', '8', '9'}, ('4', '2', '1', '3'): {'5', '6', '7', '8', '9'}, ('5', '2', '3', '1', '4'): {'6', '9', '8', '7'}, ('5', '2', '3', '1', '4', '6'): {'7', '9', '8'}, ('5', '2', '3', '1', '4', '6', '7'): {'9', '8'}, ('5', '2', '3', '1', '4', '6', '7', '8'): {'9'}}
-{'1': {'5', '2', '3', '4', '6', '7', '8', '9'}, ('2', '1'): {'5', '3', '4', '6', '7', '8', '9'}, ('2', '1', '3'): {'5', '4', '6', '7', '8', '9'}, ('4', '2', '1', '3'): {'5', '6', '7', '8', '9'}, ('5', '2', '3', '1', '4'): {'6', '9', '8', '7'}, ('5', '2', '3', '1', '4', '6'): {'7', '9', '8'}, ('5', '2', '3', '1', '4', '6', '7'): {'9', '8'}, ('5', '2', '3', '1', '4', '6', '7', '8'): {'9'}}
 
 
 
@@ -172,14 +170,29 @@ def brute_force(pzl: str) -> str:
     if '.' not in pzl:
         return pzl  # This puzzle is solved
 
-    index, c_s = find_best_index(pzl)  #
-    if index is None:
-        return ""
+    max_pos = (-1, -1, set())
+    solved_2A = False
+    for pos, elem in enumerate(pzl):
+        if elem == '.':
+            possibilities = set(pzl[j] for j in NEIGHBORS[pos] if pzl[j] != '.')
+            length = len(possibilities)
+            if length == 9:
+                return ""
+            elif length == 8:
+                index, c_s =  pos, possibilities
+                solved_2A = True
+                break
+            elif length > max_pos[0]:
+                max_pos = (length, pos, possibilities)
+    if not solved_2A:
+        index, c_s = max_pos[1], max_pos[2]
+
+
     set_of_choices = {'1', '2', '3', '4', '5', '6', '7', '8', '9'} - c_s  # If 2A is chosen
     symbol, positions = find_best_symbol(pzl, set_of_choices)  # 2B
     if symbol == -1 and positions == -1:
         return ""
-        
+
     if symbol:
         set_of_choices = positions  # If 2B is chosen
 
