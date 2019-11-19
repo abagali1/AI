@@ -112,10 +112,12 @@ def brute_force(pzl: str) -> str:
     if index is None:
         return ""
     set_of_choices = size_table[dim] - c_s  # If 2A is chosen
+    
+    
     symbol, positions = find_best_symbol(pzl, set_of_choices) # 2B
     if symbol == -1 and positions == -1:
         return ""
-
+        
     if symbol:
         set_of_choices = positions # If 2B is chosen
 
