@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 from sys import argv
+from time import process_time as time
+
 
 size, dim, sub_pzl_row, sub_pzl_col = 81, 9, 3, 3  # global variables describing puzzle physical structure
 constraint_table = {0: (0, 0, 0), 1: (0, 1, 0), 2: (0, 2, 0), 3: (0, 3, 1), 4: (0, 4, 1), 5: (0, 5, 1), 6: (0, 6, 2),
@@ -190,7 +192,9 @@ def brute_force(pzl: str) -> str:
 
 
 if __name__ == '__main__':
+    start = time()
     for pos, pzl in enumerate(open('puzzles.txt' if len(argv) <2 else argv[1]).read().splitlines()):
         sol = brute_force(pzl)
         print("Pzl {0}\n{1}\n{2}\n{3}".format(
             "{0}".format(pos + 1), pzl, sol, 405))
+    print(f"{time()-start}")
