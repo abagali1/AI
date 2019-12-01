@@ -1,38 +1,61 @@
+# Anup Bagali Period 2
 #!/usr/bin/env python3
 from sys import argv
 
 
-def clean_args(args):
-    pzl = (int(args[0][:args[0].find('x')]), int(args[0][args[0].find('x')+1:])) if 'x' in args[0] else (int(args[0]), int(args[1]))
-    blocks = []
-    start = 1 if 'x' in args[0] else 2
-    print(args[start:])
+class Puzzle:
 
-    for i in args[start:]:
-        if 'x' in i:
-            blocks.append((int(i.split('x')[0]), int(i.split('x')[1])))
-            args.remove(i)
+    def __init__(self, h, w):
+        self.height = h
+        self.width = w
+        self.board = [[] for _ in range(h*w)]
     
-    blocks += [(int(args[i]), int(args[i+1])) for i in range(start, len(args), 2)]
-        
+    def __str__(self):
+        return '\n'.join([''.join([self.board[i*self.width +j][0] for j in range(self.width)]) for i in range(self.height)]).strip()
 
-    return '.'*(pzl[0]*pzl[1]), blocks
+    def add_block(self, top_left_index, block): # TODO: ADD BLOCKS TO BOARD
+        """
+        block: tuple(height, width, letter)
+        return False here to get rid of is_invalid??
+        """
+        pass
 
+    @property
+    def decomposition(self): # TODO: RETURN PZL DECOMPOSITION
+        return ""
+
+
+ALPHABET = {i-ord('A'): chr(i) for i in range(ord('A'),ord('Z')+1)}
+LETTERS = {}
 
 
 def brute_force(pzl, blocks):
-    if is_invalid(pzl):
-        return ""
     if not blocks:
         return pzl
 
+    
+    while blocks:
+        block = blocks.pop(0)
+
+    
 
 
 
 def main():
-    pzl, blocks = clean_args(argv[1:])
-    sol = brute_force(pzl, blocks)
+    global LETTERS
 
+    args = ' '.join(argv[1:]).replace('x',' ').split(" ")  # standardize format(no more 'x')
+    pzl, blocks = Puzzle(int(args[0]), int(args[1])), [(int(args[i]), int(args[i+1]), ALPHABET[pos]) for pos, i in enumerate(range(2, len(args), 2))] # extract blocks
+
+    LETTERS = {i[2]: (i[0], i[1]) for i in blocks}
+
+
+    sol = brute_force(pzl=pzl, blocks=blocks)
+    if sol:
+        print(pzl)
+        print(pzl.decomposition)
+    else:
+        print("No solution")
 
 
 
