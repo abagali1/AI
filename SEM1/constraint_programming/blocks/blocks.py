@@ -8,17 +8,26 @@ class Puzzle:
     def __init__(self, h, w):
         self.height = h
         self.width = w
+        self.size = h*w
         self.board = [[] for _ in range(h*w)]
     
     def __str__(self):
         return '\n'.join([''.join([self.board[i*self.width +j][0] for j in range(self.width)]) for i in range(self.height)]).strip()
 
-    def add_block(self, top_left_index, block): # TODO: ADD BLOCKS TO BOARD
+    def add_block(self, block): # TODO: ADD BLOCKS TO BOARD
         """
         block: tuple(height, width, letter)
         return False here to get rid of is_invalid??
         """
-        pass
+        for position in range(self.size):
+            if not self.board[position]:
+                if self.add(position, block) or self.add(position, (block[1], block[0], block[2])):
+                    return
+                     
+
+    def add(self, top_left_index, block):
+        return True
+
 
     @property
     def decomposition(self): # TODO: RETURN PZL DECOMPOSITION
