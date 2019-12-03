@@ -12,16 +12,16 @@ ALPHABET = {i-ord('A'): chr(i) for i in range(ord('A'),ord('Z')+1)}
 LETTERS = {}
 
 
-class Puzzle:
-    def add_block(self, block): # TODO: ADD BLOCKS TO BOARD
-        """
-        block: tuple(height, width, letter)
-        return False here to get rid of is_invalid??
-        """
-        for position in range(self.size):
-            if not self.board[position]:
-                if self.add(position, block) or self.add(position, (block[1], block[0], block[2])):
-                    return 
+def place(pzl, blocks, index):
+    if index+blocks[0] > PZL_HEIGHT or index+blocks[1] < PZL_WIDTH:
+        return False
+    for i in range(index+blocks[0]):
+        for j in range(index+blocks[1]):
+            if not pzl[i*PZL_WIDTH +j]:
+                pzl[i*PZL_WIDTH+j] = blocks[2]
+            else:
+                return False
+    return pzl
 
 
 def brute_force(pzl, blocks):
@@ -31,6 +31,20 @@ def brute_force(pzl, blocks):
     
     while blocks:
         block = blocks.pop(-1)
+
+        index = pzl.find('.')
+        pzl = place(pzl, block, index)
+        if pzl:
+            sol = brute_force(pzl, blocks)
+            if sol:
+                return sol
+        else:
+            pzl = place(pzl, (blocks[1], blocks[0], blocks[2]), index)
+            if pzl:
+                sol = brute_force(pzl, blocks)
+                if sol:
+                    return sol
+
 
 
     
