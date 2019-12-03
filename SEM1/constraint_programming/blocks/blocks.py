@@ -13,14 +13,25 @@ LETTERS = {}
 
 
 def place(pzl, blocks, index):
-    if index+blocks[0] > PZL_HEIGHT or index+blocks[1] < PZL_WIDTH:
-        return False
-    for i in range(index+blocks[0]):
-        for j in range(index+blocks[1]):
-            if not pzl[i*PZL_WIDTH +j]:
-                pzl[i*PZL_WIDTH+j] = blocks[2]
-            else:
+    print(blocks, index)
+    print(to_string(pzl))
+    print(index+blocks[0], PZL_HEIGHT)
+    print(index+blocks[1], PZL_WIDTH)
+
+    for i in range(index, index+blocks[0]):
+        for j in range(index, index+blocks[1]):
+            print(f"COORS: {i}, {j}")
+
+            idx = i*PZL_WIDTH + j
+            if idx > PZL_AREA:
+                print(f"Index {idx} out of range\n")
                 return False
+            if pzl[idx] == '.':
+                pzl = pzl[:idx] + blocks[2] + pzl[idx+1:]
+            else:
+                print(f"Index {idx} unempty\n")
+                return False
+    print(f"Block {blocks} placed at {index}\n")
     return pzl
 
 
@@ -30,18 +41,17 @@ def brute_force(pzl, blocks):
 
     
     while blocks:
-        block = blocks.pop(-1)
-
+        block = blocks.pop(-1) 
         index = pzl.find('.')
-        pzl = place(pzl, block, index)
-        if pzl:
-            sol = brute_force(pzl, blocks)
+        tmp = place(pzl, block, index)
+        if tmp:
+            sol = brute_force(pzl=tmp, blocks=blocks)
             if sol:
                 return sol
         else:
-            pzl = place(pzl, (blocks[1], blocks[0], blocks[2]), index)
-            if pzl:
-                sol = brute_force(pzl, blocks)
+            tmp = place(pzl, (block[1], block[0], block[2]), index)
+            if tmp:
+                sol = brute_force(pzl=tmp, blocks=blocks)
                 if sol:
                     return sol
 
@@ -63,6 +73,7 @@ def to_string(pzl):
 
 
 def decomposition(pzl):
+    print("IT DECOMPED")
     return ""
 
 def main():
@@ -77,7 +88,7 @@ def main():
 
 
     if not can_fit(pzl, blocks):
-        return "No solution"
+        return "No solution cant_fit"
 
     if len(blocks) == 1:
         return "Decomposition: {0}x{1}".format(blocks[0][0], blocks[0][1]) if blocks[0][0] == PZL_HEIGHT \
@@ -89,7 +100,7 @@ def main():
     if sol:
         return "Decomposition: {0}".format(decomposition(pzl))
 
-    return "No solution"
+    return "No solution EOF"
 
 
 
