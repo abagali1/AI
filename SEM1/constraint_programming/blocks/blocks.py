@@ -14,12 +14,12 @@ LETTERS = {}
 
 def place(pzl, blocks, index):
     print(blocks, index)
-    print(to_string(pzl))
-    print(index+blocks[0], PZL_HEIGHT)
-    print(index+blocks[1], PZL_WIDTH)
+    tmp = index[0]*PZL_WIDTH + index[1]
+    print(to_string(pzl[:tmp]+"*"+pzl[tmp+1:]))
 
-    for i in range(index, index+blocks[0]):
-        for j in range(index, index+blocks[1]):
+
+    for i in range(index[0], index[0]+blocks[0]):
+        for j in range(index[1], index[1]+blocks[1]):
             print(f"COORS: {i}, {j}")
 
             idx = i*PZL_WIDTH + j
@@ -43,6 +43,8 @@ def brute_force(pzl, blocks):
     while blocks:
         block = blocks.pop(-1) 
         index = pzl.find('.')
+        print(index)
+        index = (index // PZL_WIDTH, (index % PZL_WIDTH) + 0)
         tmp = place(pzl, block, index)
         if tmp:
             sol = brute_force(pzl=tmp, blocks=blocks)
@@ -74,7 +76,7 @@ def to_string(pzl):
 
 def decomposition(pzl):
     print("IT DECOMPED")
-    return ""
+    return to_string(pzl)
 
 def main():
     global LETTERS, PZL_HEIGHT, PZL_WIDTH, PZL_PARITY, PZL_AREA, PZL_LONGEST_SIDE 
@@ -98,7 +100,7 @@ def main():
 
     sol = brute_force(pzl=pzl, blocks=blocks)
     if sol:
-        return "Decomposition: {0}".format(decomposition(pzl))
+        return "Decomposition:\n{0}".format(decomposition(sol))
 
     return "No solution EOF"
 
