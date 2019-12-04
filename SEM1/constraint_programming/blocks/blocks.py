@@ -61,15 +61,23 @@ def to_string(pzl):
 
 def decomposition(pzl):
     decomp = []
+    visited = set()
     for i in range(PZL_HEIGHT):
+        row = pzl[i*PZL_WIDTH:i*PZL_WIDTH+PZL_WIDTH]
         for j in range(PZL_WIDTH):
-            idx = INDICES_2D[(i, j)]
-            if pzl[idx] == '.':
+            if row[j] == '.':
                 decomp.append('1x1')
             else:
-                block = LETTERS[pzl[idx]]
-                if block not in decomp:
-                    decomp.append(block)
+                block = LETTERS[row[j]]
+                if row[j] not in visited:
+                    width = row.rfind(row[j]) - row.find(row[j])
+                    if width+1 == block[1]:
+                        decomp.append("{0}x{1}".format(block[0], block[1]))
+                    else:
+                        decomp.append("{0}x{1}".format(block[1], block[0]))
+                visited.add(row[j])
+
+    print(to_string(pzl))
     return ' '.join(decomp)
 
 
@@ -79,7 +87,7 @@ def main():
     # PARSE ARGUMENTS
     args = ' '.join(argv[1:]).lower().replace('x', ' ').split(
         " ")  # standardize format(no more 'x')
-    pzl, blocks = '.' * int(args[0]) * int(args[1]), 
+    pzl, blocks = '.' * int(args[0]) * int(args[1]), \
     sorted([(int(args[i]), int(args[i + 1]), ALPHABET[pos])
          for pos, i in enumerate(range(2, len(args), 2))],
         key=lambda x: x[0] * x[1])  # extract blocks
@@ -88,7 +96,7 @@ def main():
     PZL_HEIGHT, PZL_WIDTH, NUM_BLOCKS = int(args[0]), int(args[1]), len(blocks)
     PZL_PARITY, PZL_AREA = (PZL_HEIGHT + PZL_WIDTH) % 2, len(pzl)
     PZL_LONGEST_SIDE = PZL_HEIGHT if PZL_HEIGHT > PZL_WIDTH else PZL_WIDTH
-    LETTERS = {i[2]: "{0}x{1}".format(i[0], i[1]) for i in blocks}
+    LETTERS = {i[2]: (i[0], i[1]) for i in blocks}
     INDICES = {index: (index // PZL_WIDTH, (index % PZL_WIDTH))
                for index in range(PZL_AREA)}
     INDICES_2D = {(i, j): i * PZL_WIDTH + j for i in range(PZL_HEIGHT)
