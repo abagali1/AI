@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # Anup Bagali Period 2
 from sys import argv
-from time import process_time as time
+from time import time as time
 
 BLOCKS_TOTAL_AREA = 0
 PZL_HEIGHT = 0
@@ -24,7 +24,7 @@ def place(pzl, blocks, index):
         for j in range(index[1], index[1] + blocks[1]):
             idx = INDICES_2D[(i, j)]
             if pzl[idx] == '.':  # index empty
-                pzl = pzl[:idx] + blocks[2] + pzl[idx + 1:]
+                pzl = pzl[:idx] + blocks[2] + pzl[idx + 1:] 
             else:
                 return False  # index already occupied by another block
     return pzl
@@ -35,16 +35,12 @@ def brute_force(pzl, blocks):
         return pzl
 
     block = blocks[-1]
-    set_of_choices = [
-        place(pzl, block, INDICES[index]) or place(pzl, (block[1], block[0], block[2]), INDICES[index]) \
-        for index in [pos for pos, elem in enumerate(pzl) if elem == '.']
-    ]
+    set_of_choices = [place(pzl, block, INDICES[index]) or place(pzl, (block[1], block[0], block[2]), INDICES[index]) for index in [pos for pos, elem in enumerate(pzl) if elem == '.']]
 
-    tmp = [x for x in blocks if x != block]
 
     for choice in set_of_choices:
         if choice:
-            b_f = brute_force(pzl=choice, blocks=tmp)
+            b_f = brute_force(pzl=choice, blocks=blocks[:-1])
             if b_f:
                 return b_f
 
@@ -61,11 +57,21 @@ def can_fit(blocks):
 
 def to_string(pzl):
     return '\n'.join(
-        [''.join([pzl[i * PZL_WIDTH + j][0] for j in range(PZL_WIDTH)]) for i in range(PZL_HEIGHT)]).strip()
+        [''.join([pzl[INDICES_2D[(i,j)]][0] for j in range(PZL_WIDTH)]) for i in range(PZL_HEIGHT)]).strip()
 
 
 def decomposition(pzl):
-    return to_string(pzl)
+    decomp = []
+    for i in range(PZL_HEIGHT):
+        for j in range(PZL_WIDTH):
+            idx = INDICES_2D[(i,j)]
+            if pzl[idx] == '.':
+                decomp.append('1x1')
+            else:
+                block = LETTERS[pzl[idx]]
+                if block not in decomp:
+                    decomp.append(block)
+    return ' '.join(decomp)
 
 
 def main():
@@ -78,7 +84,7 @@ def main():
     PZL_HEIGHT, PZL_WIDTH, NUM_BLOCKS = int(args[0]), int(args[1]), len(blocks)
     PZL_PARITY, PZL_AREA = (PZL_HEIGHT + PZL_WIDTH) % 2, len(pzl)
     PZL_LONGEST_SIDE = PZL_HEIGHT if PZL_HEIGHT > PZL_WIDTH else PZL_WIDTH
-    LETTERS = {i[2]: (i[0], i[1]) for i in blocks}
+    LETTERS = {i[2]: "{0}x{1}".format(i[0], i[1]) for i in blocks}
     INDICES = {index: (index // PZL_WIDTH, (index % PZL_WIDTH)) for index in range(PZL_AREA)}
     INDICES_2D = {(i, j): i * PZL_WIDTH + j for i in range(PZL_HEIGHT) for j in range(PZL_WIDTH)}
 
