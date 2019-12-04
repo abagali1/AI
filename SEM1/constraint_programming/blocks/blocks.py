@@ -11,15 +11,11 @@ PZL_LONGEST_SIDE = 0
 NUM_BLOCKS = 0
 ALPHABET = {i-ord('A'): chr(i) for i in range(ord('A'),ord('Z')+1)}
 LETTERS = {}
+INDICES = {}
 
 
 def place(pzl, blocks, index):
-    print(f"Trying {blocks} at {index}")
-    tmp = index[0]*PZL_WIDTH + index[1]
-    print(to_string(pzl[:tmp]+"*"+pzl[tmp+1:]))
-
-    if blocks[0]+index[0]-1 > PZL_HEIGHT or blocks[1]+index[1]-1 > PZL_WIDTH:
-        print(f"C: Index ({index[0]+blocks[0]-1}, {index[1]+blocks[1]-1}) out of bounds\n")
+    if blocks[0]+index[0] > PZL_HEIGHT or blocks[1]+index[1] > PZL_WIDTH:
         return False
 
 
@@ -28,14 +24,11 @@ def place(pzl, blocks, index):
 
             idx = i*PZL_WIDTH + j
             if idx > PZL_AREA:
-                print(f"E: Index {i},{j} out of range\n")
                 return False
             if pzl[idx] == '.':
                 pzl = pzl[:idx] + blocks[2] + pzl[idx+1:]
             else:
-                print(f"E: Index {i},{j} unempty\n")
                 return False
-    print(f"S: Block {blocks} placed at {index}\n")
     return pzl
 
 
@@ -43,21 +36,19 @@ def brute_force(pzl, blocks):
     if not blocks:
         return pzl
 
-    print(f"Using {blocks}")
-    index = pzl.find('.')
-    index = (index // PZL_WIDTH, (index % PZL_WIDTH))
+    block = blocks[-1]
+    set_of_choices = [
+        place(pzl, block, INDICES[index]) or place(pzl, (block[1], block[0], block[2]), INDICES[index]) \
+        for index in [pos for pos, elem in enumerate(pzl) if elem == '.']
+        ]
+    
+    tmp = [x for x in blocks if x != block]
 
-
-    for pos, block in enumerate(reversed(blocks)): # Take greatest rectangle first
-        tmp = place(pzl, block, index) or place(pzl, (block[1], block[0], block[2]), index)
-        if tmp:
-            blks = blocks.copy()
-            blks.remove(block)
-            print(f"Placed {block}, Recurring on {blks}\n")
-            b_f = brute_force(pzl=tmp, blocks=blks)
+    for choice in set_of_choices: # Take greatest rectangle first
+        if choice:
+            b_f = brute_force(pzl=choice, blocks=tmp)
             if b_f:
                 return b_f
-    print(f"Could not place from {blocks}\n")
 
 
     
@@ -76,11 +67,12 @@ def to_string(pzl):
 
 
 def decomposition(pzl):
-    print("IT DECOMPED")
     return to_string(pzl)
 
+
+
 def main():
-    global LETTERS, PZL_HEIGHT, PZL_WIDTH, PZL_PARITY, PZL_AREA, PZL_LONGEST_SIDE, NUM_BLOCKS 
+    global LETTERS, PZL_HEIGHT, PZL_WIDTH, PZL_PARITY, PZL_AREA, PZL_LONGEST_SIDE, NUM_BLOCKS, INDICES 
 
     args = ' '.join(argv[1:]).lower().replace('x',' ').split(" ")  # standardize format(no more 'x')
     pzl, blocks = '.' * int(args[0])*int(args[1]), sorted([(int(args[i]), int(args[i+1]), ALPHABET[pos]) for pos, i in enumerate(range(2, len(args), 2))],key=lambda x: x[0]*x[1]) # extract blocks
@@ -88,10 +80,11 @@ def main():
     PZL_PARITY, PZL_AREA = (PZL_HEIGHT + PZL_WIDTH) % 2, len(pzl)
     PZL_LONGEST_SIDE = PZL_HEIGHT if PZL_HEIGHT > PZL_WIDTH else PZL_WIDTH
     LETTERS = {i[2]: (i[0], i[1]) for i in blocks}
+    INDICES = {index: (index // PZL_WIDTH, (index % PZL_WIDTH)) for index in range(PZL_AREA)}
 
 
     if not can_fit(pzl, blocks):
-        return "No solution cant_fit"
+        return "No solution"
 
     if len(blocks) == 1:
         return "Decomposition: {0}x{1}".format(blocks[0][0], blocks[0][1]) if blocks[0][0] == PZL_HEIGHT \
@@ -103,7 +96,7 @@ def main():
     if sol:
         return "Decomposition:\n{0}".format(decomposition(sol))
 
-    return "No solution EOF"
+    return "No solution"
 
 
 
