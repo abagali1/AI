@@ -19,14 +19,35 @@ def place(pzl, blocks, index):
     if blocks[0] + index[0] > PZL_HEIGHT or blocks[1] + index[1] > PZL_WIDTH:  # block does not fit
         return False
 
+    tmp = [*pzl]
     for i in range(index[0], index[0] + blocks[0]):
+        # start = i*PZL_WIDTH
+        # end = i*PZL_WIDTH+blocks[1]
+        # row = set(pzl[start:end])
+        # if len(row) != 1:
+        #     return False
+        # else:
+        #     pzl = pzl[:start] + blocks[2]*blocks[1] + pzl[end:]
         for j in range(index[1], index[1] + blocks[1]):
             idx = INDICES_2D[(i, j)]
-            if pzl[idx] == '.':  # index empty
-                pzl = pzl[:idx] + blocks[2] + pzl[idx + 1:]
+            if tmp[idx] == '.':  # index empty
+                tmp[idx] = blocks[2]
             else:
                 return False  # index already occupied by another block
-    return pzl
+    return ''.join(tmp)
+
+
+def find_corners(pzl, block):
+    corners = [i for i in [0, PZL_WIDTH-block[1], PZL_HEIGHT-block[0], INDICES_2D[(PZL_HEIGHT-block[0],PZL_WIDTH-block[1])]] if pzl[i] == '.']
+    for i in range(PZL_AREA):
+        if pzl[i] != '.':
+            continue
+        elif pzl[i-1] and pzl[i-PZL_WIDTH] != '.':
+            corners.append(i)
+        elif pzl[i+1] and pzl[i-PZL_WIDTH] != '.':
+            if pzl[i-block[1]] and pzl[i]:
+                pass
+    return False
 
 
 def brute_force(pzl, blocks):
@@ -34,24 +55,21 @@ def brute_force(pzl, blocks):
         return pzl
 
     block = blocks[-1]
+    # possible_places = find_corners(pzl, block)
+
+    # if possible_places:
+    #     set_of_choices = [place(pzl, block, INDICES[index]) or place(pzl, (block[1], block[0], block[2]),
+    #                                                                 INDICES[index]) for index in possible_places]
+    # else:
     set_of_choices = [place(pzl, block, INDICES[index]) or place(pzl, (block[1], block[0], block[2]),
-                                                                 INDICES[index]) for index in [pos for pos, elem in enumerate(pzl) if elem == '.']]
+                                                                 INDICES[index]) for index, elem in enumerate(pzl) if elem == '.']
+
 
     for choice in set_of_choices:
         if choice:
             b_f = brute_force(pzl=choice, blocks=blocks[:-1])
             if b_f:
                 return b_f
-
-
-def can_fit(blocks):
-    global BLOCKS_TOTAL_AREA, PZL_HEIGHT, PZL_WIDTH, PZL_PARITY, PZL_LONGEST_SIDE, PZL_AREA
-    BLOCKS_TOTAL_AREA = sum(x[0] * x[1] for x in blocks)
-    if PZL_AREA < BLOCKS_TOTAL_AREA or PZL_LONGEST_SIDE < max([x[0] if x[0] > x[1] else x[1] for x in blocks]):
-        return False
-    # if PZL_AREA== BLOCKS_TOTAL_AREA and sum(x[0]+x[1] for x in blocks) % 2 != PZL_PARITY:
-    #     return False
-    return True
 
 
 def to_string(pzl):
@@ -77,39 +95,38 @@ def decomposition(pzl):
                         decomp.append("{0}x{1}".format(block[1], block[0]))
                 visited.add(row[j])
 
-    print(to_string(pzl))
     return ' '.join(decomp)
 
 
 def main():
-    global LETTERS, PZL_HEIGHT, PZL_WIDTH, PZL_PARITY, PZL_AREA, PZL_LONGEST_SIDE, NUM_BLOCKS, INDICES, INDICES_2D
+    global LETTERS, PZL_HEIGHT, PZL_WIDTH, PZL_PARITY, PZL_AREA, PZL_LONGEST_SIDE, NUM_BLOCKS, INDICES, INDICES_2D, BLOCKS_TOTAL_AREA
 
     # PARSE ARGUMENTS
-    args = ' '.join(argv[1:]).lower().replace('x', ' ').split(
-        " ")  # standardize format(no more 'x')
-    pzl, blocks = '.' * int(args[0]) * int(args[1]), \
-    sorted([(int(args[i]), int(args[i + 1]), ALPHABET[pos])
-         for pos, i in enumerate(range(2, len(args), 2))],
-        key=lambda x: x[0] * x[1])  # extract blocks
+    args = ' '.join(argv[1:]).lower().replace('x', ' ').split(" ")  # standardize format(no more 'x')
+    pzl, blocks = '.' * int(args[0]) * int(args[1]), sorted([(int(args[i]), int(args[i + 1]), ALPHABET[pos]) for pos, i in enumerate(range(2, len(args), 2))], key=lambda x: x[0] * x[1])  # extract blocks
     
     # GLOBALS
     PZL_HEIGHT, PZL_WIDTH, NUM_BLOCKS = int(args[0]), int(args[1]), len(blocks)
-    PZL_PARITY, PZL_AREA = (PZL_HEIGHT + PZL_WIDTH) % 2, len(pzl)
-    PZL_LONGEST_SIDE = PZL_HEIGHT if PZL_HEIGHT > PZL_WIDTH else PZL_WIDTH
-    LETTERS = {i[2]: (i[0], i[1]) for i in blocks}
-    INDICES = {index: (index // PZL_WIDTH, (index % PZL_WIDTH))
-               for index in range(PZL_AREA)}
-    INDICES_2D = {(i, j): i * PZL_WIDTH + j for i in range(PZL_HEIGHT)
-                  for j in range(PZL_WIDTH)}
+    PZL_AREA =  PZL_HEIGHT*PZL_WIDTH
+    PZL_LONGEST_SIDE = max(PZL_HEIGHT, PZL_WIDTH)
+    BLOCKS_TOTAL_AREA = sum(x[0] * x[1] for x in blocks)
 
-    # BAIL OUT
-    if not can_fit(blocks):
+    # Bail out
+    if PZL_AREA < BLOCKS_TOTAL_AREA or PZL_LONGEST_SIDE < max([x[0] if x[0] > x[1] else x[1] for x in blocks]):
         return "No solution"
 
     # EASY CASE
     if len(blocks) == 1:
         return "Decomposition: {0}x{1}".format(blocks[0][0], blocks[0][1]) if blocks[0][0] == PZL_HEIGHT \
             else "Decomposition: {0}x{1}".format(blocks[0][1], blocks[0][0])
+    
+    LETTERS = {i[2]: (i[0], i[1]) for i in blocks}
+    INDICES = {index: (index // PZL_WIDTH, (index % PZL_WIDTH))
+               for index in range(PZL_AREA)}
+    INDICES_2D = {(i, j): i * PZL_WIDTH + j for i in range(PZL_HEIGHT)
+                  for j in range(PZL_WIDTH)}
+
+
 
 
     sol = brute_force(pzl=pzl, blocks=blocks)
