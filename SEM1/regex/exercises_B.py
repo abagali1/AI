@@ -3,7 +3,7 @@ from sys import argv
 expressions = [
     r"/^[.ox]{64}$/i", #40
     r"/^[ox]*\.[ox]*$/i", #41
-    r"/^\.|\.$|^\.o*x+$|^x+o*\.$/i", #42
+    r"/^\.|\.$|^x+o*\.|\.o*x+$/i", #42
     r"/^.(..)*$/s", #43
     r"/^(0|10|11)([01]{2})*$/", # 44
     r"/\b\w*(a[eiou]|e[aiou]|i[aeou]|o[aeiu]|u[aeio])\w*\b/i", # 45
