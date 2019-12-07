@@ -37,16 +37,16 @@ def place(pzl, blocks, index):
     return ''.join(tmp)
 
 
+
 def find_corners(pzl, block):
-    corners = [i for i in [0, PZL_WIDTH-block[1], PZL_HEIGHT-block[0], INDICES_2D[(PZL_HEIGHT-block[0],PZL_WIDTH-block[1])]] if pzl[i] == '.']
+    corners = []
     for i in range(PZL_AREA):
         if pzl[i] != '.':
             continue
-        elif pzl[i-1] and pzl[i-PZL_WIDTH] != '.':
-            corners.append(i)
-        elif pzl[i+1] and pzl[i-PZL_WIDTH] != '.':
-            if pzl[i-block[1]] and pzl[i]:
-                pass
+        x,y = INDICES[i]
+        neighbors = [pzl[INDICES_2D[(i)]] for i in [(x-1, y), (x+1,y), (x,y+1), (x,y-1)] if i in INDICES_2D]
+        if neighbors.count('.') <= 2:
+            corners.append(i) # adjust for left corners and right corners
     return False
 
 
