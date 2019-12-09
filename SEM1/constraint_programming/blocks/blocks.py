@@ -21,13 +21,6 @@ def place(pzl, blocks, index):
 
     tmp = [*pzl]
     for i in range(index[0], index[0] + blocks[0]):
-        # start = i*PZL_WIDTH
-        # end = i*PZL_WIDTH+blocks[1]
-        # row = set(pzl[start:end])
-        # if len(row) != 1:
-        #     return False
-        # else:
-        #     pzl = pzl[:start] + blocks[2]*blocks[1] + pzl[end:]
         for j in range(index[1], index[1] + blocks[1]):
             idx = INDICES_2D[(i, j)]
             if tmp[idx] == '.':  # index empty
