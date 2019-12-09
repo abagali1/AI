@@ -78,6 +78,7 @@ def to_string(pzl):
 
 
 def decomposition(pzl):
+    print(to_string(pzl))
     decomp = []
     visited = set()
     for i in range(PZL_HEIGHT):
@@ -112,7 +113,7 @@ def main():
     BLOCKS_TOTAL_AREA = sum(x[0] * x[1] for x in blocks)
 
     # Bail out
-    if PZL_AREA < BLOCKS_TOTAL_AREA or PZL_LONGEST_SIDE < max([x[0] if x[0] > x[1] else x[1] for x in blocks]):
+    if PZL_AREA < BLOCKS_TOTAL_AREA or PZL_LONGEST_SIDE < max([max(x) for x in blocks]):
         return "No solution"
 
     # EASY CASE
