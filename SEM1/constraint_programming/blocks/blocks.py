@@ -30,7 +30,6 @@ def place(pzl, blocks, index):
     return ''.join(tmp)
 
 
-
 def find_corners(pzl, block):
     corners = []
     for i in range(PZL_AREA):
@@ -54,8 +53,11 @@ def brute_force(pzl, blocks):
     #     set_of_choices = [place(pzl, block, INDICES[index]) or place(pzl, (block[1], block[0], block[2]),
     #                                                                 INDICES[index]) for index in possible_places]
     # else:
-    set_of_choices = [place(pzl, block, INDICES[index]) or place(pzl, (block[1], block[0], block[2]),
-                                                                 INDICES[index]) for index, elem in enumerate(pzl) if elem == '.']
+    set_of_choices = [place(pzl, block, INDICES[index]) 
+                    or place(pzl, (block[1], block[0], block[2]),INDICES[index])
+                    if block[0] != block[1] else 
+                    place(pzl,block,INDICES[index])
+                    for index, elem in enumerate(pzl) if elem == '.']
 
 
     for choice in set_of_choices:
@@ -94,7 +96,7 @@ def decomposition(pzl):
 
 def main():
     global LETTERS, PZL_HEIGHT, PZL_WIDTH, PZL_PARITY, PZL_AREA, PZL_LONGEST_SIDE, NUM_BLOCKS, INDICES, INDICES_2D, BLOCKS_TOTAL_AREA
-
+    print(argv[1:])
     # PARSE ARGUMENTS
     args = ' '.join(argv[1:]).lower().replace('x', ' ').split(" ")  # standardize format(no more 'x')
     pzl, blocks = '.' * int(args[0]) * int(args[1]), sorted([(int(args[i]), int(args[i + 1]), ALPHABET[pos]) for pos, i in enumerate(range(2, len(args), 2))], key=lambda x: x[0] * x[1])  # extract blocks
