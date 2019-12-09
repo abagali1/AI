@@ -113,7 +113,7 @@ def main():
     BLOCKS_TOTAL_AREA = sum(x[0] * x[1] for x in blocks)
 
     # Bail out
-    if PZL_AREA < BLOCKS_TOTAL_AREA or PZL_LONGEST_SIDE < max([max(x) for x in blocks]):
+    if PZL_AREA < BLOCKS_TOTAL_AREA or PZL_LONGEST_SIDE < max([max(x[:2]) for x in blocks]):
         return "No solution"
 
     # EASY CASE
