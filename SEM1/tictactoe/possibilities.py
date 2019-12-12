@@ -52,7 +52,7 @@ def main():
     WIN, HEIGHT, WIDTH = (int(argv[1]), int(argv[2]), int(argv[3])) if len(argv) == 4 else (3, int(argv[1]), int(argv[2]))
     pzl = '.'*HEIGHT*WIDTH
 
-    return possibilities(pzl,set(),X).union(possibilities(pzl,set(),O))
+    return len(possibilities(pzl,set(),X).union(possibilities(pzl,set(),O)))
 
 
 if __name__ == "__main__":
