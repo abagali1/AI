@@ -74,7 +74,6 @@ def possibilities(pzl, piece):
             return 1
         set_of_choices = [i for i in range(AREA) if pzl[i] == '.']
         CACHE.add(pzl)
-        GAMES[pzl] = len(set_of_choices)        
         t = 0
         new_piece = X if piece == O else O
         for choice in set_of_choices:
@@ -83,9 +82,7 @@ def possibilities(pzl, piece):
             b[choice] = '.'
             t += possibilities(new_pzl,new_piece)
         return t
-    else:
-        game += GAMES[pzl]
-        return 0
+    return 0
 
 
 def main():
