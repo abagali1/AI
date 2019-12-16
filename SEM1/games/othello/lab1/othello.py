@@ -1,21 +1,42 @@
 #!/usr/bin/env python3
 from sys import argv
-from re import compile, findall
+from re import compile, findall, IGNORECASE
 
 INDICES_2D = {(i,j):i*8 +j for i in range(8) for j in range(8)}
 INDICES = {i: (i//8, i%8) for i in range(0,64)}
 LETTERS = {'a': 0, 'b': 1, 'c': 2, 'd': 3, 'e': 4, 'f': 5, 'g': 6, 'h': 7, 'A': 0, 'B': 1, 'C': 2, 'D': 3, 'E': 4, 'F': 5, 'G': 6, 'H': 7}
 WIDTH = HEIGHT = 8
 moves = []
+REGEX = {
+    "X": compile(r"xo+.", IGNORECASE),
+    "O": compile(r"ox+.", IGNORECASE)
+}
+CONSTRAINTS = {}
+rows, cols, rdiags, ldiags = [], [], [], []
 
 
-def possible_moves(pzl):
+def possible_moves(pzl, piece):
     pass
 
 
+def gen_constraints():
+    CONSTRAINTS = {}
+    rows = [[] for _ in range(8)]
+    cols = [[] for _ in range(8)]
+    rdiags = [[] for _ in range(8)]
+    ldiags = [[] for _ in range(8)]
+    for i in range(8):
+        for j in range(8):
+            index = INDICES_2D[(i,j)]
+            rows[i].append(index)
+            cols[j].append(index)
+            ldiags[j-i].append(index)
+            CONSTRAINTS[index] = (i,j)
+    return CONSTRAINTS, rows, cols
+
 def display(pzl, piece):
     tmp = pzl[:]
-    possible = possible_moves(tmp)
+    possible = possible_moves(tmp, piece)
     for i in possible:
         tmp[i] = '*'
     print("Possible moves for {0}: {1}".format(piece, ", ".join(list(map(str, possible)))))
