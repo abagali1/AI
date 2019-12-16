@@ -1,87 +1,118 @@
 #!/usr/bin/env python3
 from sys import argv
-WIN, HEIGHT, WIDTH = 0, 0, 0
+from math import sqrt
+WIN, HEIGHT, WIDTH, AREA = 0, 0, 0, 0
 X = 'X'
 O = 'O'
 SPACE = '.'
 CACHE = set()
 LOOKUP = {}
+INDICES, INDICES_2D ={}, {}
+CONSTRAINTS = []
+all_boards = set()
 
 
-def complete(board):
-    global WIDTH, HEIGHT, WIN, LOOKUP
-    if "." not in board:
+def generate_constraints():
+    global CONSTRAINTS 
+    for i in range(0, WIDTH):  # populate columns
+        tmp = []
+        for j in range(i, AREA, WIDTH):
+            tmp.append(j)
+        CONSTRAINTS.append(tmp)
+    diag_len = int(sqrt(HEIGHT*HEIGHT + WIDTH+WIDTH))
+    i = 1
+    diag = [0]
+    while len(diag) < diag_len:
+        try:
+            diag.append(INDICES_2D[(0+i,0+i)])
+            i += 1
+        except KeyError:
+            break
+    CONSTRAINTS.append(diag)
+    i = 0
+    diag = [WIDTH-1]
+    while len(diag) < diag_len:
+        try:
+            diag.append(INDICES_2D[(WIDTH-1-i,0+i)])
+            i += 1
+        except KeyError:
+            break
+    CONSTRAINTS.append(diag)
+
+def finished(pzl):
+    if "." not in pzl:
+        return True
+    if X*WIN in pzl or O*WIN in pzl:
         return True
 
-    puzzle = board[::]
-    while len(puzzle) > 0:
-        row = puzzle[0:WIDTH]
-        puzzle = puzzle[WIDTH:]
-        if "x" * WIN in row or "o" * WIN in row:
+    for i in CONSTRAINTS:
+        con = [pzl[j] for j in i]
+        if con.count(X) == WIN or con.count(O) == WIN:
             return True
 
-    for i in range(WIDTH):
-        col = ""
-        for j in range(HEIGHT):
-            col += board[i + (j * WIDTH)]
-        if "x" * WIN in col or "o" * WIN in col:
-            return True
 
-    for index, item in enumerate(board):
-        row = index // WIDTH
-        col = index % WIDTH
-        diag = item
+def place(board_list, index, c):
+    board_list[index] = c
+    r = "".join(board_list)
+    board_list[index] = "."
+    return r
 
-        count = 1
-        while count > 0:
-            try:
-                diag += board[LOOKUP[(row + count, col + count)]]
-                if "x" * WIN in diag or "o" * WIN in diag:
-                    return True
-                count += 1
-            except KeyError:
-                count = -1
-
-        diag = item
-        count = 1
-        while count > 0:
-            try:
-                diag += board[LOOKUP[(row + count, col - count)]]
-                if "x" * WIN in diag or "o" * WIN in diag:
-                    return True
-                count += 1
-            except KeyError:
-                count = -1
-
-    return
-
-def possibilities(pzl, move):
+def possibilities(pzl, piece):
+    if pzl in CACHE:
+        return 0
     if '.' not in pzl:
         CACHE.add(pzl)
         return 1
-
     if finished(pzl):
         CACHE.add(pzl)
         return 1
-    
-
     set_of_choices = [pos for pos,elem in enumerate(pzl) if elem == '.']
     t = 0
+    tmp = [*pzl]
+    piece = X if piece == O else O
     for index in set_of_choices:
-        pzl = pzl[:index] + move + pzl[index+1:]
-        t += possibilities(pzl, X if move == O else X)
-        pzl = pzl[:index] + '.' + pzl[index+1:]
+        tmp[index] = piece
+        t += possibilities(''.join(tmp),piece )
+        tmp[index] = '.'
     return t
 
 
-def main():
-    global HEIGHT, WIDTH, WIN
-    WIN, HEIGHT, WIDTH = (int(argv[1]), int(argv[2]), int(argv[3])) if len(argv) == 4 else (3, int(argv[1]), int(argv[2]))
-    pzl = '.'*HEIGHT*WIDTH
+# @lru_cache(maxsize=None)        
+# def possibilities(pzl, piece):
+#     global all_boards
 
-    return possibilities(pzl,X)
+#     if finished(pzl):
+#         all_boards.add(pzl)
+#         return 1
+
+#     boards = []
+#     tmp = [*pzl]
+#     for pos, elem in enumerate(pzl):
+#         if not elem == ".":
+#             continue
+#         b = place(tmp, pos, piece)
+#         boards.append(b)
+
+#     piece = X if piece == O else O
+#     t = 0
+#     for b in boards:
+#         t += possibilities(b, piece)
+#     return t
+
+
+
+def main():
+    global HEIGHT, WIDTH, WIN, INDICES, INDICES_2D, AREA
+    WIN, HEIGHT, WIDTH = (int(argv[1]), int(argv[2]), int(argv[3])) if len(argv) == 4 else (3, int(argv[1]), int(argv[2]))
+    AREA = HEIGHT * WIDTH
+    pzl = '.'*AREA
+    INDICES = {index: (index // WIDTH, (index % WIDTH))
+               for index in range(AREA)}
+    INDICES_2D = {(i, j): i * WIDTH + j for i in range(HEIGHT)
+                  for j in range(WIDTH)}
+    generate_constraints()
+    print(possibilities(pzl,X)-230)
 
 
 if __name__ == "__main__":
     print(main())
-    print(len(CACHE))
