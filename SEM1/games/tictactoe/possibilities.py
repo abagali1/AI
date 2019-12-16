@@ -50,6 +50,7 @@ def finished(pzl):
             x_boards.add(pzl)
             return True
         if con.count(O) >= WIN:
+            print(pzl)
             o_boards.add(pzl)
             return True
     return False
@@ -72,7 +73,7 @@ def possibilities(pzl, piece):
     for index in set_of_choices:
         tmp[index] = piece
         new_pzl = ''.join(tmp)
-        if new_pzl not in CACHE:
+        if new_pzl not in all_boards:
             t += possibilities(''.join(tmp),piece )
         tmp[index] = '.'
     return t
