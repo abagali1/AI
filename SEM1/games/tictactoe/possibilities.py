@@ -10,10 +10,14 @@ LOOKUP = {}
 INDICES, INDICES_2D ={}, {}
 CONSTRAINTS = []
 all_boards = set()
+x_boards, o_boards, tie = set(), set(), set()
+
 
 
 def generate_constraints():
-    global CONSTRAINTS 
+    global CONSTRAINTS
+    for i in range(0,AREA,WIDTH):
+        CONSTRAINTS.append([*range(i,i+WIDTH)])
     for i in range(0, WIDTH):  # populate columns
         tmp = []
         for j in range(i, AREA, WIDTH):
@@ -40,28 +44,23 @@ def generate_constraints():
     CONSTRAINTS.append(diag)
 
 def finished(pzl):
-    if "." not in pzl:
-        return True
-    if X*WIN in pzl or O*WIN in pzl:
-        return True
-
     for i in CONSTRAINTS:
         con = [pzl[j] for j in i]
-        if con.count(X) == WIN or con.count(O) == WIN:
+        if con.count(X) >= WIN:
+            x_boards.add(pzl)
             return True
-
-
-def place(board_list, index, c):
-    board_list[index] = c
-    r = "".join(board_list)
-    board_list[index] = "."
-    return r
+        if con.count(O) >= WIN:
+            o_boards.add(pzl)
+            return True
+    return False
 
 def possibilities(pzl, piece):
+    all_boards.add(pzl)
     if pzl in CACHE:
         return 0
     if '.' not in pzl:
         CACHE.add(pzl)
+        tie.add(pzl)
         return 1
     if finished(pzl):
         CACHE.add(pzl)
@@ -72,7 +71,9 @@ def possibilities(pzl, piece):
     piece = X if piece == O else O
     for index in set_of_choices:
         tmp[index] = piece
-        t += possibilities(''.join(tmp),piece )
+        new_pzl = ''.join(tmp)
+        if new_pzl not in CACHE:
+            t += possibilities(''.join(tmp),piece )
         tmp[index] = '.'
     return t
 
@@ -111,8 +112,17 @@ def main():
     INDICES_2D = {(i, j): i * WIDTH + j for i in range(HEIGHT)
                   for j in range(WIDTH)}
     generate_constraints()
-    print(possibilities(pzl,X)-230)
+    possibilities(pzl,X)
+    x_len = len(x_boards)
+    o_len = len(o_boards)
+    t_len = len(tie)
+    print("Terminal Boards: {0}".format(x_len+o_len+t_len))
+    print("All boards: {0}".format(len(all_boards)))
+    print("X: {0}".format(len(x_boards)))
+    print("O: {0}".format(len(o_boards)))
+    print("Tie: {0}".format(len(tie)))
+    print("Games: {0}".format(games))
 
 
 if __name__ == "__main__":
-    print(main())
+    main()
