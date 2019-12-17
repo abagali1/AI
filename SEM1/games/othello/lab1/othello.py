@@ -93,15 +93,7 @@ def main():
         piece = "O" if board.count("O") < board.count("X") else "X"
 
     gen_constraints()
-    print(piece)
-    print()
-    print(to_string(board))
-    print()
     possible = possible_moves(board, piece)
-    for i in possible:
-        board[i] = '*'
-    board[52] = '$'
-    print(to_string(board))
     return possible if len(possible) != 0 else "No moves possible"
 
 
