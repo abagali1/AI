@@ -16,23 +16,45 @@ rows, cols, rdiags, ldiags = [], [], [], []
 
 
 def possible_moves(pzl, piece):
-    pass
-
+    for pos, elem in enumerate(pzl):
+        if elem != piece:
+            continue
+        con = CONSTRAINTS[pos]
+        r, c = "".join(pzl[x] for x in con[0]), "".join(pzl[x] for x in con[1])
+        ld, rd = "".join(pzl[x] for x in con[2]), "".join(pzl[x] for x in con[3])
+        
+        
 
 def gen_constraints():
-    CONSTRAINTS = {}
-    rows = [[] for _ in range(8)]
-    cols = [[] for _ in range(8)]
-    rdiags = [[] for _ in range(8)]
-    ldiags = [[] for _ in range(8)]
-    for i in range(8):
-        for j in range(8):
-            index = INDICES_2D[(i,j)]
-            rows[i].append(index)
-            cols[j].append(index)
-            ldiags[j-i].append(index)
-            CONSTRAINTS[index] = (i,j)
-    return CONSTRAINTS, rows, cols
+    for i in range(64):
+        idx = INDICES[i]
+        row = [*range(idx[0],idx[0]+8)]
+        col = [*range(idx[1],64,8)]
+        
+        l_r, l_c = idx[0], idx[1]
+        ld = set()
+        while 0<=l_r and 0<=l_c:
+            ld.add(INDICES_2D[(l_r, l_c)])
+            l_r -= 1
+            l_c -= 1
+        l_r, l_c = idx[0], idx[1]
+        while l_r<8 and l_c<8:
+            ld.add(INDICES_2D[(l_r,l_c)])
+            l_r += 1
+            l_c += 1
+        r_r, r_c = idx[0], idx[1]
+        rd = set()
+        while 0<=r_r<8 and 0<=r_c:
+            rd.add(INDICES_2D[(r_r, r_c)])
+            r_r += 1
+            r_c -= 1
+        r_r, r_c = idx[0], idx[1]
+        while 0<=r_r and r_c<8:
+            rd.add(INDICES_2D[(r_r,r_c)])
+            r_r -= 1
+            r_c += 1
+        CONSTRAINTS[i] = (row, col, [*ld], [*rd])
+
 
 def display(pzl, piece):
     tmp = pzl[:]
