@@ -16,6 +16,7 @@ REGEX = {
     }
 }
 CONSTRAINTS = {}
+moves = []
 
 
 def possible_moves(pzl, piece):
@@ -49,7 +50,6 @@ def gen_constraints():
     for i in range(64):
         idx = INDICES[i]
         col = [*range(idx[1],64,8)]
-        
         l_r, l_c = idx[0], idx[1]
         ld = set()
         while 0<=l_r and 0<=l_c:
@@ -80,6 +80,7 @@ def to_string(pzl):
 
 
 def main():
+    global moves
     piece = ''
     board = [*'.'*27 + 'OX......XO'+'.'*27]
     if len(argv) != 0:
@@ -88,8 +89,11 @@ def main():
                 board = [*arg.upper()]
             elif arg.lower() == 'x' or arg.lower() == 'o':
                 piece = arg.upper()
+            else:
+                moves.append(arg)
     if not piece:
-        piece = "O" if board.count(".") % 2 != 0 else "X"
+        piece = "O" if board.count("O") < board.count("X") else "X"
+    moves = [int(x) if x.isdigit() else LETTERS[x[0]] * 8 + int(x[1]) for x in moves]
 
     gen_constraints()
     possible = possible_moves(board, piece)
