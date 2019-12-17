@@ -93,6 +93,8 @@ def main():
 
     gen_constraints()
     possible = possible_moves(board, piece)
+    if len(possible) == 0:
+        possible = possible_moves(board, "X" if piece == "O" else "O")
     return possible if len(possible) != 0 else "No moves possible"
 
 
