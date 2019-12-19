@@ -25,6 +25,8 @@ def possible_moves(pzl, piece):
     p = {}
     for constraint in ALL_CONSTRAINTS:
         con = "".join(pzl[x] for x in constraint)
+        if piece not in con:
+            continue
 
         possible += [(constraint[x.end()-1],[constraint[i] for i in range(x.span()[0], x.span()[1])]) for x in finditer(REGEX[piece][0], con) if pzl[constraint[x.end()-1]] == '.']
         possible += [(constraint[x.start()],[constraint[i] for i in range(x.span()[0], x.span()[1])]) for x in finditer(REGEX[piece][1], con) if pzl[constraint[x.start()]] == '.']

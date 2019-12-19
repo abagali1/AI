@@ -17,7 +17,6 @@ REGEX = {
 }
 CONSTRAINTS = {}
 
-
 def possible_moves(pzl, piece):
     possible = []
     for pos, elem in enumerate(pzl):
