@@ -37,6 +37,24 @@ def possible_moves(pzl, piece):
     return p
 
 
+def parse_args():
+    global moves
+    piece = ''
+    board = [*'.'*27 + 'OX......XO'+'.'*27]
+    if len(argv) != 1:
+        for arg in argv[1:]:
+            if len(arg) == 64:
+                board = [*arg.upper()]
+            elif arg.lower() == 'x' or arg.lower() == 'o':
+                piece = arg.upper()
+            else:
+                moves.append(arg)
+    if not piece:
+        piece = "O" if board.count(".") % 2 != 0 else "X"
+    moves = [LETTERS[x] if x in LETTERS else int(x) for x in moves]
+    return piece,board
+
+
 def to_string(pzl):
     return '\n'.join(
         [''.join([pzl[INDICES_2D[(i, j)]][0] for j in range(8)]) for i in range(8)]).strip().lower()
@@ -48,23 +66,11 @@ def place(pzl, piece, index):
     return pzl
 
 def main():
-    global moves
-    piece = ''
-    board = [*'.'*27 + 'OX......XO'+'.'*27]
-    if len(argv) != 0:
-        for arg in argv[1:]:
-            if len(arg) == 64:
-                board = [*arg.upper()]
-            elif arg.lower() == 'x' or arg.lower() == 'o':
-                piece = arg.upper()
-            else:
-                moves.append(arg)
-    if not piece:
-        piece = "O" if board.count(".") % 2 != 0 else "X"
-    moves = [LETTERS[x] if x in LETTERS else int(x) for x in moves]
+    piece, board = parse_args()
 
     print("{0} {1}/{2}\n".format("".join(board).lower(), board.count("X"), board.count("O")))
     possible = possible_moves(board, piece)
+    
     if len(possible) == 0:
         piece = "X" if piece == "O" else "O"
         possible = possible_moves(board, piece)
@@ -91,7 +97,15 @@ def main():
                 board[i] = '.'
             print("Possible moves for {0}: {1}\n".format(piece, ", ".join(list(map(str,[x for x in possible])))))
         else:
+            piece = "X" if piece == "O" else "O"
+            possible = possible_moves(board, piece)
+            for i in possible:
+                board[i] = '*'
             print(to_string(board))
+            for i in possible:
+                board[i] = '.'
+            print("Possible moves for {0}: {1}\n".format(piece, ", ".join(list(map(str,[x for x in possible])))))
+
 
 
 
