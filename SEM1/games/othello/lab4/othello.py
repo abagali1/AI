@@ -36,7 +36,16 @@ def possible_moves(pzl, piece):
 def main():
     board, piece = (argv[1].upper(), [*argv[2].upper()]) if len(argv[2]) == 64 else ([*argv[1].upper()], argv[2].upper())
     possible = possible_moves(board, piece)
-    print("My move is {0}".format(max(possible, key=lambda x: len(possible[x]))))
+    if 0 in possible:
+        print("My move is 0")
+    elif 7 in possible:
+        print("My move is 7")
+    elif 56 in possible:
+        print("My move is 56")
+    elif 63 in possible:
+        print("My move is 63")
+    else:
+        print("My move is {0}".format(max(possible, key=lambda x: len(possible[x]))))
 
 
 if __name__ == "__main__":
