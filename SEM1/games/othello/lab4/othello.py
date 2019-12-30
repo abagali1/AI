@@ -35,15 +35,15 @@ def possible_moves(pzl, piece):
 def best_move(board, moves):
     print("My move is {0}".format(max(moves, key=lambda x: len(board[x]))))
     if 0 in moves:
-        return "My move is 0"
+        print("My move is 0")
     elif 7 in moves:
-        return "My move is 7"
+        print("My move is 7")
     elif 56 in moves:
-        return "My move is 56"
+        print("My move is 56")
     elif 63 in moves:
-        return "My move is 63"
+        print("My move is 63")
     else:
-        return "My move is {0}".format(min(moves.keys(), key=lambda x: len([board[i] for i in NEIGHBORS[x] if board[i] == '.'])))
+        print("My move is {0}".format(min(moves.keys(), key=lambda x: len([board[i] for i in NEIGHBORS[x] if board[i] == '.']))))
 
 
 
