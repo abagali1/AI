@@ -30,29 +30,43 @@ def possible_moves(pzl, piece):
         else:
             p[i[0]] = {*i[1]}
     return p
+    #print([len(possible_moves(place(board, piece, moves[x]), piece)) for x in moves])
 
 
-def best_move(board, moves):
+def best_move(board, moves, piece):
+    if len(moves) == 1:
+        print("My move is {0}".format([*moves.keys()][0]))
+        return
     print("My move is {0}".format(max(moves, key=lambda x: len(board[x]))))
     if 0 in moves:
         print("My move is 0")
+        return
     elif 7 in moves:
         print("My move is 7")
+        return
     elif 56 in moves:
         print("My move is 56")
+        return
     elif 63 in moves:
         print("My move is 63")
+        return
     else:
         print("My move is {0}".format(min(moves.keys(), key=lambda x: len([board[i] for i in NEIGHBORS[x] if board[i] == '.']))))
 
+    print("My move is {0}".format(min(moves, key=lambda x: len(possible_moves(place(board, piece, moves[x]), 'X' if piece == 'O' else 'O')))))
 
 
+def place(pzl, piece, index):
+    tmp = pzl[:]
+    for i in index: 
+        tmp[i] = piece
+    return tmp
 
 
 def main():
     board, piece = (argv[1].upper(), [*argv[2].upper()]) if len(argv[2]) == 64 else ([*argv[1].upper()], argv[2].upper())
     possible = possible_moves(board, piece)
-    print(best_move(board, possible))
+    best_move(board, possible, piece)
 
 
 if __name__ == "__main__":
