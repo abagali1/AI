@@ -30,7 +30,6 @@ def possible_moves(pzl, piece):
         else:
             p[i[0]] = {*i[1]}
     return p
-    #print([len(possible_moves(place(board, piece, moves[x]), piece)) for x in moves])
 
 
 def best_move(board, moves, piece):
