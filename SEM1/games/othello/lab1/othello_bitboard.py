@@ -39,61 +39,11 @@ def fill(current, opponent, direction):
     return (flood|(w<<direction))&empty if direction > 0 else (flood|(w>>direction*-1))&empty
 
 
-def north_fill(current, opponent):
-    flood = 0b0
-    empty = bit_not( (current|opponent) )
-    w = (current << 8) & opponent
-    w |= (w << 8) & opponent
-    w |= (w << 8) & opponent
-    w |= (w << 8) & opponent
-    w |= (w << 8) & opponent
-    w |= (w << 8) & opponent
-    w |= (w << 8) & opponent
-    w |= (w << 8) & opponent
-    return (flood|(w <<8)) &empty
-
-def south_fill(current, opponent):
-    flood = 0b0
-    empty = bit_not( (current|opponent) )
-    w = (current >> 8) & opponent
-    w |= (w >> 8) & opponent
-    w |= (w >> 8) & opponent
-    w |= (w >> 8) & opponent
-    w |= (w >> 8) & opponent
-    w |= (w >> 8) & opponent
-    w |= (w >> 8) & opponent
-    w |= (w >> 8) & opponent
-    return (flood|(w >> 8)) &empty
-
-def west_fill(current, opponent):
-    flood = 0b0
-    empty = bit_not( (current|opponent ))
-    w = ((current & MASKS[1])<<1) & opponent
-    w |= ((w & MASKS[1]) << 1) & opponent
-    w |= ((w & MASKS[1]) << 1) & opponent
-    w |= ((w & MASKS[1]) << 1) & opponent
-    w |= ((w & MASKS[1]) << 1) & opponent
-    w |= ((w & MASKS[1]) << 1) & opponent
-    w |= ((w & MASKS[1]) << 1) & opponent
-    w |= ((w & MASKS[1]) << 1) & opponent
-    return (flood|((w&MASKS[1])<<1)) &empty
-
-def east_fill(current, opponent):
-    flood = 0b0
-    empty = bit_not((current|opponent))
-    w = ((current * MASKS[-1])>>1) & opponent
-    w |= ((w&MASKS[-1])>>1)&opponent
-    w |= ((w&MASKS[-1])>>1)&opponent
-    w |= ((w&MASKS[-1])>>1)&opponent
-    w |= ((w&MASKS[-1])>>1)&opponent
-    w |= ((w&MASKS[-1])>>1)&opponent
-    w |= ((w&MASKS[-1])>>1)&opponent
-    w |= ((w&MASKS[-1])>>1)&opponent
-    return (flood|((w&MASKS[-1])>>1)) &empty
-
-
 def possible_moves(board, piece):
-    
+    final = 0b0
+    for d in [-1,1,8,-8]:
+        final |= fill(board[piece], board[not piece], d)
+    return {pos for pos,elem in enumerate('{:064b}'.format(final)) if elem == '1'}
     
 
 def to_string(b):
@@ -102,12 +52,24 @@ def to_string(b):
 
 
 def main():
+    piece = ''
     board = '.'*27 + 'OX......XO'+'.'*27
-    piece = "O" if board.count(".") % 2 != 0 else "X"
-    x = int(board.replace('.','0').replace('X','1').replace('O','0'), base=2)
-    o = int(board.replace('.','0').replace('X','0').replace('O','1'), base=2)
-
-    return x,o
+    if len(argv) != 0:
+        for arg in argv[1:]:
+            if len(arg) == 64:
+                board = arg.upper()
+            elif arg.lower() == 'x' or arg.lower() == 'o':
+                piece = arg.upper()
+    if not piece:
+        piece = 0 if board.count(".") % 2 != 0 else 1
+    else:
+        piece = 0 if piece == "O" else 1
+    board = {
+        1: int(board.replace('.','0').replace('X','1').replace('O','0'), base=2),
+        0: int(board.replace('.','0').replace('X','0').replace('O','1'), base=2)
+    }
+    print(possible_moves(board, piece))
+    return board[1],board[0]
 
 
 
