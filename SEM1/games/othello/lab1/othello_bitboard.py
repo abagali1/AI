@@ -90,6 +90,10 @@ def east_fill(current, opponent):
     w |= ((w&MASKS[-1])>>1)&opponent
     w |= ((w&MASKS[-1])>>1)&opponent
     return (flood|((w&MASKS[-1])>>1)) &empty
+
+
+def possible_moves(board, piece):
+    
     
 
 def to_string(b):
