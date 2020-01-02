@@ -43,9 +43,10 @@ MASKS = { #TODO: Make these all single numbers
 # }   
 
 
-
-def bit_not(x):
-    return 18446744073709551615 - x  
+bit_not = lambda x: 18446744073709551615 - x
+is_on = lambda x, pos: x & (1<<pos)
+to_string = lambda x: '\n'.join(
+        [''.join(['{:064b}'.format(x)[i*8 +j][0] for j in range(8)]) for i in range(8)]).strip().lower()
 
 
 def fill(current, opponent, direction):
@@ -67,10 +68,6 @@ def possible_moves(board, piece):
     for d in MASKS:
         final |= fill(board[piece], board[not piece], d)
     return {pos for pos,elem in enumerate('{:064b}'.format(final)) if elem == '1'}    
-
-def to_string(b):
-    return '\n'.join(
-        [''.join(['{:064b}'.format(b)[i*8 +j][0] for j in range(8)]) for i in range(8)]).strip().lower()
 
 
 def main():
