@@ -45,8 +45,8 @@ MASKS = { #TODO: Make these all single numbers
 
 bit_not = lambda x: 18446744073709551615 - x
 is_on = lambda x, pos: x & (1<<pos)
-to_string = lambda x: '\n'.join(
-        [''.join(['{:064b}'.format(x)[i*8 +j][0] for j in range(8)]) for i in range(8)]).strip().lower()
+to_string = lambda x: '\n'.join([''.join(['{:064b}'.format(x)[i*8 +j][0] for j in range(8)]) for i in range(8)]).strip().lower()
+ps = lambda x: print(to_string(x))
 
 
 def fill(current, opponent, direction):
@@ -67,7 +67,7 @@ def possible_moves(board, piece):
     final = 0b0
     for d in MASKS:
         final |= fill(board[piece], board[not piece], d)
-    return {pos for pos,elem in enumerate('{:064b}'.format(final)) if elem == '1'}    
+    return {63-p for p in range(64) if is_on(final,p) != 0}
 
 
 def main():
@@ -90,8 +90,6 @@ def main():
 
     p = possible_moves(board, piece)
     return p if len(p) > 0 else "No moves possible"
-
-
 
 
 if __name__ == "__main__":
