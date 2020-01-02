@@ -1,16 +1,6 @@
 #!/usr/bin/env python3
 from sys import argv
 
-MASKS = { # << = positive ///\\\ >>=negative
-    1: 18374403900871474942,        
-    -1: 9187201950435737471,    
-    8: 18446744073709551360,    
-    -8: 72057594037927935,     
-    7: 9187201950435737344,
-    -7: 71775015237779198,
-    9: 18374403900871474688,
-    -9: 35887507618889599
-}                        
 # << = positive ///\\\ >>=negative   
 #     NW     N     NE 
 #    <<9    <<8    <<7
@@ -29,6 +19,29 @@ MASKS = { # << = positive ///\\\ >>=negative
 # SW: 71775015237779198
 # NW: 18374403900871474688
 
+MASKS = { #TODO: Make these all single numbers
+    1: lambda x:  (x & 18374403900871474942) >> 1,
+    -1: lambda x: (x & 9187201950435737471) << 1,
+    8: lambda x: x<<8,
+    -8: lambda x: x>>8,
+    9: lambda x: ((x & 18374403900871474942) >> 1)<<8,
+    7: lambda x: ((x & 9187201950435737471) << 1)<<8,
+    -9: lambda x: ((x & 9187201950435737471) << 1)>>8,
+    -7: lambda x: ((x & 18374403900871474942) >> 1)>>8
+}
+
+
+# MASKS = { # FIXME: fix these numbers
+#     1: 18374403900871474942,        
+#     -1: 9187201950435737471,    
+#     8: 18446744073709551360,    
+#     -8: 72057594037927935,     
+#     9: 9187201950435737344,
+#     -7: 71775015237779198,
+#     7: 18374403900871474688,
+#     -9: 35887507618889599
+# }   
+
 
 
 def bit_not(x):
@@ -36,25 +49,24 @@ def bit_not(x):
 
 
 def fill(current, opponent, direction):
-    flood = 0b0
-    empty = bit_not( (current | opponent))
-    w = (((current&MASKS[direction]) << direction) & opponent) if direction > 0 else (((current&MASKS[direction]) >> direction*-1) & opponent)
-    w |= (w << direction) & opponent if direction > 0 else (w>>direction*-1)&opponent
-    w |= (w << direction) & opponent if direction > 0 else (w>>direction*-1)&opponent
-    w |= (w << direction) & opponent if direction > 0 else (w>>direction*-1)&opponent
-    w |= (w << direction) & opponent if direction > 0 else (w>>direction*-1)&opponent
-    w |= (w << direction) & opponent if direction > 0 else (w>>direction*-1)&opponent
-    w |= (w << direction) & opponent if direction > 0 else (w>>direction*-1)&opponent
-    w |= (w << direction) & opponent if direction > 0 else (w>>direction*-1)&opponent
-    return (flood|(w<<direction))&empty if direction > 0 else (flood|(w>>direction*-1))&empty
+    mask = MASKS[direction]
+    w = mask(current) & opponent
+    w |= mask(w) & opponent
+    w |= mask(w) & opponent
+    w |= mask(w) & opponent
+    w |= mask(w) & opponent
+    w |= mask(w) & opponent
+    w |= mask(w) & opponent
+    w |= mask(w) & opponent
+    return (0b0|mask(w)) & (18446744073709551615 - (current|opponent))
+
 
 
 def possible_moves(board, piece):
     final = 0b0
     for d in MASKS:
         final |= fill(board[piece], board[not piece], d)
-    return {pos for pos,elem in enumerate('{:064b}'.format(final)) if elem == '1'}
-    
+    return {pos for pos,elem in enumerate('{:064b}'.format(final)) if elem == '1'}    
 
 def to_string(b):
     return '\n'.join(
