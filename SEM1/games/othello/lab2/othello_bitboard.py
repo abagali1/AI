@@ -67,7 +67,7 @@ def possible_moves(board, piece):
     final = 0b0
     for d in MASKS:
         final |= fill(board[piece], board[not piece], d)
-    return {63-p for p in range(64) if is_on(final,p) != 0}
+    return {63-p for p in range(64) if is_on(final,p)}
 
 
 def main():
