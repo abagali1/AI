@@ -2,20 +2,33 @@
 from sys import argv
 
 MASKS = { # << = positive ///\\\ >>=negative
-    -1: 18374403900871474942,    #     NW     N     NE     
-    1: 9187201950435737471,    #    <<9    <<8    <<7
-#    8: 18446744073709551615,
-#    -8: 18446744073709551615,
-    # 7: 9187201950435737344,
-    # -7: 71775015237779198,
-    # 9: 18374403900871474688,
-    # -9: 35887507618889599
-}                               #
-                                #     W     .     E
-                                #   <<1          >>1
-                                # 
-                                #    SW     S     SE
-                                #    >>7   >>8    >>9
+    1: 18374403900871474942,        
+    -1: 9187201950435737471,    
+    8: 18446744073709551360,    
+    -8: 72057594037927935,     
+    7: 9187201950435737344,
+    -7: 71775015237779198,
+    9: 18374403900871474688,
+    -9: 35887507618889599
+}                        
+# << = positive ///\\\ >>=negative   
+#     NW     N     NE 
+#    <<9    <<8    <<7
+#
+#     W     .     E
+#   <<1          (-1)
+# 
+#    SW     S     SE
+#   (-7)  (-8)    (-9)
+# N: 18446744073709551360
+# E: 9187201950435737471
+# S: 72057594037927935
+# W: 18374403900871474942
+# NE: 9187201950435737344
+# SE: 35887507618889599
+# SW: 71775015237779198
+# NW: 18374403900871474688
+
 
 
 def bit_not(x):
@@ -25,9 +38,7 @@ def bit_not(x):
 def fill(current, opponent, direction):
     flood = 0b0
     empty = bit_not( (current | opponent))
-    print(f"DIR: {direction}")
     w = (((current&MASKS[direction]) << direction) & opponent) if direction > 0 else (((current&MASKS[direction]) >> direction*-1) & opponent)
-    print("(((current&MASKS[direction]) << direction) & opponent)" if direction > 0 else "(((current&MASKS[direction]) >> direction*-1) & opponent)")
     w |= (w << direction) & opponent if direction > 0 else (w>>direction*-1)&opponent
     w |= (w << direction) & opponent if direction > 0 else (w>>direction*-1)&opponent
     w |= (w << direction) & opponent if direction > 0 else (w>>direction*-1)&opponent
@@ -35,7 +46,6 @@ def fill(current, opponent, direction):
     w |= (w << direction) & opponent if direction > 0 else (w>>direction*-1)&opponent
     w |= (w << direction) & opponent if direction > 0 else (w>>direction*-1)&opponent
     w |= (w << direction) & opponent if direction > 0 else (w>>direction*-1)&opponent
-    print()
     return (flood|(w<<direction))&empty if direction > 0 else (flood|(w>>direction*-1))&empty
 
 
@@ -69,7 +79,6 @@ def main():
         0: int(board.replace('.','0').replace('X','0').replace('O','1'), base=2)
     }
 
-    print(piece)
     p = possible_moves(board, piece)
     return p if len(p) > 0 else "No moves possible"
 
