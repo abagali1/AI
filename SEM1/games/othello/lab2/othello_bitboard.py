@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 from sys import argv
+from time import process_time as time
 
 # << = positive ///\\\ >>=negative   
 #     NW     N     NE 
@@ -131,4 +132,6 @@ def main():
     
 
 if __name__ == "__main__":
+    start = time() 
     main()
+    print("{0}".format(time()-start))
