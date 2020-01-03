@@ -78,6 +78,17 @@ def possible_moves(board, piece):
     return {63-p for p in range(64) if is_on(final,p)}
 
 
+def place(current, opponent, move):
+    current |= move
+    for i in MASKS:
+        c = fill(move, opponent, i)
+        if c:
+            current |= MASKS[i*-1](c)
+            opponent &= bit_not(MASKS[i*-1](c))
+    return current, opponent
+
+
+
 def parse_args():
     global moves
     piece = ''
