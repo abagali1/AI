@@ -125,7 +125,7 @@ def main():
         for i in possible:
             s[i] = '*'
         print_board(s)
-        print("Possible moves for {0}: {1}".format('X' if piece else 'O', ", ".join([*map(str,[x for x in p])])))
+        print("Possible moves for {0}: {1}".format('X' if piece else 'O', ", ".join([*map(str,[x for x in possible])])))
 
     return board # for debugging
     
