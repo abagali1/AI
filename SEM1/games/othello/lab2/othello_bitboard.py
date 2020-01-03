@@ -43,7 +43,7 @@ MASKS = { #TODO: Make these all single numbers
 bit_not = lambda x: 18446744073709551615 - x
 is_on = lambda x, pos: x & (1<<pos)
 
-binary_to_board = lambda board: "".join(['O' if is_on(board[0], i) else 'X' if is_on(board[1],i) else '.' for i in range(64)])
+binary_to_board = lambda board: "".join(['o' if is_on(board[0], i) else 'x' if is_on(board[1],i) else '.' for i in range(64)])
 
 board_to_string = lambda x: '\n'.join([''.join([x[i*8+j]][0] for j in range(8)) for i in range(8)]).strip().lower()
 binary_to_string = lambda x: '\n'.join([''.join(['{:064b}'.format(x)[i*8 +j][0] for j in range(8)]) for i in range(8)]).strip().lower()
@@ -98,20 +98,37 @@ def parse_args():
         1: int(board.replace('.','0').replace('X','1').replace('O','0'), base=2),
         0: int(board.replace('.','0').replace('X','0').replace('O','1'), base=2)
     }
-    return piece,board
+    return piece, board
 
 
 def main():
     piece, board = parse_args()
 
-    print_binary(board[0])
-    print()
-    print_binary(board[1])
-    print()
-    print_board_binary(board)
     p = possible_moves(board, piece)
-    return p if len(p) > 0 else "No moves possible"
+    s = binary_to_board(board)
+    print("{0} {1}/{2}".format(s, s.count('x'), s.count('o')))
+    s = [*s]
+    for i in p:
+        s[i] = '*'
+    print_board(s)
+    print("Possible moves for {0}: {1}".format('X' if piece else 'O', ", ".join([*map(str,[x for x in p])])))
 
+
+    for move in moves:
+        print("{0} move to {1}".format('X' if piece else 'O', move))
+        # board = place(board, piece) TODO: IMPLEMENT
+        s = binary_to_board(board)
+        print("{0} {1}/{2}".format(s, s.count('x'), s.count('o')))
+        piece = not piece
+        # possible = possible_moves(board, piece)
+        s = [*s]
+        for i in possible:
+            s[i] = '*'
+        print_board(s)
+        print("Possible moves for {0}: {1}".format('X' if piece else 'O', ", ".join([*map(str,[x for x in p])])))
+
+    return board # for debugging
+    
 
 if __name__ == "__main__":
-    print(main())
+    main()
