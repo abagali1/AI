@@ -56,8 +56,6 @@ def fill(current, opponent, direction):
     w |= mask(w) & opponent
     w |= mask(w) & opponent
     w |= mask(w) & opponent
-    w |= mask(w) & opponent
-    w |= mask(w) & opponent
     return (0b0|mask(w)) & (18446744073709551615 - (current|opponent))
 
 
