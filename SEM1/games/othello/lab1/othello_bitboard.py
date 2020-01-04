@@ -56,14 +56,14 @@ def fill(current, opponent, direction):
     w |= mask(w) & opponent
     w |= mask(w) & opponent
     w |= mask(w) & opponent
-    return mask(w) & (18446744073709551615 - (current|opponent))
+    return mask(w) 
 
 
 
 def possible_moves(board, piece):
     final = 0b0
     for d in MASKS:
-        final |= fill(board[piece], board[not piece], d)
+        final |= fill(board[piece], board[not piece], d) & (18446744073709551615 - (board[piece]|board[not piece]))
     return {pos for pos,elem in enumerate('{:064b}'.format(final)) if elem == '1'}    
 
 def to_string(b):
