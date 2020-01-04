@@ -92,38 +92,42 @@ def place(b, piece, move):
 def parse_args():
     global moves
     piece = ''
-    board = '.'*27 + 'OX......XO'+'.'*27
+    string_board = '.'*27 + 'OX......XO'+'.'*27
     if len(argv) != 0:
         for arg in argv[1:]:
             if len(arg) == 64:
-                board = arg.upper()
+                string_board = arg.upper()
             elif arg.lower() == 'x' or arg.lower() == 'o':
                 piece = arg.upper()
             else:
                 moves.append(arg)
     if not piece:
-        piece = 0 if board.count(".") % 2 != 0 else 1
+        piece = 0 if string_board.count(".") % 2 != 0 else 1
     else:
        piece = 0 if piece == "O" else 1
     moves = [LETTERS[x] if x in LETTERS else int(x) for x in moves]
     board = {
-        1: int(board.replace('.','0').replace('X','1').replace('O','0'), base=2),
-        0: int(board.replace('.','0').replace('X','0').replace('O','1'), base=2)
+        1: int(string_board.replace('.','0').replace('X','1').replace('O','0'), base=2),
+        0: int(string_board.replace('.','0').replace('X','0').replace('O','1'), base=2)
     }
-    return piece, board
+    return piece, board, string_board
 
 
 def main():
-    piece, board = parse_args()
+    piece, board, string_board = parse_args()
 
+
+    print("{0} {1}/{2}\n".format("".join(string_board).lower(), string_board.count("X"), string_board.count("O")))
     p = possible_moves(board, piece)
+    if len(p) == 0:
+        piece = not piece
+        p = possible_moves(board, piece)
     s = binary_to_board(board)
-    print("{0} {1}/{2}".format(s, s.count('x'), s.count('o')))
     s = [*s]
     for i in p:
         s[i] = '*'
     print_board(s)
-    print("Possible moves for {0}: {1}".format('X' if piece else 'O', ", ".join([*map(str,[x for x in p])])))
+    print("Possible moves for {0}: {1}\n".format('X' if piece else 'O', ", ".join([*map(str,[x for x in p])])))
 
 
     for move in moves:
@@ -133,7 +137,7 @@ def main():
         
         board = place(board, piece, 1<<(63-move))
         s = binary_to_board(board)
-        print("{0} {1}/{2}".format(s, s.count('x'), s.count('o')))
+        print("{0} {1}/{2}\n".format(s, s.count('x'), s.count('o')))
         
         piece = not piece
         possible = possible_moves(board, piece)
@@ -144,7 +148,7 @@ def main():
                 s[i] = '*'
             print_board(s)
             
-            print("Possible moves for {0}: {1}".format('X' if piece else 'O', ", ".join([*map(str,[x for x in possible])])))
+            print("Possible moves for {0}: {1}\n".format('X' if piece else 'O', ", ".join([*map(str,[x for x in possible])])))
         else:
             piece = not piece
             possible = possible_moves(board, piece)
@@ -153,7 +157,7 @@ def main():
             for i in possible:
                 s[i] = '*'
             print_board(s)
-            print("Possible moves for {0}: {1}".format('X' if piece else 'O', ", ".join([*map(str,[x for x in possible])])))
+            print("Possible moves for {0}: {1}\n".format('X' if piece else 'O', ", ".join([*map(str,[x for x in possible])])))
 
              
 
