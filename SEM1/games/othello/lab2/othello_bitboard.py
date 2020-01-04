@@ -130,7 +130,7 @@ def main():
     for move in moves:
         print("{0} moves to {1}".format('X' if piece else 'O', move))
         
-        board = place(board, piece, 1<<(63-move)) 
+        board = place(board, piece, 1<<(63-move))
         s = binary_to_board(board)
         print("{0} {1}/{2}".format(s, s.count('x'), s.count('o')))
         
