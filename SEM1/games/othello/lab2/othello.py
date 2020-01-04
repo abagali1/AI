@@ -84,7 +84,6 @@ def to_string(pzl):
 
 
 def place(pzl, piece, index):
-    print(index)
     for i in index: 
         pzl[i] = piece
     return pzl
