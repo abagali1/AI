@@ -65,8 +65,6 @@ def fill(current, opponent, direction):
     w |= mask(w) & opponent
     w |= mask(w) & opponent
     w |= mask(w) & opponent
-    w |= mask(w) & opponent
-    w |= mask(w) & opponent
     return (0b0|mask(w)) & (18446744073709551615 - (current|opponent))
 
 
@@ -81,13 +79,18 @@ def possible_moves(board, piece):
 def place(b, piece, move):
     board = b.copy()
     board[piece] |= move
-    for i in MASKS:
-        c = fill(move, board[not piece], i)
-        if c:
-            board[piece] |= MASKS[i*-1](c)
-            board[not piece] &= bit_not(MASKS[i*-1](c))
-    return board
 
+    for i in MASKS:
+        c = MASKS[i](move) & board[not piece]
+        c |= MASKS[i](c)&board[not piece]
+        c |= MASKS[i](c)&board[not piece]
+        c |= MASKS[i](c)&board[not piece]
+        c |= MASKS[i](c)&board[not piece]
+        c |= MASKS[i](c)&board[not piece]
+        if MASKS[i](c)&board[piece] != 0:
+            board[piece] |= c
+            board[not piece] &= bit_not(c)
+    return board
 
 
 def parse_args():
