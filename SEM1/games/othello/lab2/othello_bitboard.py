@@ -44,7 +44,7 @@ MASKS = { #TODO: Make these all single numbers
 bit_not = lambda x: 18446744073709551615 - x
 is_on = lambda x, pos: x & (1<<pos)
 
-binary_to_board = lambda board: "".join(['o' if is_on(board[0], i) else 'x' if is_on(board[1],i) else '.' for i in range(64)])
+binary_to_board = lambda board: "".join(['o' if is_on(board[0], 63-i) else 'x' if is_on(board[1],63-i) else '.' for i in range(64)])
 
 board_to_string = lambda x: '\n'.join([''.join([x[i*8+j]][0] for j in range(8)) for i in range(8)]).strip().lower()
 binary_to_string = lambda x: '\n'.join([''.join(['{:064b}'.format(x)[i*8 +j][0] for j in range(8)]) for i in range(8)]).strip().lower()
@@ -78,14 +78,15 @@ def possible_moves(board, piece):
     return {63-p for p in range(64) if is_on(final,p)}
 
 
-def place(current, opponent, move):
-    current |= move
+def place(b, piece, move):
+    board = b.copy()
+    board[piece] |= move
     for i in MASKS:
-        c = fill(move, opponent, i)
+        c = fill(move, board[not piece], i)
         if c:
-            current |= MASKS[i*-1](c)
-            opponent &= bit_not(MASKS[i*-1](c))
-    return current, opponent
+            board[piece] |= MASKS[i*-1](c)
+            board[not piece] &= bit_not(MASKS[i*-1](c))
+    return board
 
 
 
@@ -126,13 +127,15 @@ def main():
     print("Possible moves for {0}: {1}".format('X' if piece else 'O', ", ".join([*map(str,[x for x in p])])))
 
 
+
+
     for move in moves:
-        print("{0} move to {1}".format('X' if piece else 'O', move))
-        # board = place(board, piece) TODO: IMPLEMENT
+        print("{0} moves to {1}".format('X' if piece else 'O', move))
+        board = place(board, piece, 1<<(63-move)) 
         s = binary_to_board(board)
         print("{0} {1}/{2}".format(s, s.count('x'), s.count('o')))
         piece = not piece
-        # possible = possible_moves(board, piece)
+        possible = possible_moves(board, piece)
         s = [*s]
         for i in possible:
             s[i] = '*'
