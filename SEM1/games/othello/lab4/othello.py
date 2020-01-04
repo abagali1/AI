@@ -63,7 +63,7 @@ def place(pzl, piece, index):
 
 
 def main():
-    board, piece = (argv[1].upper(), [*argv[2].upper()]) if len(argv[2]) == 64 else ([*argv[1].upper()], argv[2].upper())
+    board, piece = ([*argv[2].upper()], argv[1].upper()) if len(argv[2]) == 64 else ([*argv[1].upper()], argv[2].upper())
     possible = possible_moves(board, piece)
     best_move(board, possible, piece)
 
