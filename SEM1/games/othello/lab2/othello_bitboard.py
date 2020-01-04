@@ -127,19 +127,21 @@ def main():
     print("Possible moves for {0}: {1}".format('X' if piece else 'O', ", ".join([*map(str,[x for x in p])])))
 
 
-
-
     for move in moves:
         print("{0} moves to {1}".format('X' if piece else 'O', move))
+        
         board = place(board, piece, 1<<(63-move)) 
         s = binary_to_board(board)
         print("{0} {1}/{2}".format(s, s.count('x'), s.count('o')))
+        
         piece = not piece
         possible = possible_moves(board, piece)
+        
         s = [*s]
         for i in possible:
             s[i] = '*'
         print_board(s)
+        
         print("Possible moves for {0}: {1}".format('X' if piece else 'O', ", ".join([*map(str,[x for x in possible])])))
 
     return board # for debugging
