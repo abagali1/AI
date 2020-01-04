@@ -65,14 +65,14 @@ def fill(current, opponent, direction):
     w |= mask(w) & opponent
     w |= mask(w) & opponent
     w |= mask(w) & opponent
-    return (0b0|mask(w)) & (18446744073709551615 - (current|opponent))
+    return mask(w) & (18446744073709551615 - (current|opponent))
 
 
 
 def possible_moves(board, piece):
     final = 0b0
     for d in MASKS:
-        final |= fill(board[piece], board[not piece], d)
+        final |= fill(board[piece], board[not piece], d) 
     return {63-p for p in range(64) if is_on(final,p)}
 
 
