@@ -95,7 +95,9 @@ def main():
         0: int(string_board.replace('.','0').replace('O','1').replace('X','0'),2),
         1: int(string_board.replace('.','0').replace('O','0').replace('X','1'),2)
     }
-    piece = 0 if piece == 'O' else 'X'
+    piece = 0 if piece == 'O' else 1
+    possible = possible_moves(board, piece)
+    
     
 
 if __name__ == "__main__":
