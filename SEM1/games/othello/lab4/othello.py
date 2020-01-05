@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 from sys import argv
 from re import compile, IGNORECASE, finditer
+from time import process_time as time
+
 
 REGEX = {
     "X": {
@@ -33,9 +35,7 @@ def possible_moves(pzl, piece):
 
 
 def best_move(board, moves, piece):
-    if len(moves) == 1:
-        print("My move is {0}".format([*moves.keys()][0]))
-        return
+    print("My move is {0}".format([*moves.keys()][0]))
     print("My move is {0}".format(max(moves, key=lambda x: len(board[x]))))
     if 0 in moves:
         print("My move is 0")
@@ -65,8 +65,11 @@ def place(pzl, piece, index):
 def main():
     board, piece = ([*argv[2].upper()], argv[1].upper()) if len(argv[2]) == 64 else ([*argv[1].upper()], argv[2].upper())
     possible = possible_moves(board, piece)
-    best_move(board, possible, piece)
+    if len(possible) > 0:
+        best_move(board, possible, piece)
 
 
 if __name__ == "__main__":
+    start = time()
     main()
+    print("{0}".format(time()-start))
