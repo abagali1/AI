@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from sys import argv
 from re import compile, IGNORECASE, finditer
+from time import process_time as time
 
 INDICES_2D = {(i,j):i*8 +j for i in range(8) for j in range(8)}
 INDICES = {i: (i//8, i%8) for i in range(0,64)}
@@ -99,4 +100,6 @@ def main():
 
 
 if __name__ == "__main__":
+    start = time()
     print(main())
+    print("{0}".format(time()-start))
