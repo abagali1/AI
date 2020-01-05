@@ -72,4 +72,4 @@ def main():
 if __name__ == "__main__":
     start = time()
     main()
-    print("{0}".format(time()-start))
+    #print("{0}".format(time()-start))

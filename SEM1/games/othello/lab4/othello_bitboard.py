@@ -41,6 +41,8 @@ MASKS = { #TODO: Make these all single numbers
     -9: lambda x: ((x & 9187201950435737471) << 1)>>8,
     -7: lambda x: ((x & 18374403900871474942) >> 1)>>8
 }
+MOVES = {0: 9223372036854775808, 1: 4611686018427387904, 2: 2305843009213693952, 3: 1152921504606846976, 4: 576460752303423488, 5: 288230376151711744, 6: 144115188075855872, 7: 72057594037927936, 8: 36028797018963968, 9: 18014398509481984, 10: 9007199254740992, 11: 4503599627370496, 12: 2251799813685248, 13: 1125899906842624, 14: 562949953421312, 15: 281474976710656, 16: 140737488355328, 17: 70368744177664, 18: 35184372088832, 19: 17592186044416, 20: 8796093022208, 21: 4398046511104, 22: 2199023255552, 23: 1099511627776, 24: 549755813888, 25: 274877906944, 26: 137438953472, 27: 68719476736, 28: 34359738368, 29: 17179869184, 30: 8589934592, 31: 4294967296, 32: 2147483648, 33: 1073741824, 34: 536870912, 35: 268435456, 36: 134217728, 37: 67108864, 38: 33554432, 39: 16777216, 40: 8388608, 41: 4194304, 42: 2097152, 43: 1048576, 44: 524288, 45: 262144, 46: 131072, 47: 65536, 48: 32768, 49: 16384, 50: 8192, 51: 4096, 52: 2048, 53: 1024, 54: 512, 55: 256, 56: 128, 57: 64, 58: 32, 59: 16, 60: 8, 61: 4, 62: 2, 63: 1}
+
 bit_not = lambda x: 18446744073709551615 - x
 is_on = lambda x, pos: x & (1<<pos)
 
@@ -91,12 +93,9 @@ def place(b, piece, move):
 
 def best_move(board, moves, piece):
     print("My move is {0}".format(63-[*moves][0]))
-    print("My move is {0}".format(63-max(moves, key=lambda x: place(board, piece, x)[piece])))
+    print("My move is {0}".format(63-max(moves, key=lambda x: place(board, piece, MOVES[x])[piece])))
     if 0 in moves:
         print("My move is 63")
-        return
-    elif 63 in moves:
-        print("My move is 0")
         return
     elif 7 in moves:
         print("My move is 56")
@@ -104,8 +103,11 @@ def best_move(board, moves, piece):
     elif 56 in moves:
         print("My move is 7")
         return
-    print("My move is {0}".format(min(moves, key=lambda x: len(possible_moves(place(board, piece, 1<<(63-x)), not piece)))))
-    
+    elif 63 in moves:
+        print("My move is 0")
+        return
+    print("My move is {0}".format(63-min(moves, key=lambda x: len(possible_moves(place(board, piece, MOVES[x]), not piece)))))
+
     
 
 
@@ -125,4 +127,4 @@ def main():
 if __name__ == "__main__":
     start = time() 
     main()
-    print("{0}".format(time()-start))
+    #print("{0}".format(time()-start))
