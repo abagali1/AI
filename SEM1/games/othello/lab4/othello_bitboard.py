@@ -73,7 +73,7 @@ def possible_moves(board, piece):
     final = 0b0
     for d in MASKS:
         final |= fill(board[piece], board[not piece], d) & (18446744073709551615 - (board[piece]|board[not piece]))
-    return {63-p for p in range(64) if is_on(final,p)}
+    return {p for p in range(64) if is_on(final,p)}
 
 
 def place(b, piece, move):
@@ -89,14 +89,36 @@ def place(b, piece, move):
     return board
 
 
+def best_move(board, moves, piece):
+    print("My move is {0}".format(63-[*moves][0]))
+    print("My move is {0}".format(63-max(moves, key=lambda x: place(board, piece, x)[piece])))
+    if 0 in moves:
+        print("My move is 63")
+        return
+    elif 63 in moves:
+        print("My move is 0")
+        return
+    elif 7 in moves:
+        print("My move is 56")
+        return
+    elif 56 in moves:
+        print("My move is 7")
+        return
+    print("My move is {0}".format(min(moves, key=lambda x: len(possible_moves(place(board, piece, 1<<(63-x)), not piece)))))
+    
+    
+
+
 def main():
-    string_board, piece = ([*argv[2].upper()], argv[1].upper()) if len(argv[2]) == 64 else ([*argv[1].upper()], argv[2].upper())
+    string_board, piece = (argv[2].upper(), argv[1].upper()) if len(argv[2]) == 64 else (argv[1].upper(), argv[2].upper())
     board = {
         0: int(string_board.replace('.','0').replace('O','1').replace('X','0'),2),
         1: int(string_board.replace('.','0').replace('O','0').replace('X','1'),2)
     }
     piece = 0 if piece == 'O' else 1
     possible = possible_moves(board, piece)
+    if len(possible) > 0:
+        best_move(board, possible, piece)
     
     
 
