@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from sys import argv
-from time import process_time as time
+from time import time as time
 
 # << = positive ///\\\ >>=negative   
 #     NW     N     NE 
