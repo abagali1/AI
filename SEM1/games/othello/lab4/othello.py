@@ -36,7 +36,7 @@ def possible_moves(pzl, piece):
 
 def best_move(board, moves, piece):
     print("My move is {0}".format([*moves.keys()][0]))
-    print("My move is {0}".format(max(moves, key=lambda x: len(board[x]))))
+    print("My move is {0}".format(max(moves, key=lambda x: len(moves[x])+x)))
     if 0 in moves:
         print("My move is 0")
         return
@@ -65,6 +65,7 @@ def place(pzl, piece, index):
 def main():
     board, piece = ([*argv[2].upper()], argv[1].upper()) if len(argv[2]) == 64 else ([*argv[1].upper()], argv[2].upper())
     possible = possible_moves(board, piece)
+    print(possible)
     if len(possible) > 0:
         best_move(board, possible, piece)
 
