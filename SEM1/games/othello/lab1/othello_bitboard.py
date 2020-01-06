@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 from sys import argv
 from time import time as time
-from math import log2
 
 # << = positive ///\\\ >>=negative   
 #     NW     N     NE 
