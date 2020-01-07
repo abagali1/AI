@@ -101,24 +101,24 @@ def place(b, piece, move):
 
 
 def best_move(board, moves, piece):
-    print("My move is {0}".format(63-[*moves][0]))
-    #print("My move is {0}".format(63-max(moves, key=lambda x: place(board, piece, MOVES[x])[piece])))
+    print("My move is {0}".format([*moves][0]))
+    print("My move is {0}".format(max(moves, key=lambda x: place(board, piece, MOVES[x])[piece])))
     if 0 in moves:
-        print("My move is 63")
-        return
-    elif 7 in moves:
-        print("My move is 56")
-        return
-    elif 56 in moves:
-        print("My move is 7")
-        return
-    elif 63 in moves:
         print("My move is 0")
         return
+    elif 7 in moves:
+        print("My move is 7")
+        return
+    elif 56 in moves:
+        print("My move is 56")
+        return
+    elif 63 in moves:
+        print("My move is 63")
+        return
     else:
-        print("My move is {0}".format(63-min(moves, key=lambda x: x+len([i for i in NEIGHBORS[x] if not is_on(board[0]|board[1], i)]))))
+        print("My move is {0}".format(min(moves, key=lambda x: x+len([i for i in NEIGHBORS[x] if not is_on(board[0]|board[1], i)]))))
 
-    print("My move is {0}".format(63-min(moves, key=lambda x: len(possible_moves(place(board, piece, MOVES[x]), not piece)))))
+    print("My move is {0}".format(min(moves, key=lambda x: len(possible_moves(place(board, piece, MOVES[x]), not piece)))))
 
     
 
