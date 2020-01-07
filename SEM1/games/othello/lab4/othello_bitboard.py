@@ -48,7 +48,7 @@ LETTERS = {'a1': 0, 'b1': 1, 'c1': 2, 'd1': 3, 'e1': 4, 'f1': 5, 'g1': 6, 'h1': 
 
 
 bit_not = lambda x: 18446744073709551615 - x
-is_on = lambda x, pos: x & MOVES[pos]
+is_on = lambda x, pos: x & MOVES[63-pos]
 
 binary_to_board = lambda board: "".join(['o' if is_on(board[0], 63-i) else 'x' if is_on(board[1],63-i) else '.' for i in range(64)])
 
