@@ -2,7 +2,7 @@
 from sys import argv
 from time import time as time
 
-MASKS = { #TODO: Make these all single numbers
+MASKS = {
     1: lambda x:  (x & 0xfefefefefefefefe) >> 1,
     -1: lambda x: (x & 0x7f7f7f7f7f7f7f7f) << 1,
     8: lambda x: x<<8,
@@ -44,7 +44,6 @@ def fill(current, opponent, direction):
     return mask(w) 
 
 
-
 def possible_moves(board, piece):
     final = 0b0
     possible = set()
@@ -55,7 +54,6 @@ def possible_moves(board, piece):
         possible.add(63-LOG[b])
         final -= b
     return possible 
-
 
 
 def place(b, piece, move):
@@ -92,9 +90,8 @@ def best_move(board, moves, piece):
 
     
 
-
 def main():
-    string_board, piece = (argv[2].upper(), argv[1].upper()) if len(argv[2]) == 64 else (argv[1].upper(), argv[2].upper())
+    string_board, piece = argv[1].upper(), argv[2].upper()
     board = {
         0: int(string_board.replace('.','0').replace('O','1').replace('X','0'),2),
         1: int(string_board.replace('.','0').replace('O','0').replace('X','1'),2)
@@ -105,7 +102,6 @@ def main():
         best_move(board, possible, piece)
     
     
-
 if __name__ == "__main__":
     start = time() 
     main()
