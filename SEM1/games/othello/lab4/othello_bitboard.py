@@ -73,7 +73,6 @@ def place(b, piece, move):
 
 def best_move(board, moves, piece):
     print("My move is {0}".format([*moves][0]))
-    print("My move is {0}".format(max(moves, key=lambda x: place(board, piece, MOVES[x])[piece])))
     if 0 in moves:
         print("My move is 0")
         return
