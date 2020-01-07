@@ -77,7 +77,7 @@ def possible_moves(board, piece):
         final |= fill(board[piece], board[not piece], d) & (18446744073709551615 - (board[piece]|board[not piece]))
     while(final):
         b = final & -final
-        possible.add(LOG[b])
+        possible.add(63-LOG[b])
         final -= b
     return possible 
 
