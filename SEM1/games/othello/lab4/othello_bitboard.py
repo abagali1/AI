@@ -32,6 +32,14 @@ print_board_binary = lambda x: print(board_to_string(binary_to_board(x)))
 
 
 
+def hamming_weight(n):
+    count = 0
+    while n:
+        count += 1
+        b = n&-n
+        n -= b
+    return count
+
 
 def fill(current, opponent, direction):
     mask = MASKS[direction]
@@ -67,6 +75,15 @@ def place(b, piece, move):
             board[piece] |= c
             board[not piece] &= bit_not(c)
     return board
+
+
+def coin_heuristic(placed, piece):
+    return 100*((placed[piece] - placed[not piece])/(placed[piece] + placed[not piece]))
+
+
+def mobility_heuristic(board, move, piece, possible):
+    player, opponent = possible, len(possible_moves(place(board, piece, MOVES[move]), not piece))
+    return 100*((player-opponent)/(player+opponent))
 
 
 def best_move(board, moves, piece):
