@@ -50,7 +50,6 @@ def cache(func):
     return wrapper
 
 
-@cache
 def hamming_weight(n):
     if not n:
         return 0
