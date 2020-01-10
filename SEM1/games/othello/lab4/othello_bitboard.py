@@ -96,7 +96,9 @@ def place(b, piece, move):
 
 
 def coin_heuristic(placed, piece):
-    return 100*((placed[piece] - placed[not piece])/(placed[piece] + placed[not piece]))
+    num_player = hamming_weight(placed[piece])
+    num_opp = hamming_weight(placed[not piece])
+    return 100*((num_player - num_opp)/(num_player + num_opp))
 
 
 def mobility_heuristic(board, move, piece, possible):
@@ -120,6 +122,10 @@ def best_move(board, moves, piece):
         return
     else:
         print("My move is {0}".format(min(moves, key=lambda x: x+len([i for i in NEIGHBORS[x] if not is_on(board[0]|board[1], i)]))))
+    
+    if hamming_weight(bit_not(board[0]|board[1])) == 8:
+        print("My move is {0}".format(max(moves, key=lambda x: coin_heuristic(place(board, piece, MOVES[x]),piece))))
+        return
 
     print("My move is {0}".format(min(moves, key=lambda x: len(possible_moves(place(board, piece, MOVES[x]), not piece)))))
 
