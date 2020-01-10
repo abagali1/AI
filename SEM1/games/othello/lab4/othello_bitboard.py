@@ -95,40 +95,66 @@ def place(b, piece, move):
     return board
 
 
-def coin_heuristic(placed, piece):
+def coin_heuristic(board, move, piece):
+    placed = place(board,piece,move)
     num_player = hamming_weight(placed[piece])
     num_opp = hamming_weight(placed[not piece])
     return 100*((num_player - num_opp)/(num_player + num_opp))
 
 
-def mobility_heuristic(board, move, piece, possible):
-    player, opponent = possible, len(possible_moves(place(board, piece, MOVES[move]), not piece))
-    return 100*((player-opponent)/(player+opponent))
+def mobility_heuristic(board, move, piece):
+    opponent = possible_moves(place(board, piece, move), not piece)
+    for opp_move in opponent:
+        return -len(opponent)-10
+    return -len(opponent)
+
+
+def next_to_corner(board, move, piece):
+    """
+    Return 10 if next to a captured(own) corner
+    Return 0 if not next to a corner
+    Return -10 if next to an empty/taken(opponent) corner
+    """
+    return 0
+
+
+def stable_edge(board, move, piece):
+    """
+    Return 10 if connected to a stable edge
+    Return 0 otherwise
+    """
+    return 0
 
 
 def best_move(board, moves, piece):
     print("My move is {0}".format([*moves][0]))
-    if 0 in moves:
-        print("My move is 0")
-        return
-    elif 7 in moves:
-        print("My move is 7")
-        return
-    elif 56 in moves:
-        print("My move is 56")
-        return
-    elif 63 in moves:
-        print("My move is 63")
-        return
-    else:
-        print("My move is {0}".format(min(moves, key=lambda x: x+len([i for i in NEIGHBORS[x] if not is_on(board[0]|board[1], i)]))))
+
+    strat = coin_heuristic if hamming_weight(bit_not(board[0]|board[1])) <= 8 else mobility_heuristic
+
+    best = ([*moves][0], 0)
+    for move in moves:
+        actual_move = MOVES[move]
+        h = strat(board, actual_move, piece)
+
+        if 0 in moves:
+            print("My move is 0")
+            return
+        elif 7 in moves:
+            print("My move is 7")
+            return
+        elif 56 in moves:
+            print("My move is 56")
+            return
+        elif 63 in moves:
+            print("My move is 63")
+            return
+
+        h += next_to_corner(board, actual_move, piece)
+        h += stable_edge(board, actual_move, piece)
     
-    if hamming_weight(bit_not(board[0]|board[1])) == 8:
-        print("My move is {0}".format(max(moves, key=lambda x: coin_heuristic(place(board, piece, MOVES[x]),piece))))
-        return
-
-    print("My move is {0}".format(min(moves, key=lambda x: len(possible_moves(place(board, piece, MOVES[x]), not piece)))))
-
+        best = max((move, h), best, key=lambda x: x[1])
+    
+    print("My move is {0}".format(best[0]))
     
 
 def main():
