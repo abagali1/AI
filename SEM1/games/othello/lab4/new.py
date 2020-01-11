@@ -136,11 +136,8 @@ def best_move(board, moves, piece):
 
     strat = coin_heuristic if hamming_weight(bit_not(board[0]|board[1])) <= 8 else mobility_heuristic
 
-    best = ([*moves][0], 0)
+    best = ([*moves][0], -1000000)
     for move in moves:
-        actual_move = MOVES[move]
-        h = strat(board, actual_move, piece)
-
         if 0 in moves:
             print("My move is 0")
             return
@@ -154,9 +151,12 @@ def best_move(board, moves, piece):
             print("My move is 63")
             return
 
+        actual_move = MOVES[move]
+        h = strat(board, actual_move, piece)
+
         h += next_to_corner(board, actual_move, piece)
         h += stable_edge(board, actual_move, piece)
-    
+        
         best = max((move, h), best, key=lambda x: x[1])
     
     print("My move is {0}".format(best[0]))
