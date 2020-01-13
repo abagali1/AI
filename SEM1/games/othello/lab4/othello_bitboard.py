@@ -20,7 +20,7 @@ STABLE_EDGE_REGEX = {
 MOVES = {i:1<<(63-i) for i in range(64)}
 LOG = {MOVES[63-i]:i for i in range(64)}
 
-CORNER_NEIGHBORS = {1:0, 6:7, 8:0, 9:0, 14:7, 15:7, 48:56, 49:56, 54:63, 55:63, 57:56, 62:63}
+CORNER_NEIGHBORS = {1:63, 6:56, 8:63, 9:63, 14:56, 15:56, 48:7, 49:7, 54:0, 55:0, 57:7, 62:0}
 COL_EDGES =  {1:{7,15,23,31,39,47,55,63}, 0:{0,8,16,24,32,40,48,56}}
 ROW_EDGES = {0: {0,1,2,3,4,5,6,7}, 1:{56,57,58,59,60,61,62,6}}
 
@@ -114,18 +114,23 @@ def place(b, piece, move):
     return board
 
 
-def coin_heuristic(board, move, piece):
+def coin_heuristic(board, move, piece): # MAX: 100 MIN: -100
     placed = place(board,piece,move)
     num_player = hamming_weight(placed[piece])
     num_opp = hamming_weight(placed[not piece])
-    return ((num_player-num_opp)/(num_player+num_opp)) * 100
+    return (num_player-num_opp)*10   #((num_player-num_opp)/(num_player+num_opp)) * 100 # num_player * 100
 
 
-def mobility_heuristic(board, move, piece):
-    return -len(possible_moves(place(board, piece, move), not piece))*10
+def mobility_heuristic(board, move, piece): # MAX: 0 MIN: -340
+    placed = place(board, piece, move)
+    opp_moves = possible_moves(placed, not piece)
+    h = -len(opp_moves)*10
+    if any(map(lambda x: x in {0, 7, 56, 63}, opp_moves)):
+        h -= 1000
+    return h
 
 
-def next_to_corner(board, move, piece):
+def next_to_corner(board, move, piece): # MAX: 150 MIN: -100000
     """
     Return 10 if next to a captured(own) corner
     Return 0 if not next to a corner
@@ -134,46 +139,9 @@ def next_to_corner(board, move, piece):
     if move not in CORNER_NEIGHBORS:
         return 0
     elif is_on(board[piece], CORNER_NEIGHBORS[move]):
-        return 10
-    return -100
+        return 150
+    return -100000
 
-
-# def stable_edge(b, move, piece):
-#     """
-#     Return 10 if connected to a stable edge
-#     Return 0 otherwise
-#     """
-#     placed = place(b,piece,move)
-
-#     if move in ROW_EDGES[0]:
-#         num_tokens = move
-#         l = int("1"*num_tokens,2)
-#         r = (l << 8-num_tokens)
-#         row = get_row(placed[piece],0)
-#         if (row & l) == l or (row & r)==r:
-#             return 10
-#     elif move in ROW_EDGES[1]:
-#         num_tokens = 64-move
-#         l = int("1"*(64-move),2)
-#         r = (l << (8-num_tokens))
-#         row = get_row(placed[piece],7)
-#         if (row & l) == l or (row & r)==r:
-#             return 10
-#     elif move in COL_EDGES[0]:
-#         num_tokens = (56-move)//8
-#         l = int("1"*(num_tokens), 2)
-#         r = (l << (8-num_tokens))
-#         col = get_col(placed[piece], 0)
-#         if (col & l) == l or (col & r) == r:
-#             return 10
-#     elif move in COL_EDGES[1]:
-#         num_tokens = (63-move)//8
-#         l = int("1"*(num_tokens), 2)
-#         r = (1 << (8-num_tokens))
-#         col = get_col(placed[piece], 0)
-#         if (col & l) == 1 or (col & r) == r:
-#             return 10
-#     return 0
 
 
 def stable_edge(board, move, piece):
@@ -183,43 +151,45 @@ def stable_edge(board, move, piece):
         if move not in EDGES[edge]:
             continue
         con = "".join([bs[x] for x in EDGES[edge]])
-        if con == token*8:
-            return 100
-        if STABLE_EDGE_REGEX[piece].match(con):
-            return 100
+        if con == token*8 or STABLE_EDGE_REGEX[piece].match(con):
+            return 750
     return 0
-        
+
 
 def best_move(board, moves, piece):
     init = [*moves][0]
     print("My move is {0}".format(init))
+
+    for i in [0,7,56,63]:
+        if i in moves:
+            print("My move is {0}".format(i))
+            return
+
     actual_move = MOVES[init]
     moves.remove(init)
-
-    if 0 in moves:
-        print("My move is 0")
-        return
-    elif 7 in moves:
-        print("My move is 7")
-        return
-    elif 56 in moves:
-        print("My move is 56")
-        return
-    elif 63 in moves:
-        print("My move is 63")
-        return
 
 
     strat = coin_heuristic if hamming_weight(bit_not(board[0]|board[1])) <= 8 else mobility_heuristic
     h = strat(board, actual_move, piece) + next_to_corner(board, actual_move, piece) + stable_edge(board, actual_move, piece)
     best = (h, init)
+    
     for move in moves:
         actual_move = MOVES[move]
+        
         h = strat(board, actual_move, piece)
-        h += next_to_corner(board, actual_move, piece)
-        h += stable_edge(board, actual_move, piece)
-        best = max((h, move), best)
+        #print(move,h)
+        h += next_to_corner(board, move, piece)
+        #print(move,h)
+        h += stable_edge(board, move, piece)
+        #print(move,h)
+        tiebreaker = coin_heuristic if strat == mobility_heuristic else mobility_heuristic
+        best = (h,move) if h>best[0] else (h,move) if (h==best[0] and tiebreaker(board, MOVES[move], piece) > tiebreaker(board, MOVES[best[1]], piece)) else best
+        #print(best[1], best[0])
+
     print("My move is {0}".format(best[1]))
+
+
+    
     
 
 def main():
