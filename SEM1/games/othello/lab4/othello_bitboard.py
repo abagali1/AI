@@ -70,14 +70,6 @@ def hamming_weight(n):
         return HAMMING_CACHE[n]
 
 
-def get_col(board, col):
-    return ((((board << col) & 0x8080808080808080) * 0x2040810204081)>>56) & 0xff
-
-
-def get_row(board, row):
-    return (board >> 8*(7-row)) & 0xff
-
-
 def fill(current, opponent, direction):
     mask = MASKS[direction]
     w = mask(current) & opponent
