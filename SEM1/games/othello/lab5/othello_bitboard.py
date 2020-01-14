@@ -129,30 +129,35 @@ def minimax(board, piece, depth):
 
     if len(current_moves) == 0:
         val = minimax(board, not piece, depth-1)
-        return val[0], -1+val[1]
+        return val[0], [-1]+val[1]
 
     best_opp_moves = []
     
     if piece:
         max_move = -100
+        best_move = 0
         for i in current_moves:
             placed = place(board, piece, i)
             tmp, opp_moves = minimax(placed, not piece, depth-1)
             if tmp > max_move:
                 max_move = tmp
+                best_move = i
                 best_opp_moves = opp_moves
-        TREE_CACHE[(board[0], board[1], piece)] = (max_move, [max_move] + best_opp_moves)
-        print(TREE_CACHE[(board[0], board[1], piece)][1])
+
+        TREE_CACHE[(board[0], board[1], piece)] = (max_move, [best_move] + best_opp_moves)
         return TREE_CACHE[(board[0], board[1], piece)]
     else:
         min_move = 100
+        best_move = 0
         for i in current_moves:
             placed = place(board, piece, i)
             tmp, opp_moves = minimax(placed, not piece, depth-1)
             if tmp < min_move:
                 min_move = tmp
+                best_move = i
                 best_opp_moves = opp_moves
-        TREE_CACHE[(board[0], board[1], piece)] = (min_move, [min_move] + best_opp_moves)
+ 
+        TREE_CACHE[(board[0], board[1], piece)] = (min_move, [best_move] + best_opp_moves)
         return TREE_CACHE[(board[0], board[1], piece)]
 
 
@@ -160,9 +165,9 @@ def actual_best_move(board, moves, piece):
     best = []
     for move in moves:
         placed = place(board, piece, move)
-        val = minimax(placed, not piece, 12)
+        val = minimax(placed, not piece, 11)
         best.append((val[0], move, val[1]))
-    return max(best, key=lambda x: x[0])[1] if piece else min(best, key=lambda x: x[0])[1]
+    return max(best, key=lambda x: x[0]) if piece else min(best, key=lambda x: x[0])
 
 
 def main():
@@ -176,10 +181,7 @@ def main():
     possible = possible_moves(board, piece)
     num_empty = hamming_weight(bit_not(board[0]|board[1]))
     if len(possible) > 0:
-        if num_empty > 11:
-            best_move(board, possible, piece)
-        else:
-            print("My move is {0}".format(actual_best_move(board, [*possible], piece)))
+        print("My move is {0}".format(actual_best_move(board, [*possible], piece)))
     
     
 if __name__ == "__main__":
