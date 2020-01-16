@@ -30,8 +30,6 @@ HAMMING_CACHE = {}
 TREE_CACHE = {}
 POSSIBLE_CACHE = {}
 PLACE_CACHE = {}
-FILL_CACHE = {}
-fill_cached = 0
 
 bit_not = lambda x: 0xffffffffffffffff - x
 is_on = lambda x, pos: x & MOVES[63 - pos]
@@ -76,19 +74,16 @@ def hamming_weight(n):
         return HAMMING_CACHE[n]
 
 
+@cache
 def fill(current, opponent, direction):
-    if (current, opponent, direction) in FILL_CACHE:
-        return FILL_CACHE[(current, opponent, direction)]
-    else:
-        mask = MASKS[direction]
-        w = mask(current) & opponent
-        w |= mask(w) & opponent
-        w |= mask(w) & opponent
-        w |= mask(w) & opponent
-        w |= mask(w) & opponent
-        w |= mask(w) & opponent
-        FILL_CACHE[(current, opponent, direction)] = mask(w)
-        return FILL_CACHE[(current, opponent, direction)]
+    mask = MASKS[direction]
+    w = mask(current) & opponent
+    w |= mask(w) & opponent
+    w |= mask(w) & opponent
+    w |= mask(w) & opponent
+    w |= mask(w) & opponent
+    w |= mask(w) & opponent
+    return mask(w)
 
 
 def possible_moves(board, piece):
@@ -107,74 +102,87 @@ def possible_moves(board, piece):
         return possible
 
 
-@cache
-def place(current, opponent, piece, move):
-    board = {piece: current, not piece: opponent}
-    board[piece] |= move
+def place(b, piece, move):
+    if (b[0], b[1], piece, move) in PLACE_CACHE:
+        return PLACE_CACHE[(b[0], b[1], piece, move)]
+    else:
+        board = {0: b[0], 1: b[1]}
+        board[piece] |= move
 
-    for i in MASKS:
-        c = fill(move, board[not piece], i)
-        if c & board[piece] != 0:
-            c = MASKS[i * -1](c)
-            board[piece] |= c
-            board[not piece] &= bit_not(c)
-    return board
+        for i in MASKS:
+            c = fill(move, board[not piece], i)
+            if c & board[piece] != 0:
+                c = MASKS[i * -1](c)
+                board[piece] |= c
+                board[not piece] &= bit_not(c)
+        PLACE_CACHE[(b[0], b[1], piece, move)] = board
+        return board
 
 
 def game_over(board, current):
-    if (board[current] | board[not current]) == FULL_BOARD:
+    if board[current] | board[not current] == FULL_BOARD:
         return True
     player_moves = possible_moves(board, current)
     opponent_moves = possible_moves(board, not current)
-    return player_moves, (len(player_moves) + len(opponent_moves)) == 0
+    if not player_moves and not opponent_moves:
+        return True
+    else:
+        return player_moves
 
 
-def minimax(board, piece, past_moves, depth):
+def minimax(board, piece, depth):
     """
     Returns the best value, [sequence of the previous best moves]
     """
-    # if (board[0], board[1], piece) in TREE_CACHE:
-    #     return TREE_CACHE[(board[0], board[1], piece)]
+    if (board[0], board[1], piece) in TREE_CACHE:
+        return TREE_CACHE[(board[0], board[1], piece)]
 
-    current_moves, state = game_over(board, piece)
-    if state or depth == 0:
-        score = hamming_weight(board[1]) - hamming_weight(board[0])
-        return score, past_moves
+    state = game_over(board, piece)
+    if state is True or depth == 0:
+        return hamming_weight(board[1]) - hamming_weight(board[0]), []
+    else:
+        current_moves = state
 
-    if not len(current_moves):
-        score, moves = minimax(board, not piece, past_moves + [-1], depth - 1)
-        return score, moves
+    if len(current_moves) == 0:
+        val = minimax(board, not piece, depth)
+        return val[0], val[1] + [-1]
 
     best_opp_moves = []
 
     if piece:
         max_move = -100
+        best_move = 0
         for i in current_moves:
-            score, opp_moves = minimax(place(board[piece], board[not piece], piece, MOVES[i]), not piece,
-                                       past_moves + [i], depth - 1)
-            if score > max_move:
-                max_move, best_opp_moves = score, opp_moves
-        # TREE_CACHE[(board[0], board[1], piece)] = (max_move, best_opp_moves + [best_move])
-        return max_move, best_opp_moves
+            placed = place(b=board, piece=piece, move=MOVES[i])
+            tmp, opp_moves = minimax(placed, not piece, depth - 1)
+            if tmp > max_move:
+                max_move = tmp
+                best_move = i
+                best_opp_moves = opp_moves
+        TREE_CACHE[(board[0], board[1], piece)] = (max_move, best_opp_moves + [best_move])
+        return TREE_CACHE[(board[0], board[1], piece)]
     else:
         min_move = 100
+        best_move = 0
         for i in current_moves:
-            score, opp_moves = minimax(place(board[piece], board[not piece], piece, MOVES[i]), not piece,
-                                       past_moves + [i], depth - 1)
-            if score < min_move:
-                min_move, best_opp_moves = score, opp_moves
-        # TREE_CACHE[(board[0], board[1], piece)] = (min_move, best_opp_moves + [best_move])
-        return min_move, best_opp_moves
+            placed = place(b=board, piece=piece, move=MOVES[i])
+            tmp, opp_moves = minimax(placed, not piece, depth - 1)
+            if tmp < min_move:
+                min_move = tmp
+                best_move = i
+                best_opp_moves = opp_moves
+        TREE_CACHE[(board[0], board[1], piece)] = (min_move, best_opp_moves + [best_move])
+        return TREE_CACHE[(board[0], board[1], piece)]
 
 
 def actual_best_move(board, moves, piece):
     best = []
     for move in moves:
-        placed = place(board[piece], board[not piece], piece, MOVES[move])
-        val = minimax(placed, not piece, [], 12)
+        placed = place(board, piece, MOVES[move])
+        val = minimax(placed, not piece, 11)
         best.append((val[0], move, val[1]))
     final = max(best, key=lambda x: x[0]) if piece else min(best, key=lambda x: x[0])
-    return final[0], final[2] + [final[1]]
+    return (final[0], final[2] + [final[1]]) if piece else (final[0]*-1, final[2] + [final[1]])
 
 
 def main():
@@ -185,12 +193,12 @@ def main():
     }
     piece = 0 if piece == 'O' else 1
     possible = possible_moves(board, piece)
-    moves = len(possible)
-    if moves > 0:
+    num_empty = hamming_weight(bit_not(board[0] | board[1]))
+    if len(possible) > 0:
         print("Min score: {0}; move sequence: {1}".format(*actual_best_move(board, [*possible], piece)))
 
 
 if __name__ == "__main__":
     start = time()
     main()
-    # print("{0}".format(time() - start))
+    # print("{0}".format(time()-start))
