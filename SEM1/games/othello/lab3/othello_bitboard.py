@@ -141,6 +141,7 @@ def main():
 
     for move in moves:
         if move < 0:
+            print('O' if piece else 'X', " is passing")
             continue
         print("{0} moves to {1}".format('X' if piece else 'O', move))
         
