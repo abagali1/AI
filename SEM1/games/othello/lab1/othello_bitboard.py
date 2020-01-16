@@ -42,7 +42,7 @@ MASKS = {
     -9: 18374403900871474942
 }
 
-LOG = {1 << i: i for i in range(64)}
+POS = {1 << i: 63-i for i in range(64)}
 
 
 def bit_not(x):
@@ -79,7 +79,7 @@ def possible_moves(board, piece):
         final |= f & (18446744073709551615 - (board[piece] | board[not piece]))
     while final:
         b = final & -final
-        possible.add(63 - LOG[b])
+        possible.add(POS[b])
         final -= b
     return possible
 

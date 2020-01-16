@@ -14,7 +14,7 @@ MASKS = {
 }
 
 MOVES = {i: 1 << (63 - i) for i in range(64)}
-LOG = {MOVES[63 - i]: i for i in range(64)}
+POS = {MOVES[63 - i]: 63-i for i in range(64)}
 FULL_BOARD = 0xffffffffffffffff
 
 CORNERS = {0, 7, 56, 63}
@@ -92,7 +92,7 @@ def possible_moves(board, piece):
             final |= fill(board[piece], board[not piece], d) & (FULL_BOARD - (board[piece] | board[not piece]))
         while final:
             b = final & -final
-            possible.add(63 - LOG[b])
+            possible.add(POS[b])
             final -= b
         POSSIBLE_CACHE[(board[0], board[1], piece)] = possible
         return possible
