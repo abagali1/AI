@@ -193,7 +193,6 @@ def main():
     }
     piece = 0 if piece == 'O' else 1
     possible = possible_moves(board, piece)
-    num_empty = hamming_weight(bit_not(board[0] | board[1]))
     if len(possible) > 0:
         print("Min score: {0}; move sequence: {1}".format(*actual_best_move(board, [*possible], piece)))
 
