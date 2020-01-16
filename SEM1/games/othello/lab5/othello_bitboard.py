@@ -3,26 +3,15 @@ from sys import argv
 from time import time as time
 
 MASKS = {
-    1: lambda x: (x & 0xfefefefefefefefe) >> 1,
-    -1: lambda x: (x & 0x7f7f7f7f7f7f7f7f) << 1,
-    8: lambda x: x << 8,
-    -8: lambda x: x >> 8,
-    9: lambda x: ((x & 0xfefefefefefefefe) >> 1) << 8,
-    7: lambda x: ((x & 0x7f7f7f7f7f7f7f7f) << 1) << 8,
-    -9: lambda x: ((x & 0x7f7f7f7f7f7f7f7f) << 1) >> 8,
-    -7: lambda x: ((x & 0xfefefefefefefefe) >> 1) >> 8
+    -1: 18374403900871474942,
+    1: 9187201950435737471,
+    8: 0xffffffffffffffff,
+    -8: 0xffffffffffffffff,
+    7: 18374403900871474942,
+    9: 9187201950435737471,
+    -7: 9187201950435737471,
+    -9: 18374403900871474942
 }
-
-# MASKS = {
-#     -1: 18374403900871474942,
-#     1: 9187201950435737471,
-#     8: 0xffffffffffffffff,
-#     -8: 0xffffffffffffffff,
-#     7: 18374403900871474942,
-#     9: 9187201950435737471,
-#     -7: 9187201950435737471,
-#     -9: 18374403900871474942
-# }
 
 MOVES = {i: 1 << (63 - i) for i in range(64)}
 LOG = {MOVES[63 - i]: i for i in range(64)}
@@ -74,13 +63,23 @@ def hamming_weight(n):
 
 def fill(current, opponent, direction):
     mask = MASKS[direction]
-    w = mask(current) & opponent
-    w |= mask(w) & opponent
-    w |= mask(w) & opponent
-    w |= mask(w) & opponent
-    w |= mask(w) & opponent
-    w |= mask(w) & opponent
-    return mask(w)
+    if direction > 0:
+        w = ((current & mask) << direction) & opponent
+        w |= ((w & mask) << direction) & opponent
+        w |= ((w & mask) << direction) & opponent
+        w |= ((w & mask) << direction) & opponent
+        w |= ((w & mask) << direction) & opponent
+        w |= ((w & mask) << direction) & opponent
+        return (w & mask) << direction
+    else:
+        direction *= -1
+        w = ((current & mask) >> direction) & opponent
+        w |= ((w & mask) >> direction) & opponent
+        w |= ((w & mask) >> direction) & opponent
+        w |= ((w & mask) >> direction) & opponent
+        w |= ((w & mask) >> direction) & opponent
+        w |= ((w & mask) >> direction) & opponent
+        return (w & mask) >> direction
 
 
 def possible_moves(board, piece):
@@ -109,7 +108,7 @@ def place(b, piece, move):
     for i in MASKS:
         c = fill(move, board[not piece], i)
         if c & board[piece] != 0:
-            c = MASKS[i * -1](c)
+            c = (c & MASKS[i*-1]) << i*-1 if i < 0 else (c & MASKS[i*-1]) >> i
             board[piece] |= c
             board[not piece] &= (FULL_BOARD - c)
     # PLACE_CACHE[(b[0], b[1], piece, move)] = board
