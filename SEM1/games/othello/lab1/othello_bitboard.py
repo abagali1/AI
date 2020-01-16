@@ -58,7 +58,7 @@ def fill(current, opponent, direction):
         w |= ((w & mask) << direction) & opponent
         w |= ((w & mask) << direction) & opponent
         w |= ((w & mask) << direction) & opponent
-        return (w & mask) << direction
+        return w
     else:
         direction *= -1
         w = ((current & mask) >> direction) & opponent
@@ -67,14 +67,16 @@ def fill(current, opponent, direction):
         w |= ((w & mask) >> direction) & opponent
         w |= ((w & mask) >> direction) & opponent
         w |= ((w & mask) >> direction) & opponent
-        return (w & mask) >> direction
+        return w
 
 
 def possible_moves(board, piece):
     final = 0b0
     possible = set()
-    for d in MASKS:
-        final |= fill(board[piece], board[not piece], d) & (18446744073709551615 - (board[piece] | board[not piece]))
+    for direction, mask in MASKS.items():
+        f = ((fill(board[piece], board[not piece], direction) & mask) << direction) if direction > 0 else (
+                    (fill(board[piece], board[not piece], direction) & mask) >> direction * -1)
+        final |= f & (18446744073709551615 - (board[piece] | board[not piece]))
     while final:
         b = final & -final
         possible.add(63 - LOG[b])
