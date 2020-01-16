@@ -56,11 +56,11 @@ def hamming_weight(n):
     if n in HAMMING_CACHE:
         return HAMMING_CACHE[n]
     else:
+        orig = n
         if n <= 2:
             HAMMING_CACHE[n] = n
         else:
             c = 0
-            orig = n
             while n:
                 c += 1
                 n -= n&-n
