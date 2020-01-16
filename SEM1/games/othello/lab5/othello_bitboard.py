@@ -13,6 +13,17 @@ MASKS = {
     -7: lambda x: ((x & 0xfefefefefefefefe) >> 1) >> 8
 }
 
+# MASKS = {
+#     -1: 18374403900871474942,
+#     1: 9187201950435737471,
+#     8: 0xffffffffffffffff,
+#     -8: 0xffffffffffffffff,
+#     7: 18374403900871474942,
+#     9: 9187201950435737471,
+#     -7: 9187201950435737471,
+#     -9: 18374403900871474942
+# }
+
 MOVES = {i: 1 << (63 - i) for i in range(64)}
 LOG = {MOVES[63 - i]: i for i in range(64)}
 FULL_BOARD = 0xffffffffffffffff
@@ -27,39 +38,26 @@ EDGES = {0: {0, 1, 2, 3, 4, 5, 6, 7}, 1: {56, 57, 58, 59, 60, 61, 62, 6}, 2: {7,
 
 FUNC_CACHE = {}
 HAMMING_CACHE = {}
-TREE_CACHE = {}
 POSSIBLE_CACHE = {}
 PLACE_CACHE = {}
-
-bit_not = lambda x: 0xffffffffffffffff - x
-is_on = lambda x, pos: x & MOVES[63 - pos]
-
-binary_to_board = lambda board: "".join(
-    ['o' if is_on(board[0], 63 - i) else 'x' if is_on(board[1], 63 - i) else '.' for i in range(64)])
-
-board_to_string = lambda x: '\n'.join([''.join([x[i * 8 + j]][0] for j in range(8)) for i in range(8)]).strip().lower()
-binary_to_string = lambda x: '\n'.join(
-    [''.join(['{:064b}'.format(x)[i * 8 + j][0] for j in range(8)]) for i in range(8)]).strip().lower()
-
-print_binary = lambda x: print(binary_to_string(x))
-print_board = lambda x: print(board_to_string(x))
-print_board_binary = lambda x: print(board_to_string(binary_to_board(x)))
+TREE_CACHE = {}
 
 
 def cache(func):
     name = func.__name__
 
     def wrapper(*args, **kwargs):
+        key = "".join([str(x) for x in args])
         if name not in FUNC_CACHE:
             result = func(*args)
-            FUNC_CACHE[name] = {args: result}
+            FUNC_CACHE[name] = {key: result}
             return result
         else:
-            if args in FUNC_CACHE[name]:
-                return FUNC_CACHE[name][args]
+            if key in FUNC_CACHE[name]:
+                return FUNC_CACHE[name][key]
             else:
                 result = func(*args)
-                FUNC_CACHE[name][args] = result
+                FUNC_CACHE[name][key] = result
                 return result
 
     return wrapper
@@ -74,7 +72,6 @@ def hamming_weight(n):
         return HAMMING_CACHE[n]
 
 
-@cache
 def fill(current, opponent, direction):
     mask = MASKS[direction]
     w = mask(current) & opponent
@@ -93,7 +90,7 @@ def possible_moves(board, piece):
         final = 0b0
         possible = set()
         for d in MASKS:
-            final |= fill(board[piece], board[not piece], d) & (0xffffffffffffffff - (board[piece] | board[not piece]))
+            final |= fill(board[piece], board[not piece], d) & (FULL_BOARD - (board[piece] | board[not piece]))
         while final:
             b = final & -final
             possible.add(63 - LOG[b])
@@ -103,20 +100,20 @@ def possible_moves(board, piece):
 
 
 def place(b, piece, move):
-    if (b[0], b[1], piece, move) in PLACE_CACHE:
-        return PLACE_CACHE[(b[0], b[1], piece, move)]
-    else:
-        board = {0: b[0], 1: b[1]}
-        board[piece] |= move
+    # if (b[0], b[1], piece, move) in PLACE_CACHE:
+    #     return PLACE_CACHE[(b[0], b[1], piece, move)]
+    # else:
+    board = {0: b[0], 1: b[1]}
+    board[piece] |= move
 
-        for i in MASKS:
-            c = fill(move, board[not piece], i)
-            if c & board[piece] != 0:
-                c = MASKS[i * -1](c)
-                board[piece] |= c
-                board[not piece] &= bit_not(c)
-        PLACE_CACHE[(b[0], b[1], piece, move)] = board
-        return board
+    for i in MASKS:
+        c = fill(move, board[not piece], i)
+        if c & board[piece] != 0:
+            c = MASKS[i * -1](c)
+            board[piece] |= c
+            board[not piece] &= (FULL_BOARD - c)
+    # PLACE_CACHE[(b[0], b[1], piece, move)] = board
+    return board
 
 
 def game_over(board, current):
@@ -124,7 +121,7 @@ def game_over(board, current):
         return True
     player_moves = possible_moves(board, current)
     opponent_moves = possible_moves(board, not current)
-    if not player_moves and not opponent_moves:
+    if len(player_moves) + len(opponent_moves) == 0:
         return True
     else:
         return player_moves
@@ -150,27 +147,21 @@ def minimax(board, piece, depth):
     best_opp_moves = []
 
     if piece:
-        max_move = -100
-        best_move = 0
+        max_move, best_move = -100, 0
         for i in current_moves:
-            placed = place(b=board, piece=piece, move=MOVES[i])
+            placed = place(board, piece, MOVES[i])
             tmp, opp_moves = minimax(placed, not piece, depth - 1)
             if tmp > max_move:
-                max_move = tmp
-                best_move = i
-                best_opp_moves = opp_moves
+                max_move, best_move, best_opp_moves = tmp, i, opp_moves
         TREE_CACHE[(board[0], board[1], piece)] = (max_move, best_opp_moves + [best_move])
         return TREE_CACHE[(board[0], board[1], piece)]
     else:
-        min_move = 100
-        best_move = 0
+        min_move, best_move = 100, 0
         for i in current_moves:
-            placed = place(b=board, piece=piece, move=MOVES[i])
+            placed = place(board, piece, MOVES[i])
             tmp, opp_moves = minimax(placed, not piece, depth - 1)
             if tmp < min_move:
-                min_move = tmp
-                best_move = i
-                best_opp_moves = opp_moves
+                min_move, best_move, best_opp_moves = tmp, i, opp_moves
         TREE_CACHE[(board[0], board[1], piece)] = (min_move, best_opp_moves + [best_move])
         return TREE_CACHE[(board[0], board[1], piece)]
 
@@ -179,7 +170,7 @@ def actual_best_move(board, moves, piece):
     best = []
     for move in moves:
         placed = place(board, piece, MOVES[move])
-        val = minimax(placed, not piece, 11)
+        val = minimax(placed, not piece, 12)
         best.append((val[0], move, val[1]))
     final = max(best, key=lambda x: x[0]) if piece else min(best, key=lambda x: x[0])
     return (final[0], final[2] + [final[1]]) if piece else (final[0]*-1, final[2] + [final[1]])
@@ -200,4 +191,4 @@ def main():
 if __name__ == "__main__":
     start = time()
     main()
-    # print("{0}".format(time()-start))
+    print("{0}".format(time()-start))
