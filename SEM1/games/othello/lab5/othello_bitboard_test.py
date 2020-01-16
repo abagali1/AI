@@ -153,36 +153,56 @@ def minimax(board, piece, depth):
     """
     Returns the best value, [sequence of the previous best moves]
     """
+    print("--------")
+    print("START recur with ", piece)
+    b = binary_to_board(board)
+    print(board)
+    print(hamming_weight(board[1]), hamming_weight(board[0]))
+    print(b, " {0}".format(hamming_weight(board[1])-hamming_weight(board[0])))
+    print_board_binary(board)
+    print()
     if (board[0], board[1], piece) in TREE_CACHE:
         return TREE_CACHE[(board[0], board[1], piece)]
 
     state = game_over(board, piece)
     if state is True or depth == 0:
+        print("OVER")
         return hamming_weight(board[1]) - hamming_weight(board[0]), []
     else:
         current_moves = state
 
     if len(current_moves) == 0:
+        print("PASS ", piece)
         val = minimax(board, not piece, depth)
+        print(val)
         return val[0], val[1] + [-1]
 
     best_opp_moves = []
+    print(piece, " has ", current_moves)
     if piece:
         max_move, best_move = -100, 0
         for i in current_moves:
+            print("X: Placing ", i)
             placed = place(board, piece, MOVES[i])
             tmp, opp_moves = minimax(placed, not piece, depth - 1)
             if tmp > max_move:
                 max_move, best_move, best_opp_moves = tmp, i, opp_moves
+            print("X: ", max_move, best_move, tmp, opp_moves)
+            print("X: ", opp_moves)
+            print()
         TREE_CACHE[(board[0], board[1], piece)] = (max_move, best_opp_moves + [best_move])
         return TREE_CACHE[(board[0], board[1], piece)]
     else:
         min_move, best_move = 100, 0
         for i in current_moves:
+            print("O: Placing ", i)
             placed = place(board, piece, MOVES[i])
             tmp, opp_moves = minimax(placed, not piece, depth - 1)
             if tmp < min_move:
                 min_move, best_move, best_opp_moves = tmp, i, opp_moves
+            print("O: ", min_move, best_move, tmp, opp_moves)
+            print("O: ", opp_moves)
+            print()
         TREE_CACHE[(board[0], board[1], piece)] = (min_move, best_opp_moves + [best_move])
         return TREE_CACHE[(board[0], board[1], piece)]
 
@@ -190,9 +210,12 @@ def minimax(board, piece, depth):
 def actual_best_move(board, moves, piece):
     best = []
     for move in moves:
+        print("INITIAL place ", piece, " at ", move)
         placed = place(board, piece, MOVES[move])
         val = minimax(placed, not piece, 12)
+        print(move, val)
         best.append((val[0], move, val[1]))
+    print(best)
     final = max(best, key=lambda x: x[0]) if piece else min(best, key=lambda x: x[0])
     return (final[0], final[2] + [final[1]]) if piece else (final[0]*-1, final[2] + [final[1]])
 
@@ -265,7 +288,27 @@ def best_move(board, m, piece):
 
     print("My move is {0}".format(best[1]))
 
+
+def parse_args():
+    board = '.'*27 + 'OX......XO'+'.'*27
+    piece = ''
+    moves = []
+    for i in argv[1:]:
+        if len(i) == 64:
+            piece = i.upper()
+        elif i.upper() == 'X' or i.upper() == 'O':
+            piece = i.upper()
+        else:
+            moves.append(i)
+    if not piece:
+        piece = "O" if board.count(".") % 2 != 0 else "X"
+    moves = [LETTERS[x] if x in LETTERS else int(x) for x in moves]
+    return board, piece, moves
+
+
 def main():
+    # string_board, piece, moves = parse_args()
+    # string_board, piece = argv[1].upper(), argv[2].upper()
     string_board, piece = argv[1].upper(), argv[2].upper()
     board = {
         0: int(string_board.replace('.', '0').replace('O', '1').replace('X', '0'), 2),
@@ -274,6 +317,38 @@ def main():
     piece = 0 if piece == 'O' else 1
     possible = possible_moves(board, piece)
     print(possible)
+
+    # for move in moves:
+    #     if move < 0:
+    #         print('O' if piece else 'X', " is passing")
+    #         continue
+    #     print("{0} moves to {1}".format('X' if piece else 'O', move))
+    #
+    #     board = place(board, piece, MOVES[move])
+    #     s = binary_to_board(board)
+    #     print("{0} {1}/{2}\n".format(s, s.count('x'), s.count('o')))
+    #
+    #     piece = not piece
+    #     possible = possible_moves(board, piece)
+    #
+    #     if len(possible) != 0:
+    #         s = [*s]
+    #         for i in possible:
+    #             s[i] = '*'
+    #         print_board(s)
+    #
+    #         print("Possible moves for {0}: {1}\n".format('X' if piece else 'O',
+    #                                                      ", ".join([*map(str, [x for x in possible])])))
+    #     else:
+    #         piece = not piece
+    #         possible = possible_moves(board, piece)
+    #         s = binary_to_board(board)
+    #         s = [*s]
+    #         for i in possible:
+    #             s[i] = '*'
+    #         print_board(s)
+    #         print("Possible moves for {0}: {1}\n".format('X' if piece else 'O',
+    #                                                      ", ".join([*map(str, [x for x in possible])])))
     if possible:
         # best_move(board, possible, piece)
         print("Min score: {0}; move sequence: {1}".format(*actual_best_move(board, [*possible] , piece)))
