@@ -60,11 +60,15 @@ def hamming_weight(n):
             HAMMING_CACHE[n] = n
         else:
             c = 0
+            orig = n
             while n:
                 c += 1
                 n -= n&-n
-            HAMMING_CACHE[n] =c
-        return HAMMING_CACHE[n]
+                if n in HAMMING_CACHE:
+                    HAMMING_CACHE[orig] = HAMMING_CACHE[n]+c
+                    break
+            HAMMING_CACHE[orig] = c
+        return HAMMING_CACHE[orig]
 
 
 def fill(current, opponent, direction):
