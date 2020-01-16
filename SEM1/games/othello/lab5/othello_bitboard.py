@@ -29,6 +29,8 @@ EDGES = {0: {0,1,2,3,4,5,6,7}, 1:{56,57,58,59,60,61,62,6}, 2:{7,15,23,31,39,47,5
 FUNC_CACHE = {}
 HAMMING_CACHE = {}
 TREE_CACHE = {}
+POSSIBLE_CACHE = {}
+PLACE_CACHE = {}
 
 
 bit_not = lambda x: 0xffffffffffffffff - x
@@ -69,7 +71,7 @@ def hamming_weight(n):
             HAMMING_CACHE[n] = 1+hamming_weight(n-(n&-n))
         return HAMMING_CACHE[n]
 
-
+@cache
 def fill(current, opponent, direction):
     mask = MASKS[direction]
     w = mask(current) & opponent
@@ -82,28 +84,36 @@ def fill(current, opponent, direction):
 
 
 def possible_moves(board, piece):
-    final = 0b0
-    possible = set()
-    for d in MASKS:
-        final |= fill(board[piece], board[not piece], d) & (0xffffffffffffffff - (board[piece]|board[not piece]))
-    while final:
-        b = final & -final
-        possible.add(63-LOG[b])
-        final -= b
-    return possible 
+    if (board[0], board[1], piece) in POSSIBLE_CACHE:
+        return POSSIBLE_CACHE[(board[0], board[1], piece)]
+    else:
+        final = 0b0
+        possible = set()
+        for d in MASKS:
+            final |= fill(board[piece], board[not piece], d) & (0xffffffffffffffff - (board[piece]|board[not piece]))
+        while final:
+            b = final & -final
+            possible.add(63-LOG[b])
+            final -= b
+        POSSIBLE_CACHE[(board[0], board[1], piece)] = possible
+        return possible 
 
 
 def place(b, piece, move):
-    board = {0: b[0], 1:b[1]}
-    board[piece] |= move
+    if (b[0], b[1], piece, move) in PLACE_CACHE:
+        return PLACE_CACHE[(b[0], b[1], piece, move)]
+    else:
+        board = {0: b[0], 1:b[1]}
+        board[piece] |= move
 
-    for i in MASKS:
-        c = fill(move, board[not piece], i)
-        if c&board[piece] != 0:
-            c = MASKS[i*-1](c)
-            board[piece] |= c
-            board[not piece] &= bit_not(c)
-    return board
+        for i in MASKS:
+            c = fill(move, board[not piece], i)
+            if c&board[piece] != 0:
+                c = MASKS[i*-1](c)
+                board[piece] |= c
+                board[not piece] &= bit_not(c)
+        PLACE_CACHE[(b[0], b[1], piece, move)] = board
+        return board
 
 
 def game_over(board, current):
@@ -111,6 +121,7 @@ def game_over(board, current):
         return True
     player_moves = possible_moves(board, current)
     opponent_moves = possible_moves(board, not current)
+    print(current, player_moves, opponent_moves)
     if not player_moves and not opponent_moves:
         return True
     else:
@@ -118,18 +129,29 @@ def game_over(board, current):
 
 
 def minimax(board, piece, depth):
+    """
+    Returns the best value, [sequence of the previous best moves]
+    """
+    print("------")
+    print("RECURRING with: ", piece)
+    print_board_binary(board)
+    print(binary_to_board(board))
+    print()
     if (board[0], board[1], piece) in TREE_CACHE:
         return TREE_CACHE[(board[0], board[1], piece)]
 
     state = game_over(board, piece)
     if state == True or depth==0:
+        print("OVER")
         return hamming_weight(board[1])-hamming_weight(board[0]), []
     else:
         current_moves = state
 
     if len(current_moves) == 0:
-        val = minimax(board, not piece, depth-1)
-        return val[0], [-1]+val[1]
+        print(piece, " has no moves ", state)
+        val = minimax(board, not piece, depth)
+        print(val)
+        return val[0], val[1]+[-1]
 
     best_opp_moves = []
     
@@ -137,36 +159,43 @@ def minimax(board, piece, depth):
         max_move = -100
         best_move = 0
         for i in current_moves:
-            placed = place(board, piece, i)
+            print("Placing X at ", i)
+            placed = place(b=board, piece=piece, move=MOVES[i])
             tmp, opp_moves = minimax(placed, not piece, depth-1)
             if tmp > max_move:
                 max_move = tmp
                 best_move = i
                 best_opp_moves = opp_moves
-
-        TREE_CACHE[(board[0], board[1], piece)] = (max_move, [best_move] + best_opp_moves)
+            print("Placed X at ", i, "Previous Moves: ", best_opp_moves)
+        TREE_CACHE[(board[0], board[1], piece)] = (max_move, best_opp_moves + [best_move])
+        print(i ,"X, ", TREE_CACHE[(board[0], board[1], piece)][1])
         return TREE_CACHE[(board[0], board[1], piece)]
     else:
         min_move = 100
         best_move = 0
         for i in current_moves:
-            placed = place(board, piece, i)
+            print("Placing O at ", i)
+            placed = place(b=board, piece=piece, move=MOVES[i])
             tmp, opp_moves = minimax(placed, not piece, depth-1)
             if tmp < min_move:
                 min_move = tmp
                 best_move = i
                 best_opp_moves = opp_moves
- 
-        TREE_CACHE[(board[0], board[1], piece)] = (min_move, [best_move] + best_opp_moves)
+            print("Placed O at ", i, "Previous Moves: ", best_opp_moves)
+        TREE_CACHE[(board[0], board[1], piece)] = (min_move, best_opp_moves+ [best_move] )
+        print(i, "O, ", TREE_CACHE[(board[0], board[1], piece)][1])
         return TREE_CACHE[(board[0], board[1], piece)]
 
 
 def actual_best_move(board, moves, piece):
     best = []
+    print_board_binary(board)
+    print("---------\n")
     for move in moves:
-        placed = place(board, piece, move)
+        print("INITIAL with ", piece, " at ", move)
+        placed = place(board, piece, MOVES[move])
         val = minimax(placed, not piece, 11)
-        best.append((val[0], move, val[1]))
+        best.append((val[0], move, val[1]+[move]))
     return max(best, key=lambda x: x[0]) if piece else min(best, key=lambda x: x[0])
 
 
