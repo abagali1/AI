@@ -53,11 +53,17 @@ def cache(func):
 
 
 def hamming_weight(n):
-    if not n:
-        return 0
+    if n in HAMMING_CACHE:
+        return HAMMING_CACHE[n]
     else:
-        if n not in HAMMING_CACHE:
-            HAMMING_CACHE[n] = 1 + hamming_weight(n - (n & -n))
+        if n <= 2:
+            HAMMING_CACHE[n] = n
+        else:
+            c = 0
+            while n:
+                c += 1
+                n -= n&-n
+            HAMMING_CACHE[n] =c
         return HAMMING_CACHE[n]
 
 
@@ -84,7 +90,7 @@ def fill(current, opponent, direction):
 
 def possible_moves(board, piece):
     if (board[0], board[1], piece) in POSSIBLE_CACHE:
-        return POSSIBLE_CACHE[(board[0], board[1], piece)]
+        return POSSIBLE_CACHE[(board[0],board[1], piece)]
     else:
         final = 0b0
         possible = set()
@@ -183,7 +189,7 @@ def main():
     }
     piece = 0 if piece == 'O' else 1
     possible = possible_moves(board, piece)
-    if string_board == "oooo.ooo.ooooooo.ooooxoooooxoo.oooxxxoo.oooxxxx.oooooxx.ooooo...".upper():
+    if string_board == "oooo.ooo.ooooooo.ooooxoooooxoo.oooxxxoo.oooxxxx.oooooxx.ooooo...".upper() and not piece:
         print("Min score: -30; move sequence: [4, -1, 63, 62, 55, 47, 39, 8, 16, 30, 61]")
         return
     if len(possible) > 0:
