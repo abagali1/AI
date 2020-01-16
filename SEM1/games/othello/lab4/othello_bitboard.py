@@ -136,7 +136,6 @@ def next_to_corner(board, move, piece): # MAX: 150 MIN: -100000
     return -100000
 
 
-
 def stable_edge(board, move, piece):
     bs = binary_to_board(place(board, piece, move))
     token = 'X' if piece else 'O'
