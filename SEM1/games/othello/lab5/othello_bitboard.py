@@ -195,8 +195,9 @@ def actual_best_move(board, moves, piece):
         print("INITIAL with ", piece, " at ", move)
         placed = place(board, piece, MOVES[move])
         val = minimax(placed, not piece, 11)
-        best.append((val[0], move, val[1]+[move]))
-    return max(best, key=lambda x: x[0]) if piece else min(best, key=lambda x: x[0])
+        best.append((val[0], move, val[1]))
+    final = max(best, key=lambda x: x[0]) if piece else min(best, key=lambda x: x[0])
+    return final[0], final[2]+[final[1]]
 
 
 def main():
@@ -210,7 +211,7 @@ def main():
     possible = possible_moves(board, piece)
     num_empty = hamming_weight(bit_not(board[0]|board[1]))
     if len(possible) > 0:
-        print("My move is {0}".format(actual_best_move(board, [*possible], piece)))
+        print("Min score: {0}; move sequence: {1}".format(*actual_best_move(board, [*possible], piece)))
     
     
 if __name__ == "__main__":
