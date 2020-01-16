@@ -3,14 +3,14 @@ from sys import argv
 from time import time as time
 
 MASKS = {
-    -1: 18374403900871474942,
-    1: 9187201950435737471,
+    -1: 0xfefefefefefefefe,
+    1: 0x7f7f7f7f7f7f7f7f,
     8: 0xffffffffffffffff,
     -8: 0xffffffffffffffff,
-    7: 18374403900871474942,
-    9: 9187201950435737471,
-    -7: 9187201950435737471,
-    -9: 18374403900871474942
+    7: 0xfefefefefefefefe,
+    9: 0x7f7f7f7f7f7f7f7f,
+    -7: 0x7f7f7f7f7f7f7f7f,
+    -9: 0xfefefefefefefefe
 }
 
 MOVES = {i: 1 << (63 - i) for i in range(64)}
