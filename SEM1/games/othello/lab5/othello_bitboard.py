@@ -139,8 +139,7 @@ def actual_best_move(board, moves, piece):
         placed = place(board, piece, MOVES[move])
         val = minimax(placed, not piece, 12)
         final = max(final,(val[0], move, val[1])) if piece else min(final,(val[0], move, val[1]))
-        s = "Min score: {0}; move sequence: {1}".format(final[0], final[2]+[final[1]]) if piece else "Min score: {0}; move sequence: {1}".format(final[0]*-1, final[2]+[final[1]])
-        print(s)
+        print("Min score: {0}; move sequence: {1}".format(final[0], final[2]+[final[1]]) if piece else "Min score: {0}; move sequence: {1}".format(final[0]*-1, final[2]+[final[1]]))
     return (final[0], final[2] + [final[1]]) if piece else (final[0] * -1, final[2] + [final[1]])
 
 
