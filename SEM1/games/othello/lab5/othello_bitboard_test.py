@@ -208,6 +208,8 @@ def minimax(board, piece, depth):
 
 
 def actual_best_move(board, moves, piece):
+    print(board, moves, piece)
+    return
     best = []
     for move in moves:
         print("INITIAL place ", piece, " at ", move)
@@ -316,7 +318,7 @@ def main():
     }
     piece = 0 if piece == 'O' else 1
     possible = possible_moves(board, piece)
-    print(possible)
+
 
     # for move in moves:
     #     if move < 0:

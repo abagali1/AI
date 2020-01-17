@@ -17,6 +17,8 @@ MOVES = {i: 1 << (63 - i) for i in range(64)}
 POS = {MOVES[63 - i]: 63 - i for i in range(64)}
 FULL_BOARD = 0xffffffffffffffff
 
+CORNERS = {0, 7, 56, 63}
+
 HAMMING_CACHE = {}
 POSSIBLE_CACHE = {}
 TREE_CACHE = {}
@@ -57,7 +59,7 @@ def fill(current, opponent, direction):
 
 
 def possible_moves(board, piece):
-    key = (board[0] << 64) + board[1] + piece
+    key = (board[0], board[1], piece)
     if key in POSSIBLE_CACHE:
         return POSSIBLE_CACHE[key]
     else:
@@ -98,7 +100,7 @@ def minimax(board, piece, depth):
     """
     Returns the best value, [sequence of the previous best moves]
     """
-    key = (board[0] << 65) + board[1] + piece
+    key = (board[0],board[1],piece)
     if key in TREE_CACHE:
         return TREE_CACHE[key]
 
@@ -120,8 +122,8 @@ def minimax(board, piece, depth):
             tmp, opp_moves = minimax(placed, not piece, depth - 1)
             if tmp > max_move:
                 max_move, best_move, best_opp_moves = tmp, i, opp_moves
-        TREE_CACHE[key] = (max_move, best_opp_moves + [best_move])
-        return TREE_CACHE[key]
+        TREE_CACHE[(board[0], board[1], piece)] = (max_move, best_opp_moves + [best_move])
+        return TREE_CACHE[(board[0], board[1], piece)]
     else:
         min_move, best_move = 100, 0
         for i in current_moves:
@@ -129,18 +131,27 @@ def minimax(board, piece, depth):
             tmp, opp_moves = minimax(placed, not piece, depth - 1)
             if tmp < min_move:
                 min_move, best_move, best_opp_moves = tmp, i, opp_moves
-        TREE_CACHE[key] = (min_move, best_opp_moves + [best_move])
-        return TREE_CACHE[key]
+        TREE_CACHE[(board[0], board[1], piece)] = (min_move, best_opp_moves + [best_move])
+        return TREE_CACHE[(board[0], board[1], piece)]
+
+
+
+def mobility_heuristic(board, move, piece): # MAX: 0 MIN: -340
+    placed = place(board, piece, move)
+    opp_moves = possible_moves(placed, not piece)
+    h = -len(opp_moves)*10
+    if any(map(lambda x: x in CORNERS, opp_moves)):
+        h -= 1000
+    return h
 
 
 def actual_best_move(board, moves, piece):
-    final = (-100, 0, 0) if piece else (100, 0, 0)
-    for move in moves[::-1]:
+    final = (-1000, 0, 0) if piece else (1000, 0, 0)
+    for move in sorted(moves, key=lambda x: mobility_heuristic(board, MOVES[x], piece))[::-1]:
         placed = place(board, piece, MOVES[move])
         val = minimax(placed, not piece, 12)
-        final = max(final,(val[0], move, val[1])) if piece else min(final,(val[0], move, val[1]))
-        print("Min score: {0}; move sequence: {1}".format(final[0], final[2]+[final[1]]) if piece else "Min score: {0}; move sequence: {1}".format(final[0]*-1, final[2]+[final[1]]))
-    return (final[0], final[2] + [final[1]]) if piece else (final[0] * -1, final[2] + [final[1]])
+        final = max(final,(val[0], move, val[1]+[move])) if piece else min(final,(val[0], move, val[1]+[move]))
+        print("Min score: {0}; move sequence: {1}".format(final[0], final[2]) if piece else "Min score: {0}; move sequence: {1}".format(final[0]*-1, final[2]))
 
 
 def main():
@@ -151,9 +162,9 @@ def main():
     }
     piece = 0 if piece == 'O' else 1
     possible = possible_moves(board, piece)
-    print(sorted(possible))
+
     if possible:
-        print("Min score: {0}; move sequence: {1}".format(*actual_best_move(board, [*possible], piece)))
+        actual_best_move(board, [*possible], piece)
 
 
 if __name__ == "__main__":
