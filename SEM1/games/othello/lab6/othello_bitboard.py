@@ -165,13 +165,13 @@ def mobility_heuristic(board, move, piece): # MAX: 0 MIN: -340
 
 
 def actual_best_move(board, moves, piece):
-    best = []
-    for move in moves:
+    final = (-1000, 0, 0) if piece else (1000, 0, 0)
+    for move in sorted(moves, key=lambda x: mobility_heuristic(board, MOVES[x], piece)):
         placed = place(board, piece, MOVES[move])
         val = minimax(placed, not piece, 12, -10000, 10000)
-        best.append((val[0], move, val[1]))
-    final = max(best, key=lambda x: x[0]) if piece else min(best, key=lambda x: x[0])
-    return (final[0], final[2] + [final[1]]) if piece else (final[0]*-1, final[2] + [final[1]])
+        final = max(final,(val[0], move, val[1]+[move])) if piece else min(final,(val[0], move, val[1]+[move]))
+        print("Min score: {0}; move sequence: {1}".format(final[0], final[2]) if piece else "Min score: {0}; move sequence: {1}".format(final[0]*-1, final[2]))
+    return (final[0], final[2]) if piece else (final[0]*-1, final[2])
 
 
 def main():
