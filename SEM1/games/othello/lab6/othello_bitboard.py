@@ -136,7 +136,7 @@ def minimax(board, piece, depth, alpha, beta):
             tmp, opp_moves = minimax(placed, not piece, depth - 1, alpha, beta)
             if tmp > max_move:
                 max_move, best_move, best_opp_moves = tmp, i, opp_moves
-            alpha = max(alpha, max_move)
+            alpha = max(max_move, alpha)
             if beta <= alpha:
                 break
         TREE_CACHE[(board[0], board[1], piece)] = (max_move, best_opp_moves + [best_move])
@@ -148,7 +148,7 @@ def minimax(board, piece, depth, alpha, beta):
             tmp, opp_moves = minimax(placed, not piece, depth - 1, alpha, beta)
             if tmp < min_move:
                 min_move, best_move, best_opp_moves = tmp, i, opp_moves
-            beta = min(beta, min_move)
+            beta = min(min_move, beta)
             if beta <= alpha:
                 break
         TREE_CACHE[(board[0], board[1], piece)] = (min_move, best_opp_moves + [best_move])
@@ -166,7 +166,7 @@ def mobility_heuristic(board, move, piece): # MAX: 0 MIN: -340
 
 def actual_best_move(board, moves, piece):
     best = []
-    for move in sorted(moves, key=lambda x: mobility_heuristic(board,MOVES[x], piece)+x):
+    for move in moves:
         placed = place(board, piece, MOVES[move])
         val = minimax(placed, not piece, 12, -10000, 10000)
         best.append((val[0], move, val[1]))
