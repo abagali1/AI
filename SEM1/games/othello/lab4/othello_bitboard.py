@@ -165,11 +165,14 @@ def best_move(board, moves, piece):
     for move in moves:
         actual_move = MOVES[move]
         h = strat(board, actual_move, piece)
+        print(move, h)
         h += next_to_corner(board, move, piece)
+        print(move, h)
         h += stable_edge(board, move, piece)
+        print(move,h)
         tiebreaker = coin_heuristic if strat == mobility_heuristic else mobility_heuristic
         best = (h,move) if h>best[0] else (h,move) if (h==best[0] and tiebreaker(board, MOVES[move], piece) > tiebreaker(board, MOVES[best[1]], piece)) else best
-
+        print(move, h)
     print("My move is {0}".format(best[1]))
 
 
