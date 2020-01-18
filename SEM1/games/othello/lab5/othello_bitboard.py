@@ -122,8 +122,8 @@ def minimax(board, piece, depth):
             tmp, opp_moves = minimax(placed, not piece, depth - 1)
             if tmp > max_move:
                 max_move, best_move, best_opp_moves = tmp, i, opp_moves
-        TREE_CACHE[(board[0], board[1], piece)] = (max_move, best_opp_moves + [best_move])
-        return TREE_CACHE[(board[0], board[1], piece)]
+        TREE_CACHE[key] = (max_move, best_opp_moves + [best_move])
+        return TREE_CACHE[key]
     else:
         min_move, best_move = 100, 0
         for i in current_moves:
@@ -131,8 +131,8 @@ def minimax(board, piece, depth):
             tmp, opp_moves = minimax(placed, not piece, depth - 1)
             if tmp < min_move:
                 min_move, best_move, best_opp_moves = tmp, i, opp_moves
-        TREE_CACHE[(board[0], board[1], piece)] = (min_move, best_opp_moves + [best_move])
-        return TREE_CACHE[(board[0], board[1], piece)]
+        TREE_CACHE[key] = (min_move, best_opp_moves + [best_move])
+        return TREE_CACHE[key]
 
 
 
