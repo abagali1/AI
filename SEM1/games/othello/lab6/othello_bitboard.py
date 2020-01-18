@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 from sys import argv
-from time import time as time
+from time import time 
 
+FULL_BOARD = 0xffffffffffffffff
 MASKS = {
     -1: 0xfefefefefefefefe,
     1: 0x7f7f7f7f7f7f7f7f,
-    8: 0xffffffffffffffff,
-    -8: 0xffffffffffffffff,
+    8: FULL_BOARD,
+    -8: FULL_BOARD,
     7: 0xfefefefefefefefe,
     9: 0x7f7f7f7f7f7f7f7f,
     -7: 0x7f7f7f7f7f7f7f7f,
@@ -16,7 +17,6 @@ MASKS = {
 
 MOVES = {i: 1 << (63 - i) for i in range(64)}
 POS = {MOVES[63 - i]: 63 - i for i in range(64)}
-FULL_BOARD = 0xffffffffffffffff
 
 
 HAMMING_CACHE = {}
@@ -93,7 +93,8 @@ def game_over(board, current):
         return True
     player_moves = possible_moves(board, current)
     opponent_moves = possible_moves(board, not current)
-    return True if len(player_moves) + len(opponent_moves) == 0 else player_moves
+    pm = len(player_moves)
+    return True if pm + len(opponent_moves) == 0 else (player_moves, pm)
 
 
 def minimax(board, piece, depth, alpha, beta):
@@ -107,9 +108,9 @@ def minimax(board, piece, depth, alpha, beta):
     if state is True or depth == 0:
         return hamming_weight(board[1]) - hamming_weight(board[0]), []
     else:
-        current_moves = state
+        current_moves, length = state
 
-    if len(current_moves) == 0:
+    if length == 0:
         val = minimax(board, not piece, depth, alpha, beta)
         return val[0], val[1] + [-1]
 
