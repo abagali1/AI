@@ -18,21 +18,10 @@ MOVES = {i: 1 << (63 - i) for i in range(64)}
 POS = {MOVES[63 - i]: 63 - i for i in range(64)}
 FULL_BOARD = 0xffffffffffffffff
 
-CORNERS = {0, 7, 56, 63}
-CORNER_NEIGHBORS = {1: 63, 6: 56, 8: 63, 9: 63, 14: 56, 15: 56, 48: 7, 49: 7, 54: 0, 55: 0, 57: 7, 62: 0}
-COL_EDGES = {1: {7, 15, 23, 31, 39, 47, 55, 63}, 0: {0, 8, 16, 24, 32, 40, 48, 56}}
-ROW_EDGES = {0: {0, 1, 2, 3, 4, 5, 6, 7}, 1: {56, 57, 58, 59, 60, 61, 62, 6}}
 
-EDGES = {0: {0, 1, 2, 3, 4, 5, 6, 7}, 1: {56, 57, 58, 59, 60, 61, 62, 6}, 2: {7, 15, 23, 31, 39, 47, 55, 63},
-         3: {0, 8, 16, 24, 32, 40, 48, 56}}
-
-
-FUNC_CACHE = {}
 HAMMING_CACHE = {}
 POSSIBLE_CACHE = {}
-PLACE_CACHE = {}
 TREE_CACHE = {}
-FILL_CACHE = {}
 
 
 def hamming_weight(n):
@@ -70,7 +59,7 @@ def fill(current, opponent, direction):
 
 
 def possible_moves(board, piece):
-    key = (board[0]<<64)+board[1]+piece
+    key = (board[0], board[1], piece)
     if key in POSSIBLE_CACHE:
         return POSSIBLE_CACHE[key]
     else:
@@ -149,15 +138,6 @@ def minimax(board, piece, depth, alpha, beta):
                 break
         TREE_CACHE[(board[0], board[1], piece)] = (min_move, best_opp_moves + [best_move])
         return TREE_CACHE[(board[0], board[1], piece)]
-
-
-def mobility_heuristic(board, move, piece): # MAX: 0 MIN: -340
-    placed = place(board, piece, move)
-    opp_moves = possible_moves(placed, not piece)
-    h = -len(opp_moves)*10
-    if any(map(lambda x: x in CORNERS, opp_moves)):
-        h -= 1000
-    return h
 
 
 def actual_best_move(board, moves, piece):
