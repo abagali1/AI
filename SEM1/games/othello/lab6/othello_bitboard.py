@@ -97,22 +97,25 @@ def game_over(board, current):
     return True if pm + len(opponent_moves) == 0 else (player_moves, pm)
 
 
-def minimax(board, piece, depth, alpha, beta):
+def minimax(board, piece, depth, alpha, beta, possible=[]):
     """
     Returns the best value, [sequence of the previous best moves]
     """
     if (board[0], board[1], piece) in TREE_CACHE:
         return TREE_CACHE[(board[0], board[1], piece)]
 
-    state = game_over(board, piece)
-    if state is True or depth == 0:
-        return hamming_weight(board[1]) - hamming_weight(board[0]), []
-    else:
-        current_moves, length = state
+    if not possible:
+        state = game_over(board, piece)
+        if state is True or depth == 0:
+            return hamming_weight(board[1]) - hamming_weight(board[0]), []
+        else:
+            current_moves, length = state
 
-    if length == 0:
-        val = minimax(board, not piece, depth, alpha, beta)
-        return val[0], val[1] + [-1]
+        if length == 0:
+            val = minimax(board, not piece, depth, alpha, beta)
+            return val[0], val[1] + [-1]
+    else:
+        current_moves = possible
     
     best_opp_moves = []
     if piece:
@@ -142,7 +145,7 @@ def minimax(board, piece, depth, alpha, beta):
 
 
 def actual_best_move(board, moves, piece):
-    val = minimax(board, piece, 12, -10000, 10000)
+    val = minimax(board, piece, 12, -10000, 10000, possible=sorted(moves, key=lambda x: len(possible_moves(place(board, piece, MOVES[x]), not piece))))
     print("Min score: {0}; move sequence: {1}".format(val[0], val[1]) if piece else "Min score: {0}; move sequence: {1}".format(val[0]*-1, val[1]))
 
 
