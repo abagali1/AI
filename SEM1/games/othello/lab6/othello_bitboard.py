@@ -113,7 +113,7 @@ def minimax(board, piece, depth, alpha, beta):
     if length == 0:
         val = minimax(board, not piece, depth, alpha, beta)
         return val[0], val[1] + [-1]
-
+    
     best_opp_moves = []
     if piece:
         max_move, best_move = -100, 0
@@ -142,12 +142,8 @@ def minimax(board, piece, depth, alpha, beta):
 
 
 def actual_best_move(board, moves, piece):
-    final = (-1000, 0, 0) if piece else (1000, 0, 0)
-    for move in moves:
-        placed = place(board, piece, MOVES[move])
-        val = minimax(placed, not piece, 12, -10000, 10000)
-        final = max(final,(val[0], move, val[1]+[move])) if piece else min(final,(val[0], move, val[1]+[move]))
-        print("Min score: {0}; move sequence: {1}".format(final[0], final[2]) if piece else "Min score: {0}; move sequence: {1}".format(final[0]*-1, final[2]))
+    val = minimax(board, piece, 12, -10000, 10000)
+    print("Min score: {0}; move sequence: {1}".format(val[0], val[1]) if piece else "Min score: {0}; move sequence: {1}".format(val[0]*-1, val[1]))
 
 
 def main():
