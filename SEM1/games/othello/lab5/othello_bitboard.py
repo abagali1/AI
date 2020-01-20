@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from sys import argv
 from time import time as time
+from re import compile, IGNORECASE, match
 
 MASKS = {
     -1: 0xfefefefefefefefe,
@@ -12,12 +13,33 @@ MASKS = {
     -7: 0x7f7f7f7f7f7f7f7f,
     -9: 0xfefefefefefefefe
 }
+STABLE_EDGE_REGEX = {
+    1: compile(r"\.|\.$|^x+o*\.|\.o*x+", IGNORECASE),
+    0: compile(r"\.|\.$|^o+x*\.|\.x*o+", IGNORECASE)
+}
+
+bit_not = lambda x: 0xffffffffffffffff - x
+is_on = lambda x, pos: x & MOVES[63-pos]
+
+binary_to_board = lambda board: "".join(['o' if is_on(board[0], 63-i) else 'x' if is_on(board[1],63-i) else '.' for i in range(64)])
+board_to_string = lambda x: '\n'.join([''.join([x[i*8+j]][0] for j in range(8)) for i in range(8)]).strip().lower()
+binary_to_string = lambda x: '\n'.join([''.join(['{:064b}'.format(x)[i*8 +j][0] for j in range(8)]) for i in range(8)]).strip().lower()
+
+print_binary = lambda x: print(binary_to_string(x))
+print_board = lambda x: print(board_to_string(x))
+print_board_binary = lambda x: print(board_to_string(binary_to_board(x)))
+
 
 MOVES = {i: 1 << (63 - i) for i in range(64)}
 POS = {MOVES[63 - i]: 63 - i for i in range(64)}
 FULL_BOARD = 0xffffffffffffffff
 
 CORNERS = {0, 7, 56, 63}
+CORNER_NEIGHBORS = {1:63, 6:56, 8:63, 9:63, 14:56, 15:56, 48:7, 49:7, 54:0, 55:0, 57:7, 62:0}
+COL_EDGES =  {1:{7,15,23,31,39,47,55,63}, 0:{0,8,16,24,32,40,48,56}}
+ROW_EDGES = {0: {0,1,2,3,4,5,6,7}, 1:{56,57,58,59,60,61,62,6}}
+EDGES = {0: {0,1,2,3,4,5,6,7}, 1:{56,57,58,59,60,61,62,6}, 2:{7,15,23,31,39,47,55,63}, 3:{0,8,16,24,32,40,48,56}}
+
 
 HAMMING_CACHE = {}
 POSSIBLE_CACHE = {}
@@ -136,6 +158,13 @@ def minimax(board, piece, depth):
 
 
 
+def coin_heuristic(board, move, piece): # MAX: 100 MIN: -100
+    placed = place(board,piece,move)
+    num_player = hamming_weight(placed[piece])
+    num_opp = hamming_weight(placed[not piece])
+    return (num_player-num_opp)*10
+
+
 def mobility_heuristic(board, move, piece): # MAX: 0 MIN: -340
     placed = place(board, piece, move)
     opp_moves = possible_moves(placed, not piece)
@@ -143,6 +172,56 @@ def mobility_heuristic(board, move, piece): # MAX: 0 MIN: -340
     if any(map(lambda x: x in CORNERS, opp_moves)):
         h -= 1000
     return h
+
+
+def next_to_corner(board, move, piece): # MAX: 150 MIN: -100000
+    """
+    Return 10 if next to a captured(own) corner
+    Return 0 if not next to a corner
+    Return -10 if next to an empty/taken(opponent) corner
+    """
+    if move not in CORNER_NEIGHBORS:
+        return 0
+    elif is_on(board[piece], CORNER_NEIGHBORS[move]):
+        return 150
+    return -100000
+
+
+def stable_edge(board, move, piece):
+    bs = binary_to_board(place(board, piece, move))
+    token = 'X' if piece else 'O'
+    for edge in EDGES:
+        if move not in EDGES[edge]:
+            continue
+        con = "".join([bs[x] for x in EDGES[edge]])
+        if con == token*8 or STABLE_EDGE_REGEX[piece].match(con):
+            return 750
+    return 0
+
+
+def best_move(board, moves, piece):
+    for i in CORNERS:
+        if i in moves:
+            print("My move is {0}".format(i))
+            return
+    moves = [*moves]
+    init = moves[0]
+
+    print("My move is {0}".format(init))
+    actual_move = MOVES[init]
+    strat = coin_heuristic if hamming_weight(bit_not(board[0]|board[1])) <= 8 else mobility_heuristic
+
+    h = strat(board, actual_move, piece) + next_to_corner(board, actual_move, piece) + stable_edge(board, actual_move, piece)
+    best = (h, init)
+    
+    for move in moves:
+        actual_move = MOVES[move]
+        h = strat(board, actual_move, piece)
+        h += next_to_corner(board, move, piece)
+        h += stable_edge(board, move, piece)
+        tiebreaker = coin_heuristic if strat == mobility_heuristic else mobility_heuristic
+        best = (h,move) if h>best[0] else (h,move) if (h==best[0] and tiebreaker(board, MOVES[move], piece) > tiebreaker(board, MOVES[best[1]], piece)) else best
+    print("My move is {0}".format(best[1]))
 
 
 def actual_best_move(board, moves, piece):
@@ -162,9 +241,16 @@ def main():
     }
     piece = 0 if piece == 'O' else 1
     possible = possible_moves(board, piece)
+    num_empty = hamming_weight(FULL_BOARD - (board[0]|board[1]))
 
     if possible:
-        actual_best_move(board, [*possible], piece)
+        print_board_binary(board)
+        print()
+        print(binary_to_board(board), "{0}/{1}".format(hamming_weight(board[1]), hamming_weight(board[0])))
+        print(possible)
+        best_move(board, possible, piece)
+        if num_empty <= 12:
+            actual_best_move(board, possible, piece)
 
 
 if __name__ == "__main__":
