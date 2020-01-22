@@ -24,6 +24,12 @@ POSSIBLE_CACHE = {(68853694464, 34628173824, 0): {34, 43, 20, 29}, (68853694464,
 TREE_CACHE = {}
 
 
+def string_to_board(board):
+    return {
+        0: int(board.replace(".","0").replace("O","1").replace("X","0"),2),
+        1: int(board.replace(".","0").replace("O","0").replace("X","1"),2)
+    }
+
 def hamming_weight(n):
     if n in HAMMING_CACHE:
         return HAMMING_CACHE[n]
@@ -150,13 +156,9 @@ def actual_best_move(board, moves, piece):
     val = minimax(board, piece, 12, -10000, 10000, possible=sorted(moves, key=lambda x: len(possible_moves(place(board, piece, MOVES[x]), not piece))))
     print("Min score: {0}; move sequence: {1}".format(val[0], val[1]) if piece else "Min score: {0}; move sequence: {1}".format(val[0]*-1, val[1]))
 
-
 def main():
     string_board, piece = argv[1].upper(), argv[2].upper()
-    board = {
-        0: int(string_board.replace('.', '0').replace('O', '1').replace('X', '0'), 2),
-        1: int(string_board.replace('.', '0').replace('O', '0').replace('X', '1'), 2)
-    }
+    board = string_to_board(string_board)
     piece = 0 if piece == 'O' else 1
     possible = possible_moves(board, piece)
     if possible:
