@@ -101,8 +101,9 @@ def minimax(board, piece, depth, alpha, beta, possible=[]):
     """
     Returns the best value, [sequence of the previous best moves]
     """
-    if (board[0], board[1], piece) in TREE_CACHE:
-        return TREE_CACHE[(board[0], board[1], piece)]
+    key = (board[0], board[1], piece)
+    if key in TREE_CACHE:
+        return TREE_CACHE[key]
 
     if not possible:
         state = game_over(board, piece)
@@ -113,7 +114,8 @@ def minimax(board, piece, depth, alpha, beta, possible=[]):
 
         if length == 0:
             val = minimax(board, not piece, depth, alpha, beta)
-            return val[0], val[1] + [-1]
+            TREE_CACHE[key] = (val[0], val[1]+[-1])
+            return TREE_CACHE[key]
     else:
         current_moves = sorted(possible, key=lambda x: len(possible_moves(place(board, piece, MOVES[x]), not piece)))
     
@@ -128,8 +130,8 @@ def minimax(board, piece, depth, alpha, beta, possible=[]):
             alpha = max(max_move, alpha)
             if beta <= alpha:
                 break
-        TREE_CACHE[(board[0], board[1], piece)] = (max_move, best_opp_moves + [best_move])
-        return TREE_CACHE[(board[0], board[1], piece)]
+        TREE_CACHE[key] = (max_move, best_opp_moves + [best_move])
+        return TREE_CACHE[key]
     else:
         min_move, best_move = 100, 0
         for i in current_moves:
@@ -140,8 +142,8 @@ def minimax(board, piece, depth, alpha, beta, possible=[]):
             beta = min(min_move, beta)
             if beta <= alpha:
                 break
-        TREE_CACHE[(board[0], board[1], piece)] = (min_move, best_opp_moves + [best_move])
-        return TREE_CACHE[(board[0], board[1], piece)]
+        TREE_CACHE[key] = (min_move, best_opp_moves + [best_move])
+        return TREE_CACHE[key]
 
 
 def actual_best_move(board, moves, piece):
