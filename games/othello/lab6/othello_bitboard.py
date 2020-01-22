@@ -89,12 +89,12 @@ def place(b, piece, move):
 
 
 def game_over(board, current):
-    if board[current] | board[not current] == FULL_BOARD:
+    if not (FULL_BOARD ^ (board[current]|board[not current])):
         return True
     player_moves = possible_moves(board, current)
     opponent_moves = possible_moves(board, not current)
     pm = len(player_moves)
-    return True if pm + len(opponent_moves) == 0 else (player_moves, pm)
+    return True if (pm|len(opponent_moves))==0 else (player_moves, pm)
 
 
 def minimax(board, piece, depth, alpha, beta, possible=[]):
