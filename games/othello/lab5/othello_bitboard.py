@@ -134,7 +134,8 @@ def minimax(board, piece, depth):
 
     if len(current_moves) == 0:
         val = minimax(board, not piece, depth)
-        return val[0], val[1] + [-1]
+        TREE_CACHE[key] = (val[0, val[1]+[-1]])
+        return TREE_CACHE[key]
 
     best_opp_moves = []
     if piece:
