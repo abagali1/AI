@@ -88,11 +88,11 @@ def possible_moves(board, piece):
         final = 0b0
         possible = set()
         for d in MASKS:
-            final |= fill(board[piece], board[not piece], d) & (FULL_BOARD - (board[piece] | board[not piece]))
+            final |= fill(board[piece], board[not piece], d) & (FULL_BOARD ^ (board[piece] | board[not piece]))
         while final:
             b = final & -final
             possible.add(POS[b])
-            final -= b
+            final ^= b
         POSSIBLE_CACHE[key] = possible
         return possible
 
@@ -106,7 +106,7 @@ def place(b, piece, move):
         if c & board[piece] != 0:
             c = (c & MASKS[i * -1]) << i * -1 if i < 0 else (c & MASKS[i * -1]) >> i
             board[piece] |= c
-            board[not piece] &= (FULL_BOARD - c)
+            board[not piece] &= (FULL_BOARD ^ c)
     return board
 
 
@@ -134,7 +134,7 @@ def minimax(board, piece, depth):
 
     if len(current_moves) == 0:
         val = minimax(board, not piece, depth)
-        TREE_CACHE[key] = (val[0, val[1]+[-1]])
+        TREE_CACHE[key] = (val[0], val[1]+[-1])
         return TREE_CACHE[key]
 
     best_opp_moves = []
