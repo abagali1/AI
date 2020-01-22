@@ -115,7 +115,7 @@ def minimax(board, piece, depth, alpha, beta, possible=[]):
             val = minimax(board, not piece, depth, alpha, beta)
             return val[0], val[1] + [-1]
     else:
-        current_moves = possible
+        current_moves = sorted(possible, key=lambda x: len(possible_moves(place(board, piece, MOVES[x]), not piece)))
     
     best_opp_moves = []
     if piece:
