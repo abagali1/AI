@@ -114,7 +114,7 @@ def minimax(board, piece, depth, alpha, beta, possible=[]):
 
     if not possible:
         state = game_over(board, piece)
-        if state is True or depth == 0:
+        if (board[piece]|board[1^piece]) == FULL_BOARD:
             return hamming_weight(board[1]) - hamming_weight(board[0]), []
         else:
             current_moves, length = state

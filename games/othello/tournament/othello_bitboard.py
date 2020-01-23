@@ -3,6 +3,7 @@ from sys import argv
 from time import time 
 from re import compile, IGNORECASE, match
 from functools import lru_cache
+import random
 
 
 FULL_BOARD = 0xffffffffffffffff
@@ -119,7 +120,7 @@ def place(b, piece, move):
         if c & board[piece] != 0:
             c = (c & MASKS[i * -1]) << i * -1 if i < 0 else (c & MASKS[i * -1]) >> i
             board[piece] |= c
-            board[not piece] &= (FULL_BOARD - c)
+            board[1^piece] &= (FULL_BOARD - c)
     return board
 
 
@@ -184,7 +185,7 @@ def minimax(board, piece, depth, alpha, beta, possible=[]):
 def coin_heuristic(board, move, piece): # MAX: 100 MIN: -100
     placed = place(board,piece,move)
     num_player = hamming_weight(placed[piece])
-    num_opp = hamming_weight(placed[not piece])
+    num_opp = hamming_weight(placed[1^piece])
     return (num_player-num_opp)*20
 
 
@@ -249,12 +250,15 @@ def a_good_move(board, moves, piece, empty):
     return best[1]
 
 class Strategy:
+    def __init__(self):
+        self.num_empty = 0
+
     def best_strategy(self, board, player, best_move, running):
         board, piece = string_to_board(board), PLAYER[player]
         moves = possible_moves(board, piece)
-        val = sorted(moves, key=lambda x: len(possible_moves(place(board, piece, MOVES[x]), not piece)))
-        num_empty = FULL_BOARD ^ (board[0]|board[1])
-        if num_empty < 11:
-            best_move.value = GRADER_MOVE[minimax(board, piece, 12, -1000, 1000, moves)]
-        else:
-            best_move.value = GRADER_MOVE[a_good_move(board, moves, piece, num_empty)]
+        self.num_empty = self.num_empty-1 if 1^self.num_empty  else hamming_weight(FULL_BOARD^(board[piece]|board[1^piece]))
+        best_move.value = a_good_move(board, moves, piece, self.num_empty)
+        moves = sorted(moves, key=lambda x: len(possible_moves(place(board, piece, MOVES[x]), 1^piece)))
+        depth = 1
+        while depth <= 20:
+            best_move.value = GRADER_MOVE[minimax(board, piece, depth, -1000, 1000, possible=moves)[1][-1]]
