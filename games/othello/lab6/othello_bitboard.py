@@ -3,15 +3,17 @@ from sys import argv
 from time import time 
 
 FULL_BOARD = 0xffffffffffffffff
+RIGHT_MASK = 0xfefefefefefefefe
+LEFT_MASK =0x7f7f7f7f7f7f7f7f
 MASKS = {
-    -1: 0xfefefefefefefefe,
-    1: 0x7f7f7f7f7f7f7f7f,
+    -1: RIGHT_MASK,
+    1: LEFT_MASK,
     8: FULL_BOARD,
     -8: FULL_BOARD,
-    7: 0xfefefefefefefefe,
-    9: 0x7f7f7f7f7f7f7f7f,
-    -7: 0x7f7f7f7f7f7f7f7f,
-    -9: 0xfefefefefefefefe
+    7: RIGHT_MASK,
+    9: LEFT_MASK,
+    -7: LEFT_MASK,
+    -9: RIGHT_MASK
 }
 
 
@@ -53,15 +55,14 @@ def fill(current, opponent, direction):
         w |= ((w & mask) << direction) & opponent
         w |= ((w & mask) << direction) & opponent
         return (w & mask) << direction
-    else:
-        direction *= -1
-        w = ((current & mask) >> direction) & opponent
-        w |= ((w & mask) >> direction) & opponent
-        w |= ((w & mask) >> direction) & opponent
-        w |= ((w & mask) >> direction) & opponent
-        w |= ((w & mask) >> direction) & opponent
-        w |= ((w & mask) >> direction) & opponent
-        return (w & mask) >> direction
+    direction *= -1
+    w = ((current & mask) >> direction) & opponent
+    w |= ((w & mask) >> direction) & opponent
+    w |= ((w & mask) >> direction) & opponent
+    w |= ((w & mask) >> direction) & opponent
+    w |= ((w & mask) >> direction) & opponent
+    w |= ((w & mask) >> direction) & opponent
+    return (w & mask) >> direction
 
 
 def possible_moves(board, piece):
@@ -72,11 +73,11 @@ def possible_moves(board, piece):
         final = 0b0
         possible = set()
         for d in MASKS:
-            final |= fill(board[piece], board[not piece], d) & (FULL_BOARD - (board[piece] | board[not piece]))
+            final |= fill(board[piece], board[not piece], d) & (FULL_BOARD ^ (board[piece] | board[not piece]))
         while final:
             b = final & -final
             possible.add(POS[b])
-            final -= b
+            final ^= b
         POSSIBLE_CACHE[key] = possible
         return possible
 
