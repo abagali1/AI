@@ -133,7 +133,7 @@ def minimax(board, piece, depth):
         current_moves = state
 
     if len(current_moves) == 0:
-        val = minimax(board, not piece, depth)
+        val = minimax(board, 1^piece, depth)
         TREE_CACHE[key] = (val[0], val[1]+[-1])
         return TREE_CACHE[key]
 
@@ -142,7 +142,7 @@ def minimax(board, piece, depth):
         max_move, best_move = -100, 0
         for i in current_moves:
             placed = place(board, piece, MOVES[i])
-            tmp, opp_moves = minimax(placed, not piece, depth - 1)
+            tmp, opp_moves = minimax(placed, 1^piece, depth - 1)
             if tmp > max_move:
                 max_move, best_move, best_opp_moves = tmp, i, opp_moves
         TREE_CACHE[key] = (max_move, best_opp_moves + [best_move])
@@ -151,7 +151,7 @@ def minimax(board, piece, depth):
         min_move, best_move = 100, 0
         for i in current_moves:
             placed = place(board, piece, MOVES[i])
-            tmp, opp_moves = minimax(placed, not piece, depth - 1)
+            tmp, opp_moves = minimax(placed, 1^piece, depth - 1)
             if tmp < min_move:
                 min_move, best_move, best_opp_moves = tmp, i, opp_moves
         TREE_CACHE[key] = (min_move, best_opp_moves + [best_move])
