@@ -107,7 +107,7 @@ def minimax(board, piece, depth, alpha, beta, possible=[]):
     """
     Returns the best value, [sequence of the previous best moves]
     """
-    key = (board[0], board[1], piece)
+    key = (board[0], board[1], piece, alpha, beta)
     if key in TREE_CACHE:
         return TREE_CACHE[key]
 
