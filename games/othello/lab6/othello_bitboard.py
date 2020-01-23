@@ -119,18 +119,18 @@ def minimax(board, piece, depth, alpha, beta, possible=[]):
             current_moves, length = state
 
         if length == 0:
-            val = minimax(board, not piece, depth, alpha, beta)
+            val = minimax(board, 1^piece, depth, alpha, beta)
             TREE_CACHE[key] = (val[0], val[1]+[-1])
             return TREE_CACHE[key]
     else:
-        current_moves = sorted(possible, key=lambda x: len(possible_moves(place(board, piece, MOVES[x]), not piece)))
+        current_moves = sorted(possible, key=lambda x: len(possible_moves(place(board, piece, MOVES[x]), 1^piece)))
     
     best_opp_moves = []
     if piece:
         max_move, best_move = -100, 0
         for i in current_moves:
             placed = place(board, piece, MOVES[i])
-            tmp, opp_moves = minimax(placed, not piece, depth - 1, alpha, beta)
+            tmp, opp_moves = minimax(placed, 1^piece, depth - 1, alpha, beta)
             if tmp > max_move:
                 max_move, best_move, best_opp_moves = tmp, i, opp_moves
             alpha = max(max_move, alpha)
@@ -142,7 +142,7 @@ def minimax(board, piece, depth, alpha, beta, possible=[]):
         min_move, best_move = 100, 0
         for i in current_moves:
             placed = place(board, piece, MOVES[i])
-            tmp, opp_moves = minimax(placed, not piece, depth - 1, alpha, beta)
+            tmp, opp_moves = minimax(placed, 1^piece, depth - 1, alpha, beta)
             if tmp < min_move:
                 min_move, best_move, best_opp_moves = tmp, i, opp_moves
             beta = min(min_move, beta)
