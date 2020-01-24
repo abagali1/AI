@@ -251,14 +251,43 @@ def a_good_move(board, moves, piece, empty):
 
 class Strategy:
     def __init__(self):
-        self.num_empty = 0
+        self.num_empty = -1
+        self.ordered_moves = 0
+
+    
+    def choose_move(self, board, moves, piece, best_move):
+        # best_move.value = GRADER_MOVE[a_good_move(board, moves, piece, self.num_empty)]
+        # for depth in range(3, 24):
+        #     best_move.value = GRADER_MOVE[minimax(board, piece, depth, -1000, 1000, self.ordered_moves)[1][-1]]
+        #     print(best_move.value)
+        if self.num_empty > 12:
+            print("a good move")
+            best_move.value = GRADER_MOVE[a_good_move(board, moves, piece, self.num_empty)]
+        else:
+            print("min max")
+            best_move.value = GRADER_MOVE[minimax(board, piece, 12, -1000, 1000, self.ordered_moves)[1][-1]]
+        print(best_move.value)
+
+
 
     def best_strategy(self, board, player, best_move, running):
         board, piece = string_to_board(board), PLAYER[player]
         moves = possible_moves(board, piece)
-        self.num_empty = self.num_empty-1 if 1^self.num_empty  else hamming_weight(FULL_BOARD^(board[piece]|board[1^piece]))
-        best_move.value = a_good_move(board, moves, piece, self.num_empty)
-        moves = sorted(moves, key=lambda x: len(possible_moves(place(board, piece, MOVES[x]), 1^piece)))
-        depth = 1
-        while depth <= 20:
-            best_move.value = GRADER_MOVE[minimax(board, piece, depth, -1000, 1000, possible=moves)[1][-1]]
+        if self.num_empty != -1:
+            self.num_empty -= 1
+        else:
+            self.num_empty = hamming_weight(FULL_BOARD ^ (board[0]|board[1]) )
+
+        if 1^self.ordered_moves:
+            self.ordered_moves = sorted(moves, key= lambda x: len(possible_moves(place(board, piece, MOVES[x]), 1^piece)))
+
+        
+        self.choose_move(board, moves, piece, best_move)
+        self.ordered_moves = 0
+
+if __name__ == '__main__':
+    from multiprocessing import Value
+    m = Value('d',0.0)
+    s = Strategy()
+    b = '???????????o@@@@@..??o@@@o@..??@@o@o@@.??@@o@o@@.??@@oo@@o.??@@@@@ooo??..@@@oo.??...@oooo???????????'
+    s.best_strategy(b, 'o', m, 1)
