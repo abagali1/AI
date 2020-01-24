@@ -120,7 +120,7 @@ def place(b, piece, move):
         if c & board[piece] != 0:
             c = (c & MASKS[i * -1]) << i * -1 if i < 0 else (c & MASKS[i * -1]) >> i
             board[piece] |= c
-            board[1^piece] &= (FULL_BOARD - c)
+            board[1^piece] &= (FULL_BOARD ^ c)
     return board
 
 
@@ -256,15 +256,10 @@ class Strategy:
 
     
     def choose_move(self, board, moves, piece, best_move):
-        # best_move.value = GRADER_MOVE[a_good_move(board, moves, piece, self.num_empty)]
-        # for depth in range(3, 24):
-        #     best_move.value = GRADER_MOVE[minimax(board, piece, depth, -1000, 1000, self.ordered_moves)[1][-1]]
-        #     print(best_move.value)
         if self.num_empty > 12:
             print("a good move")
             best_move.value = GRADER_MOVE[a_good_move(board, moves, piece, self.num_empty)]
         else:
-            print("min max")
             best_move.value = GRADER_MOVE[minimax(board, piece, 12, -1000, 1000, self.ordered_moves)[1][-1]]
         print(best_move.value)
 
