@@ -4,7 +4,8 @@ from time import time
 
 FULL_BOARD = 0xffffffffffffffff
 RIGHT_MASK = 0xfefefefefefefefe
-LEFT_MASK =0x7f7f7f7f7f7f7f7f
+LEFT_MASK = 0x7f7f7f7f7f7f7f7f
+CORNER_BOARD = 0x8100000000000081
 MASKS = {
     -1: RIGHT_MASK,
     1: LEFT_MASK,
@@ -101,23 +102,38 @@ def game_over(board, current):
     player_moves = possible_moves(board, current)
     opponent_moves = possible_moves(board, not current)
     pm = len(player_moves)
-    return True if (pm|len(opponent_moves))==0 else (player_moves, pm)
+    om = len(opponent_moves)
+    return True if (pm|om) else (player_moves, pm, opponent_moves, om)
+
+
+def h(board, current, current_moves, current_length, opponent_moves, opponent_length):
+    h = 0
+    player_corners = board[current] & CORNER_BOARD
+    opponent_corners = board[1^current] & CORNER_BOARD
+    if player_corners:
+        h += 10*hamming_weight(player_corners)
+    if opponent_corners: 
+        h -= 10*hamming_weight(opponent_corners)
+    
+    
 
 
 def minimax(board, piece, depth, alpha, beta, possible=[]):
     """
     Returns the best value, [sequence of the previous best moves]
     """
-    key = (board[0], board[1], piece, alpha, beta)
+    key = (board[0], board[1], piece, depth, alpha, beta)
     if key in TREE_CACHE:
         return TREE_CACHE[key]
 
     if not possible:
         state = game_over(board, piece)
-        if (board[piece]|board[1^piece]) == FULL_BOARD:
+        if state is True:
             return hamming_weight(board[1]) - hamming_weight(board[0]), []
-        else:
-            current_moves, length = state
+        current_moves, length, opponent_moves, o_length= state
+        if depth == 0:
+            return h(board, piece, current_moves, current_length, opponent_moves, o_length)
+        
 
         if length == 0:
             val = minimax(board, 1^piece, depth, alpha, beta)
