@@ -106,16 +106,16 @@ def game_over(board, current):
     return True if (pm|om) else (player_moves, pm, opponent_moves, om)
 
 
-def h(board, current, current_moves, current_length, opponent_moves, opponent_length):
-    h = 0
-    player_corners = board[current] & CORNER_BOARD
-    opponent_corners = board[1^current] & CORNER_BOARD
-    if player_corners:
-        h += 10*hamming_weight(player_corners)
-    if opponent_corners: 
-        h -= 10*hamming_weight(opponent_corners)
-    
-    
+def h(board, current, x_moves, x_length, o_moves, o_length):
+    h = hamming_weight(board[1]) - hamming_weight(board[0])
+    x_corners = board[1] & CORNER_BOARD
+    o_corners = board[0] & CORNER_BOARD
+    if x_corners:
+        h += 20*hamming_weight(x_corners)
+    if o_corners: 
+        h -= 20*hamming_weight(o_corners)
+    h += 10*x_length
+    h -= 10*o_length
 
 
 def minimax(board, piece, depth, alpha, beta, possible=[]):
@@ -130,9 +130,12 @@ def minimax(board, piece, depth, alpha, beta, possible=[]):
         state = game_over(board, piece)
         if state is True:
             return hamming_weight(board[1]) - hamming_weight(board[0]), []
-        current_moves, length, opponent_moves, o_length= state
+        current_moves, length, opponent_moves, opponent_length = state
         if depth == 0:
-            return h(board, piece, current_moves, current_length, opponent_moves, o_length)
+            x_moves, x_length = current_moves, length if piece else opponent_moves, opponent_length
+            o_moves, o_length = opponent_moves, opponent_length if piece else current_moves, length
+
+            return h(board, piece, x_moves, x_length, o_moves, o_length)
         
 
         if length == 0:
