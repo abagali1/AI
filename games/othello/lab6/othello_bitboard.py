@@ -123,6 +123,7 @@ def minimax(board, piece, depth, alpha, beta, possible=[]):
             val = minimax(board, 1^piece, depth, alpha, beta)
             TREE_CACHE[key] = (val[0], val[1]+[-1])
             return TREE_CACHE[key]
+        current_moves = sorted(current_moves, key=lambda x: len(possible_moves(place(board, piece, MOVES[x]), 1^piece)))
     else:
         current_moves = sorted(possible, key=lambda x: len(possible_moves(place(board, piece, MOVES[x]), 1^piece)))
     
