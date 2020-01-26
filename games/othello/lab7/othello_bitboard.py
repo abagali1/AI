@@ -192,7 +192,7 @@ def midgame(board, moves, piece):
         print("Min score: {0}; move sequence: {1}".format(best[0], best[1]) if piece else "Min score: {0}; move sequence: {1}".format(best[0]*-1, best[1]))
 
 def endgame(board, moves, piece):
-    val = minimax(board, piece, 9, -10000, 10000, possible=sorted(moves, key=lambda x: len(possible_moves(place(board, piece, MOVES[x]), not piece))))
+    val = minimax(board, piece, 12, -10000, 10000, possible=sorted(moves, key=lambda x: len(possible_moves(place(board, piece, MOVES[x]), not piece))))
     print("Min score: {0}; move sequence: {1}".format(val[0], val[1]) if piece else "Min score: {0}; move sequence: {1}".format(val[0]*-1, val[1]))
 
 def main():
@@ -211,4 +211,4 @@ def main():
 if __name__ == "__main__":
     start = time()
     main()
-   # print("{0}".format(time() - start))
+    print("{0}".format(time() - start))
