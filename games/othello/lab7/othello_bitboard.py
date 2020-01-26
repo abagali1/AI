@@ -125,7 +125,7 @@ def weight_table(board):
     return h
 
 
-def h(board, current, x_moves, x_length, o_moves, o_length):
+def heuristic(board, current, x_moves, x_length, o_moves, o_length):
     h = 20*x_length - 20*o_length
     x_corners = board[1] & CORNER_BOARD
     o_corners = board[0] & CORNER_BOARD
@@ -139,7 +139,7 @@ def h(board, current, x_moves, x_length, o_moves, o_length):
     return h
 
 
-def minimax(board, piece, depth, alpha, beta, possible=[]):
+def midgame_minimax(board, piece, depth, alpha, beta, possible=[]):
     """
     Returns the best value, [sequence of the previous best moves]
     """
@@ -148,15 +148,16 @@ def minimax(board, piece, depth, alpha, beta, possible=[]):
     if not possible:
         state = game_over(board, piece)
         if state is True:
-            return hamming_weight(board[1]) - hamming_weight(board[0]), []
+            return hamming_weight(board[1]) - hamming_weight(board[0])*100, []
         current_moves, length, opponent_moves, opponent_length = state
         if depth == 0:
             x_moves, x_length = (current_moves, length) if piece else (opponent_moves, opponent_length)
             o_moves, o_length = (opponent_moves, opponent_length) if piece else (current_moves, length)
-            return h(board, piece, x_moves, x_length, o_moves, o_length), []
+            return heuristic(board, piece, x_moves, x_length, o_moves, o_length), []
         if length == 0:
-            val = minimax(board, 1^piece, depth, alpha, beta)
+            val = midgame_minimax(board, 1^piece, depth, alpha, beta)
             return (val[0], val[1]+[-1])
+        current_moves = sorted(current_moves, key=lambda x: len(possible_moves(place(board, piece, MOVES[x]), 1^piece)))
     else:
         current_moves = possible
     best_opp_moves = []
@@ -164,7 +165,7 @@ def minimax(board, piece, depth, alpha, beta, possible=[]):
         max_move, best_move = -100, 0
         for i in current_moves:
             placed = place(board, piece, MOVES[i])
-            tmp, opp_moves = minimax(placed, 1^piece, depth - 1, alpha, beta)
+            tmp, opp_moves = midgame_minimax(placed, 1^piece, depth - 1, alpha, beta)
             if tmp > max_move:
                 max_move, best_move, best_opp_moves = tmp, i, opp_moves
             alpha = max(max_move, alpha)
@@ -175,7 +176,7 @@ def minimax(board, piece, depth, alpha, beta, possible=[]):
         min_move, best_move = 100, 0
         for i in current_moves:
             placed = place(board, piece, MOVES[i])
-            tmp, opp_moves = minimax(placed, 1^piece, depth - 1, alpha, beta)
+            tmp, opp_moves = midgame_minimax(placed, 1^piece, depth - 1, alpha, beta)
             if tmp < min_move:
                 min_move, best_move, best_opp_moves = tmp, i, opp_moves
             beta = min(min_move, beta)
@@ -186,13 +187,64 @@ def minimax(board, piece, depth, alpha, beta, possible=[]):
 
 def midgame(board, moves, piece):
     best = (-1000, 0) if piece else (1000, 0)
+    print(moves)
     for depth in range(3, 40):
-        val = minimax(board, piece, depth, -10000, 10000, possible=sorted(moves, key=lambda x: len(possible_moves(place(board, piece, MOVES[x]), not piece))))
+        val = midgame_minimax(board, piece, depth, -10000, 10000, possible=sorted(moves, key=lambda x: len(possible_moves(place(board, piece, MOVES[x]), not piece))))
         best = max(val, best) if piece else min(val, best)
         print("Min score: {0}; move sequence: {1}".format(best[0], best[1]) if piece else "Min score: {0}; move sequence: {1}".format(best[0]*-1, best[1]))
 
+
+def endgame_minimax(board, piece, depth, alpha, beta, possible=[]):
+    """
+    Returns the best value, [sequence of the previous best moves]
+    """
+    key = (board[0], board[1], piece, depth, alpha, beta)
+    if key in TREE_CACHE:
+        return TREE_CACHE[key]
+
+    if not possible:
+        state = game_over(board, piece)
+        if state is True or depth == 0:
+            return hamming_weight(board[1]) - hamming_weight(board[0]), []
+        current_moves, length = state[0], state[1]
+
+        if length == 0:
+            val = endgame_minimax(board, 1^piece, depth, alpha, beta)
+            TREE_CACHE[key] = (val[0], val[1]+[-1])
+            return TREE_CACHE[key]
+        current_moves = sorted(current_moves, key=lambda x: len(possible_moves(place(board, piece, MOVES[x]), 1^piece)))
+    else:
+        current_moves = possible
+    
+    best_opp_moves = []
+    if piece:
+        max_move, best_move = -100, 0
+        for i in current_moves:
+            placed = place(board, piece, MOVES[i])
+            tmp, opp_moves = endgame_minimax(placed, 1^piece, depth - 1, alpha, beta)
+            if tmp > max_move:
+                max_move, best_move, best_opp_moves = tmp, i, opp_moves
+            alpha = max(max_move, alpha)
+            if beta <= alpha:
+                break
+        TREE_CACHE[key] = (max_move, best_opp_moves + [best_move])
+        return TREE_CACHE[key]
+    else:
+        min_move, best_move = 100, 0
+        for i in current_moves:
+            placed = place(board, piece, MOVES[i])
+            tmp, opp_moves = endgame_minimax(placed, 1^piece, depth - 1, alpha, beta)
+            if tmp < min_move:
+                min_move, best_move, best_opp_moves = tmp, i, opp_moves
+            beta = min(min_move, beta)
+            if beta <= alpha:
+                break
+        TREE_CACHE[key] = (min_move, best_opp_moves + [best_move])
+        return TREE_CACHE[key]
+
+
 def endgame(board, moves, piece):
-    val = minimax(board, piece, 12, -10000, 10000, possible=sorted(moves, key=lambda x: len(possible_moves(place(board, piece, MOVES[x]), not piece))))
+    val = endgame_minimax(board, piece, 12, -10000, 10000, possible=sorted(moves, key=lambda x: len(possible_moves(place(board, piece, MOVES[x]), not piece))))
     print("Min score: {0}; move sequence: {1}".format(val[0], val[1]) if piece else "Min score: {0}; move sequence: {1}".format(val[0]*-1, val[1]))
 
 def main():
