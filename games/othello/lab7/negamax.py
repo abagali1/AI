@@ -118,26 +118,17 @@ def weight_table(board):
     return h
 
 
-# def heuristic(board, current, opponent, current_moves, current_length, opponent_moves, opponent_length, empty):
-#     h = 20*current_length - 20*opponent_length
+def heuristic(board, current, opponent, current_moves, current_length, opponent_moves, opponent_length):
+    h = 20*current_length - 20*opponent_length
 
-
-#     h += 20*hamming_weight(board[current] & CORNER_BOARD)
-#     h -= 50*hamming_weight(board[opponent] & CORNER_BOARD)
-
-#     h -= 50*hamming_weight(board[current] & CORNER_NEIGHBORS)
-#     h += 30*hamming_weight(board[opponent] & CORNER_NEIGHBORS)    
+    h += 20*hamming_weight(board[current] & CORNER_BOARD)
+    h -= 50*hamming_weight(board[opponent] & CORNER_BOARD)
     
-#     h += hamming_weight(board[current])-hamming_weight(board[opponent])
+    h += hamming_weight(board[current])-hamming_weight(board[0])
 
-#     h += weight_table(board[current])*20
-#     h -= weight_table(board[opponent])*20
-#     return h
-
-def heuristic(board, current, opponent):
-    c = hamming_weight(board[current])
-    o = hamming_weight(board[opponent])
-    return 100*((c-o)/(c+o))
+    h += weight_table(board[current])*20
+    h -= weight_table(board[opponent])*20
+    return h
 
         
 def midgame_negamax(board, current, depth, alpha, beta, empty, possible=[]):
@@ -147,13 +138,12 @@ def midgame_negamax(board, current, depth, alpha, beta, empty, possible=[]):
         current_moves, opponent_moves = possible_moves(board, current), possible_moves(board, opponent)
         length, opponent_length = len(current_moves), len(opponent_moves)
         if not (FULL_BOARD ^ (board[current]|board[opponent])) or (length|opponent_length)==0:
-            return heuristic(board, current, opponent)*100,0
+            return hamming_weight(board[current])-hamming_weight(board[opponent])*100,0
         if length==0 and opponent_length!=0:
             val = midgame_negamax(board, opponent, depth, -beta, -alpha, empty)
             return  -val[0], val[1]
         if depth<=0:
-            return heuristic(board, current, opponent)
-            #return heuristic(board, current, opponent, current_moves, length, opponent_moves, opponent_length, empty), 0
+            return heuristic(board, current, opponent, current_moves, length, opponent_moves, opponent_length),0
     else:
         current_moves = possible
 
