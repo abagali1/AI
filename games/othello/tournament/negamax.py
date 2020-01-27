@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from sys import argv
-from time import time 
+from time import time
+from random import choice 
 
 FULL_BOARD = 0xffffffffffffffff
 RIGHT_MASK = 0xfefefefefefefefe
@@ -19,20 +20,29 @@ MASKS = {
     -9: RIGHT_MASK
 }
 
-WEIGHT_TABLE = [4, -3, 2, 2, 2, 2, -3, 4,
+WEIGHT_TABLE = [
+           4, -3, 2, 2, 2, 2, -3, 4,
           -3, -4, -1, -1, -1, -1, -4, -3,
            2, -1, 1, 0, 0, 1, -1, 2,
            2, -1, 0, 1, 1, 0, -1, 2,
            2, -1, 0, 1, 1, 0, -1, 2,
            2, -1, 1, 0, 0, 1, -1, 2,
           -3, -4, -1, -1, -1, -1, -4,
-          4, -3, -3, 2, 2, 2, 2, -3, 4
+           4, -3, -3, 2, 2, 2, 2, -3, 4
           ]
 
 MOVES = {i: 1 << (63^i) for i in range(64)}
 POS = {MOVES[63^i]: 63^i for i in range(64)}
 LOG = {MOVES[63^i]:i for i in range(64)}
+GRADER_MOVE = [11, 12, 13, 14, 15, 16, 17, 18, 21, 22, 23, 24, 25, 26, 27, 28, 31, 32, 33, 34, 35, 36, 37, 38, 41, 42, 43, 44, 45, 46, 47, 48, 51, 52, 53, 54, 55, 56, 57, 58, 61, 62, 63, 64, 65, 66, 67, 68, 71, 72, 73, 74, 75, 76, 77, 78, 81, 82, 83, 84, 85, 86, 87, 88]
 
+PLAYER = {
+    'o': 0,
+    'O': 0,
+    'x': 1,
+    'X': 1,
+    '@': 1
+}
 
 HAMMING_CACHE = {}
 POSSIBLE_CACHE = {(68853694464, 34628173824, 0): {34, 43, 20, 29}, (68853694464, 34628173824, 1): {26, 19, 44, 37}}
@@ -41,9 +51,10 @@ WEIGHT_CACHE = {}
 
 
 def string_to_board(board):
+    board = board.replace("?","").replace(".","0")
     return {
-        0: int(board.replace(".","0").replace("O","1").replace("X","0"),2),
-        1: int(board.replace(".","0").replace("O","0").replace("X","1"),2)
+        0: int(board.replace("o","1").replace("@","0"), 2),
+        1: int(board.replace("o","0").replace("@","1"), 2)
     }
 
 def hamming_weight(n):
@@ -105,7 +116,7 @@ def place(b, piece, move):
         if c & board[piece] != 0:
             c = (c & MASKS[i * -1]) << i * -1 if i < 0 else (c & MASKS[i * -1]) >> i
             board[piece] |= c
-            board[1^piece] &= (FULL_BOARD ^ c)
+            board[1^piece] &= (FULL_BOARD - c)
     return board
 
 
@@ -121,12 +132,21 @@ def weight_table(board):
 def heuristic(board, current, opponent, current_moves, current_length, opponent_moves, opponent_length, empty):
     h = 20*current_length - 20*opponent_length
 
+    current_corners = board[current] & CORNER_BOARD
+    opponent_corners = board[opponent] & CORNER_BOARD
+    if current_corners:
+        h += 20*hamming_weight(current_corners)
+    if opponent_corners: 
+        h -= 50*hamming_weight(opponent_corners)
 
-    h += 20*hamming_weight(board[current] & CORNER_BOARD)
-    h -= 50*hamming_weight(board[opponent] & CORNER_BOARD)
+    current_corner_neighbors = board[current] & CORNER_NEIGHBORS
+    opponent_corner_neighbors = board[opponent] & CORNER_NEIGHBORS
 
-    h -= 50*hamming_weight(board[current] & CORNER_NEIGHBORS)
-    h += 30*hamming_weight(board[opponent] & CORNER_NEIGHBORS)    
+    if current_corner_neighbors:
+        h -= 30*hamming_weight(current_corner_neighbors)
+
+    if opponent_corner_neighbors:
+        h += 30*hamming_weight(opponent_corner_neighbors)    
     
     h += hamming_weight(board[current])-hamming_weight(board[opponent])
 
@@ -145,8 +165,8 @@ def midgame_negamax(board, current, depth, alpha, beta, empty, possible=[]):
             return hamming_weight(board[current])-hamming_weight(board[opponent])*100,0
         if length==0 and opponent_length!=0:
             val = midgame_negamax(board, opponent, depth, -beta, -alpha, empty)
-            return  -val[0], val[1]
-        if depth<=0:
+            return -val[0], val[1]
+        if depth==0:
             return heuristic(board, current, opponent, current_moves, length, opponent_moves, opponent_length, empty), 0
     else:
         current_moves = possible
@@ -166,7 +186,6 @@ def midgame_negamax(board, current, depth, alpha, beta, empty, possible=[]):
 
 def endgame_negamax(board, current, depth, alpha, beta, possible=[]):
     opponent = 1^current
-
 
     if not possible:
         current_moves, opponent_moves = possible_moves(board, current), possible_moves(board, opponent)
@@ -192,59 +211,56 @@ def endgame_negamax(board, current, depth, alpha, beta, possible=[]):
     return best_score, best_move
 
 
-def mtdf(board, current, f, depth, empty, moves):
-    g = f
-    upper = 1000000
-    lower = -1000000
-    while lower < upper:
-        beta = max(g, lower+1)
-        g, best_move = midgame_negamax(board, current, depth, beta-1, beta, empty, possible=moves)
-        if g<beta:
-            upper = g
-        else:
-            lower = g
-    return g, best_move
-
-
-def endgame(board, moves, piece, empty):
-    sorted_moves = sorted(moves, key=lambda x: len(possible_moves(place(board, piece, MOVES[x]), 1^piece)))
-    val = endgame_negamax(board, piece, 12, -1000, 1000, possible=sorted_moves)
-    print("My move is {0}".format(val[1]))
-
-
-# def midgame(board, moves, piece, empty):
-#     print(moves)
-#     sorted_moves = sorted(moves, key=lambda x: len(possible_moves(place(board, piece, MOVES[x]), 1^piece)))
-#     best = (-1000, 0)
-#     for max_depth in range(3,50):
-#         val = midgame_negamax(board, piece, max_depth, -1000, 1000, empty, possible=sorted_moves)
-#         best = max(val, best)
-#         print("My move is {0}".format(best[1]))
-
-
 def midgame(board, moves, piece, empty):
+    print(moves)
     sorted_moves = sorted(moves, key=lambda x: len(possible_moves(place(board, piece, MOVES[x]), 1^piece)))
-    best = (-10000000, 0)
+    best = (-1000, 0)
     for max_depth in range(3,50):
-        val = mtdf(board, piece, best[0], max_depth, empty, sorted_moves)
+        val = midgame_negamax(board, piece, max_depth, -1000, 1000, empty, possible=sorted_moves)
         best = max(val, best)
-        print("My move is",best[1])
+        print("My move is {0}".format(best[1]))
 
 
-def main():
-    string_board, piece = argv[1].upper(), argv[2].upper()
-    board = string_to_board(string_board)
-    piece = 0 if piece == 'O' else 1
-    possible = possible_moves(board, piece)
-    num_empty = hamming_weight(FULL_BOARD ^ (board[0]|board[1]))
-    print(possible)
-    if possible:
-        if num_empty >= 14:
-            midgame(board, possible, piece, num_empty)
+class Strategy:
+    def __init__(self):
+        self.num_empty = -1
+        self.ordered_moves = 0
+
+    
+    def choose_move(self, board, moves, piece, best_move):
+        if self.num_empty >=14:
+            print("a good move")
+            best = (-1000, 0)
+            for max_depth in range(1, 50):
+                val = midgame_negamax(board, piece, max_depth, -1000, 1000, self.num_empty, possible=self.ordered_moves)
+                best = max(val, best)
+                best_move.value = GRADER_MOVE[best[1]]
         else:
-            endgame(board, possible, piece, num_empty)
+            best_move.value = GRADER_MOVE[endgame_negamax(board, piece, 12, -1000, 1000, possible=self.ordered_moves)[1]]
+        print(best_move.value)
 
-if __name__ == "__main__":
+
+
+    def best_strategy(self, board, player, best_move, running):
+        board, piece = string_to_board(board), PLAYER[player]
+        moves = possible_moves(board, piece)
+        if self.num_empty != -1:
+            self.num_empty -= 1
+        else:
+            self.num_empty = hamming_weight(FULL_BOARD ^ (board[0]|board[1]) )
+
+        if 1^self.ordered_moves:
+            self.ordered_moves = sorted(moves, key= lambda x: len(possible_moves(place(board, piece, MOVES[x]), 1^piece)))
+
+        best_move.value = GRADER_MOVE[self.ordered_moves[0]]
+        self.choose_move(board, moves, piece, best_move)
+        self.ordered_moves = 0
+
+if __name__ == '__main__':
     start = time()
-    main()
+    from multiprocessing import Value
+    m = Value('d',0.0)
+    s = Strategy()
+    b = '???????????.@@@@@..??.ooooo..??ooo@oooo??o@@@oooo??o@@o@ooo??oo@@@ooo??ooo@@o..??..@@@@..???????????'
+    s.best_strategy(b, 'o', m, 1)
     print(time()-start)

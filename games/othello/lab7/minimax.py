@@ -23,7 +23,7 @@ WEIGHTS = [4, -3, 2, 2, 2, 2, -3, 4,
            2, -1, 0, 1, 1, 0, -1, 2,
            2, -1, 1, 0, 0, 1, -1, 2,
           -3, -4, -1, -1, -1, -1, -4,
-          -3, 4, -3, 2, 2, 2, 2, -3, 4
+          4, -3, -3, 2, 2, 2, 2, -3, 4
           ]
 
 MOVES = {i: 1 << (63 - i) for i in range(64)}
@@ -244,7 +244,7 @@ def endgame_minimax(board, piece, depth, alpha, beta, possible=[]):
 
 
 def endgame(board, moves, piece):
-    val = endgame_minimax(board, piece, 12, -10000, 10000, possible=sorted(moves, key=lambda x: len(possible_moves(place(board, piece, MOVES[x]), not piece))))
+    val = endgame_minimax(board, piece, 9, -10000, 10000, possible=sorted(moves, key=lambda x: len(possible_moves(place(board, piece, MOVES[x]), not piece))))
     print("Min score: {0}; move sequence: {1}".format(val[0], val[1]) if piece else "Min score: {0}; move sequence: {1}".format(val[0]*-1, val[1]))
 
 def main():
