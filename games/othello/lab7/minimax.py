@@ -26,9 +26,9 @@ WEIGHTS = [4, -3, 2, 2, 2, 2, -3, 4,
           4, -3, -3, 2, 2, 2, 2, -3, 4
           ]
 
-MOVES = {i: 1 << (63 - i) for i in range(64)}
-POS = {MOVES[63 - i]: 63 - i for i in range(64)}
-LOG = {MOVES[63-i]:i for i in range(64)}
+MOVES = {i: 1 << (63 ^ i) for i in range(64)}
+POS = {MOVES[63 ^ i]: 63 ^ i for i in range(64)}
+LOG = {MOVES[63^i]:i for i in range(64)}
 
 
 HAMMING_CACHE = {}
@@ -102,7 +102,7 @@ def place(b, piece, move):
         if c & board[piece] != 0:
             c = (c & MASKS[i * -1]) << i * -1 if i < 0 else (c & MASKS[i * -1]) >> i
             board[piece] |= c
-            board[not piece] &= (FULL_BOARD - c)
+            board[not piece] &= (FULL_BOARD ^ c)
     return board
 
 
