@@ -158,34 +158,12 @@ def endgame(board, moves, piece, empty):
     print("My move is {0}".format(val[1]))
 
 
-def negascout(board, current, depth, alpha, beta):
-    opponent = 1^current
-
-    current_moves, opponent_moves = possible_moves(board, current), possible_moves(board, opponent)
-    length, opponent_length = len(current_moves), len(opponent_moves)
-    if not (FULL_BOARD ^ (board[current]|board[opponent])) or (length|opponent_length)==0:
-        return hamming_weight(board[current])-hamming_weight(board[opponent])*100,0
-    if depth == 0:
-        return heuristic(board, current, opponent), 0
-
-    current_moves = sorted(current_moves, key=lambda x: heuristic(board, current, opponent), reverse=True)
-
-    best_score, best_move = -10000000, 0
-    for pos, move in enumerate(current_moves):
-        child = place(board, current, MOVES[move])
-        if pos == 0:
-            score = -negascout(child, opponent, depth-1, -beta, -alpha)[0]
-        else:
-            score = -negascout(child, opponent, depth-1, -alpha-1, -alpha)[0]
-            if alpha < score < beta:
-                score = -negascout(child, opponent, depth-1, -beta, -score)[0]
-        if score > best_score:
-            best_score = score
-            best_move = move
-        alpha = max(alpha, score)
-        if alpha >= beta:
-            break
-    return alpha, best_move
+def alpha_beta_with_memory(board, current, alpha, beta, d):
+    # (board[0],board[1],current) -> (score, alpha, beta, d)
+    key = (board[0], board[1], current)
+    if key in TREE_CACHE:
+        n = TREE_CACHE[key]
+        
 
 
 def midgame(board, moves, piece, empty):
