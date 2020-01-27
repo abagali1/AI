@@ -118,56 +118,10 @@ def weight_table(board):
     return h
 
 
-# def heuristic(board, current, opponent, current_moves, current_length, opponent_moves, opponent_length, empty):
-#     h = 20*current_length - 20*opponent_length
-
-
-#     h += 20*hamming_weight(board[current] & CORNER_BOARD)
-#     h -= 50*hamming_weight(board[opponent] & CORNER_BOARD)
-
-#     h -= 50*hamming_weight(board[current] & CORNER_NEIGHBORS)
-#     h += 30*hamming_weight(board[opponent] & CORNER_NEIGHBORS)    
-    
-#     h += hamming_weight(board[current])-hamming_weight(board[opponent])
-
-#     h += weight_table(board[current])*20
-#     h -= weight_table(board[opponent])*20
-#     return h
-
 def heuristic(board, current, opponent):
     c = hamming_weight(board[current])
     o = hamming_weight(board[opponent])
     return 100*((c-o)/(c+o))
-
-        
-def midgame_negamax(board, current, depth, alpha, beta, empty, possible=[]):
-    opponent = 1^current
-
-    if not possible:
-        current_moves, opponent_moves = possible_moves(board, current), possible_moves(board, opponent)
-        length, opponent_length = len(current_moves), len(opponent_moves)
-        if not (FULL_BOARD ^ (board[current]|board[opponent])) or (length|opponent_length)==0:
-            return heuristic(board, current, opponent)*100,0
-        if length==0 and opponent_length!=0:
-            val = midgame_negamax(board, opponent, depth, -beta, -alpha, empty)
-            return  -val[0], val[1]
-        if depth<=0:
-            return heuristic(board, current, opponent)
-            #return heuristic(board, current, opponent, current_moves, length, opponent_moves, opponent_length, empty), 0
-    else:
-        current_moves = possible
-
-
-    best_score, best_move = -100, current_moves[0]
-    for move in current_moves:
-        score = -midgame_negamax(place(board, current, MOVES[move]), opponent, depth-1, -beta, -alpha, empty-1)[0]
-        if score > best_score:
-            best_score = score
-            best_move = move
-        alpha = max(alpha, score)
-        if beta <= alpha:
-            break
-    return best_score, best_move
 
 
 def endgame_negamax(board, current, depth, alpha, beta, possible=[]):
@@ -204,14 +158,43 @@ def endgame(board, moves, piece, empty):
     print("My move is {0}".format(val[1]))
 
 
+def negascout(board, current, depth, alpha, beta):
+    opponent = 1^current
+
+    current_moves, opponent_moves = possible_moves(board, current), possible_moves(board, opponent)
+    length, opponent_length = len(current_moves), len(opponent_moves)
+    if not (FULL_BOARD ^ (board[current]|board[opponent])) or (length|opponent_length)==0:
+        return heuristic(board, current, opponent)*100,0
+    if depth == 0:
+        return heuristic(board, current, opponent), 0
+
+    current_moves = sorted(current_moves, key=lambda x: heuristic(board, current, opponent), reverse=True)
+
+    best_score, best_move = -10000000, 0
+    for pos, move in enumerate(current_moves):
+        child = place(board, current, MOVES[move])
+        if pos == 0:
+            score = -negascout(child, opponent, depth-1, -beta, -alpha)[0]
+        else:
+            score = -negascout(child, opponent, depth-1, -alpha-1, -alpha)[0]
+            if alpha < score < beta:
+                score = -negascout(child, opponent, depth-1, -beta, -score)[0]
+        if score > best_score:
+            best_score = score
+            best_move = move
+        alpha = max(alpha, score)
+        if alpha >= beta:
+            break
+    return alpha, best_move
+
+
 def midgame(board, moves, piece, empty):
     print(moves)
-    sorted_moves = sorted(moves, key=lambda x: len(possible_moves(place(board, piece, MOVES[x]), 1^piece)))
     best = (-1000, 0)
     for max_depth in range(3,50):
-        val = midgame_negamax(board, piece, max_depth, -1000, 1000, empty, possible=sorted_moves)
+        val = negascout(board, piece, max_depth, -1000, 1000)
         best = max(val, best)
-        print("My move is {0}".format(best[1]))
+        print("My move is", best[1])
 
 
 def main():
