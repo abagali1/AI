@@ -52,7 +52,7 @@ EDGES = {0: {0,1,2,3,4,5,6,7}, 1:{56,57,58,59,60,61,62,6}, 2:{7,15,23,31,39,47,5
 
 
 HAMMING_CACHE = {}
-POSSIBLE_CACHE = {(68853694464, 34628173824, 0): {34, 43, 20, 29}, (68853694464, 34628173824, 1): {26, 19, 44, 37}}
+POSSIBLE_CACHE = {(68853694464, 34628173824, 0): ({34, 43, 20, 29},4), (68853694464, 34628173824, 1): ({26, 19, 44, 37},4)}
 TREE_CACHE = {}
 WEIGHT_CACHE = {}
 
@@ -102,15 +102,16 @@ def possible_moves(board, piece):
         return POSSIBLE_CACHE[key]
     else:
         final = 0b0
-        possible = []
+        possible, count = [], 0
         for d in MASKS:
             final |= fill(board[piece], board[1^piece], d) & (FULL_BOARD ^ (board[piece] | board[not piece]))
         while final:
             b = final & -final
             possible.append(POS[b])
             final ^= b
-        POSSIBLE_CACHE[key] = possible
-        return possible
+            count += 1
+        POSSIBLE_CACHE[key] = (possible, count)
+        return possible, count
 
 
 def place(b, piece, move):
@@ -144,8 +145,8 @@ def coin_heuristic(board, move, piece): # MAX: 100 MIN: -100
 
 def mobility_heuristic(board, move, piece): # MAX: 0 MIN: -340
     placed = place(board, piece, move)
-    opp_moves = possible_moves(placed, not piece)
-    h = -len(opp_moves)*40
+    opp_moves, opp_length = possible_moves(placed, 1^piece)
+    h = -opp_length*40
     if any(map(lambda x: x in CORNERS, opp_moves)):
         h -= 100000
     return h
@@ -196,9 +197,9 @@ def endgame_negamax(board, current, depth, alpha, beta, possible=[]):
 
 
     if not possible:
-        current_moves, opponent_moves = possible_moves(board, current), possible_moves(board, opponent)
-        length, opponent_length = len(current_moves), len(opponent_moves)
-        if not (FULL_BOARD ^ (board[current]|board[opponent])) or (length|opponent_length)==0 or depth==0:
+        (current_moves, length), (opponent_moves, opponent_length) = possible_moves(board, current), possible_moves(board, opponent)
+
+        if (length|opponent_length)==0 or depth==0:
             return hamming_weight(board[current])-hamming_weight(board[opponent]),0
         if length==0 and opponent_length!=0:
             val = endgame_negamax(board, opponent, depth, -beta, -alpha)
@@ -213,14 +214,14 @@ def endgame_negamax(board, current, depth, alpha, beta, possible=[]):
         if score > best_score:
             best_score = score
             best_move = move
-        alpha = max(alpha, score)
+            alpha = max(alpha, score)
         if beta <= alpha:
             break
     return best_score, best_move
 
 
 def endgame(board, moves, piece, empty):
-    sorted_moves = sorted(moves, key=lambda x: len(possible_moves(place(board, piece, MOVES[x]), 1^piece)))
+    sorted_moves = sorted(moves, key=lambda x: possible_moves(place(board, piece, MOVES[x]), 1^piece)[1])
     val = endgame_negamax(board, piece, 11, -1000, 1000, possible=sorted_moves)
     print("My move is {0}".format(val[1]))
 
@@ -241,9 +242,9 @@ def heuristic(board, current, opponent, current_moves, current_length, opponent_
 def negascout(board, current, depth, alpha, beta, empty):
     opponent = 1^current
 
-    current_moves, opponent_moves = possible_moves(board, current), possible_moves(board, opponent)
-    length, opponent_length = len(current_moves), len(opponent_moves)
-    if not (FULL_BOARD ^ (board[current]|board[opponent])) or (length|opponent_length)==0:
+    (current_moves, length), (opponent_moves, opponent_length) = possible_moves(board, current), possible_moves(board, opponent)
+
+    if (length|opponent_length)==0:
         return hamming_weight(board[current])-hamming_weight(board[opponent])*100,0
     if depth == 0:
         return heuristic(board, current, opponent, current_moves, length, opponent_moves, opponent_length),0
