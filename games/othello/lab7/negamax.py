@@ -35,7 +35,7 @@ LOG = {MOVES[63^i]:i for i in range(64)}
 
 
 HAMMING_CACHE = {}
-POSSIBLE_CACHE = {(68853694464, 34628173824, 0): {34, 43, 20, 29}, (68853694464, 34628173824, 1): {26, 19, 44, 37}}
+POSSIBLE_CACHE = {(68853694464, 34628173824, 0): ({34, 43, 20, 29},4), (68853694464, 34628173824, 1): ({26, 19, 44, 37},4)}
 TREE_CACHE = {}
 WEIGHT_CACHE = {}
 
@@ -85,15 +85,16 @@ def possible_moves(board, piece):
         return POSSIBLE_CACHE[key]
     else:
         final = 0b0
-        possible = []
+        possible, count = [], 0
         for d in MASKS:
             final |= fill(board[piece], board[1^piece], d) & (FULL_BOARD ^ (board[piece] | board[not piece]))
         while final:
             b = final & -final
             possible.append(POS[b])
             final ^= b
-        POSSIBLE_CACHE[key] = possible
-        return possible
+            count += 1
+        POSSIBLE_CACHE[key] = (possible, count)
+        return possible, count
 
 
 def place(b, piece, move):
@@ -135,9 +136,9 @@ def midgame_negamax(board, current, depth, alpha, beta, empty, possible=[]):
     opponent = 1^current
 
     if not possible:
-        current_moves, opponent_moves = possible_moves(board, current), possible_moves(board, opponent)
-        length, opponent_length = len(current_moves), len(opponent_moves)
-        if not (FULL_BOARD ^ (board[current]|board[opponent])) or (length|opponent_length)==0:
+        (current_moves, length), (opponent_moves, opponent_length) = possible_moves(board, current), possible_moves(board, opponent)
+
+        if (length|opponent_length)==0:
             return hamming_weight(board[current])-hamming_weight(board[opponent])*100,0
         if length==0 and opponent_length!=0:
             val = midgame_negamax(board, opponent, depth, -beta, -alpha, empty)
@@ -154,7 +155,7 @@ def midgame_negamax(board, current, depth, alpha, beta, empty, possible=[]):
         if score > best_score:
             best_score = score
             best_move = move
-        alpha = max(alpha, score)
+            alpha = max(alpha, score)
         if beta <= alpha:
             break
     return best_score, best_move
@@ -165,14 +166,14 @@ def endgame_negamax(board, current, depth, alpha, beta, possible=[]):
 
 
     if not possible:
-        current_moves, opponent_moves = possible_moves(board, current), possible_moves(board, opponent)
-        length, opponent_length = len(current_moves), len(opponent_moves)
-        if not (FULL_BOARD ^ (board[current]|board[opponent])) or (length|opponent_length)==0 or depth==0:
+        (current_moves, length), (opponent_moves, opponent_length) = possible_moves(board, current), possible_moves(board, opponent)
+
+        if (length|opponent_length)==0 or depth==0:
             return hamming_weight(board[current])-hamming_weight(board[opponent]),0
         if length==0 and opponent_length!=0:
             val = endgame_negamax(board, opponent, depth, -beta, -alpha)
             return -val[0], val[1]
-        current_moves = sorted(current_moves, key=lambda x: len(possible_moves(place(board, current, MOVES[x]), opponent)))
+        current_moves = sorted(current_moves, key=lambda x: possible_moves(place(board, current, MOVES[x]), opponent)[1])
     else:
         current_moves = possible
 
@@ -182,21 +183,21 @@ def endgame_negamax(board, current, depth, alpha, beta, possible=[]):
         if score > best_score:
             best_score = score
             best_move = move
-        alpha = max(alpha, score)
+            alpha = max(alpha, score)
         if beta <= alpha:
             break
     return best_score, best_move
 
 
 def endgame(board, moves, piece, empty):
-    sorted_moves = sorted(moves, key=lambda x: len(possible_moves(place(board, piece, MOVES[x]), 1^piece)))
+    sorted_moves = sorted(moves, key=lambda x: possible_moves(place(board, piece, MOVES[x]), 1^piece)[1])
     val = endgame_negamax(board, piece, 12, -1000, 1000, possible=sorted_moves)
     print("My move is {0}".format(val[1]))
 
 
 def midgame(board, moves, piece, empty):
     print(moves)
-    sorted_moves = sorted(moves, key=lambda x: len(possible_moves(place(board, piece, MOVES[x]), 1^piece)))
+    sorted_moves = sorted(moves, key=lambda x: possible_moves(place(board, piece, MOVES[x]), 1^piece)[1])
     best = (-1000, 0)
     for max_depth in range(3,50):
         val = midgame_negamax(board, piece, max_depth, -1000, 1000, empty, possible=sorted_moves)
@@ -208,7 +209,7 @@ def main():
     string_board, piece = argv[1].upper(), argv[2].upper()
     board = string_to_board(string_board)
     piece = 0 if piece == 'O' else 1
-    possible = possible_moves(board, piece)
+    possible, _ = possible_moves(board, piece)
     num_empty = hamming_weight(FULL_BOARD ^ (board[0]|board[1]))
     print(possible)
     if possible:

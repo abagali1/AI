@@ -222,7 +222,7 @@ def endgame_negamax(board, current, depth, alpha, beta, possible=[]):
 
 def endgame(board, moves, piece, empty):
     sorted_moves = sorted(moves, key=lambda x: possible_moves(place(board, piece, MOVES[x]), 1^piece)[1])
-    val = endgame_negamax(board, piece, 11, -1000, 1000, possible=sorted_moves)
+    val = endgame_negamax(board, piece, 12, -1000, 1000, possible=sorted_moves)
     print("My move is {0}".format(val[1]))
 
 
@@ -285,7 +285,7 @@ def main():
     string_board, piece = argv[1].upper(), argv[2].upper()
     board = string_to_board(string_board)
     piece = 0 if piece == 'O' else 1
-    possible = possible_moves(board, piece)
+    possible, _ = possible_moves(board, piece)
     num_empty = hamming_weight(FULL_BOARD ^ (board[0]|board[1]))
     if possible:
         if num_empty >= 14:
