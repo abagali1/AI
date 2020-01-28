@@ -252,7 +252,6 @@ def negascout(board, current, depth, alpha, beta, empty):
         val = negascout(board, opponent, depth, -beta, -alpha, empty)
         return  -val[0], val[1] 
     
-    #current_moves = sorted(current_moves, key=lambda x: hamming_weight(place(board, current, MOVES[x])[current])-hamming_weight(place(board, current, MOVES[x])[opponent]))
     current_moves = sorted(current_moves, key=lambda x: evaluate_move(board, x, current, empty), reverse=True)
     best_score, best_move = -10000000, 0
     for pos, move in enumerate(current_moves):

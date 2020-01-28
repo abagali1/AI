@@ -85,15 +85,16 @@ def possible_moves(board, piece):
         return POSSIBLE_CACHE[key]
     else:
         final = 0b0
-        possible = []
+        possible, count = [], 0
         for d in MASKS:
             final |= fill(board[piece], board[1^piece], d) & (FULL_BOARD ^ (board[piece] | board[not piece]))
         while final:
             b = final & -final
             possible.append(POS[b])
             final ^= b
-        POSSIBLE_CACHE[key] = possible
-        return possible
+            count += 1
+        POSSIBLE_CACHE[key] = (possible, count)
+        return possible, count
 
 
 def place(b, piece, move):
@@ -126,12 +127,9 @@ def heuristic(board, current, opponent):
 
 def endgame_negamax(board, current, depth, alpha, beta, possible=[]):
     opponent = 1^current
-
-
     if not possible:
-        current_moves, opponent_moves = possible_moves(board, current), possible_moves(board, opponent)
-        length, opponent_length = len(current_moves), len(opponent_moves)
-        if not (FULL_BOARD ^ (board[current]|board[opponent])) or (length|opponent_length)==0 or depth==0:
+        (current_moves, length), (opponent_moves, opponent_length) = possible_moves(board, current), possible_moves(board, opponent)
+        if not (FULL_BOARD ^ (board[1]|board[0])) or (length|opponent_length)==0 or depth==0:
             return hamming_weight(board[current])-hamming_weight(board[opponent]),0
         if length==0 and opponent_length!=0:
             val = endgame_negamax(board, opponent, depth, -beta, -alpha)
@@ -158,21 +156,78 @@ def endgame(board, moves, piece, empty):
     print("My move is {0}".format(val[1]))
 
 
-def negamax_with_memory(board, current, alpha, beta, depth):
-    opponent, old_alpha = 1^current, alpha
-    key = (board[current], board[opponent])
+def minimax_with_memory(board, current, alpha, beta, depth):
+    opponent = 1^current
+    key = (board[1], board[0], current)
     if key in TREE_CACHE:
-        cached_score, cached_move, cached_depth, cached_status = TREE_CACHE[key]
-        
+        cached_score, cached_depth, lower_bound, upper_bound = TREE_CACHE[key]
+        if cached_depth >= depth:
+            if lower_bound >= beta:
+                return lower_bound
+            if upper_bound <= alpha:
+                return upper_bound
+            alpha, beta = max(alpha, lower_bound), min(beta, upper_bound)
+    
+    (current_moves, length), (opponent_moves, opponent_length) = possible_moves(board, current), possible_moves(board, opponent)
+
+
+    if not (FULL_BOARD ^ (board[0]|board[1])) or (length|opponent_length)==0 or depth==0:
+        return hamming_weight(board[1])-hamming_weight(board[0])
+    
+    if length==0 and opponent_length!=0:
+        return minimax_with_memory(board, opponent, depth, alpha, beta)
+    
+    if current:
+        g, a = -float('inf'), alpha
+        for move in current_moves:
+            if g<=beta:
+                break
+            g = max(g, minimax_with_memory(place(board, current, MOVES[move]), opponent, a, beta, depth-1))
+            a = max(a, g)
+
+    else:
+        g, b = float('inf'), beta
+        for move in current_moves:
+            if g>=alpha:
+                break
+            g = min(g, minimax_with_memory(place(board, current, MOVES[move]), opponent, alpha, b, depth-1))
+            b = min(b, g)
+
+    if g <= alpha:
+        TREE_CACHE[key] = (g, depth, alpha, g)
+    elif alpha < g < beta:
+        TREE_CACHE[key] = (g, depth, g, g)
+    elif g >= beta:
+        TREE_CACHE[key] = (g, depth, g, beta)
+    return g
+
+
+def mtdf(board, piece, first_guess, depth):
+    g = first_guess
+    upper_bound = 100000000
+    lower_bound = -upper_bound
+    while True:
+        if g == lower_bound:
+            beta = g+1
+        else:
+            beta = g
+        g = minimax_with_memory(board, piece, beta-1, beta, depth)
+        if g < beta:
+            upper_bound = g
+        else:
+            lower_bound = g
+        if lower_bound >= upper_bound:
+            break
+    return g
+
 
 
 def midgame(board, moves, piece, empty):
-    print(moves)
-    best = (-1000, 0)
-    for max_depth in range(3,50):
-        val = negascout(board, piece, max_depth, -1000, 1000)
-        best = max(val, best)
-        print("My move is", best[1])
+    first_guess = 0
+    for move in moves:
+        first_guess = mtdf(place(board, piece, MOVES[move]), 1^piece, first_guess, 12)
+        print(first_guess, move)
+
 
 
 def main():
