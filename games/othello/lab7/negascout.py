@@ -224,15 +224,10 @@ def endgame(board, moves, piece, empty):
 
 
 def heuristic(board, current, opponent, current_moves, current_length, opponent_moves, opponent_length):
-    h = 20*current_length - 20*opponent_length
-
-    h += 20*hamming_weight(board[current] & CORNER_BOARD)
-    h -= 50*hamming_weight(board[opponent] & CORNER_BOARD)
-    
-    h += hamming_weight(board[current])-hamming_weight(board[0])
-
-    h += weight_table(board[current])*20
-    h -= weight_table(board[opponent])*20
+    h = ((current_length-opponent_length)/(current_length+opponent_length+1))
+    current_corners = hamming_weight(board[current]&CORNER_BOARD)
+    opponent_corners = hamming_weight(board[opponent]&CORNER_BOARD)
+    h += ((current_corners-opponent_corners)/(current_corners+opponent_corners+1))
     return h
 
 
@@ -290,5 +285,4 @@ def main():
             endgame(board, possible, piece, num_empty)
 
 if __name__ == "__main__":
-    start = time()
     main()
