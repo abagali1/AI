@@ -1,16 +1,13 @@
 #!/usr/bin/env python3
 from sys import argv
-from time import time
 from re import compile, IGNORECASE, match
 
 
-inf = float('inf')
 FULL_BOARD = 0xffffffffffffffff
 RIGHT_MASK = 0xfefefefefefefefe
 LEFT_MASK = 0x7f7f7f7f7f7f7f7f
 CORNER_BOARD = 0x8100000000000081
 CORNER_NEIGHBORS = 0x42c300000000c342
-CORNERS = {0, 7, 56, 63}
 MASKS = {
     -1: RIGHT_MASK,
     1: LEFT_MASK,
@@ -25,17 +22,6 @@ STABLE_EDGE_REGEX = {
     1: compile(r"^x+[o.]*x+$", IGNORECASE),
     0: compile(r"^o+[x.]*o+", IGNORECASE)
 }
-
-WEIGHT_TABLE = [
-        20, -3, 11, 8, 8, 11, -3, 20,
-    	-3, -7, -4, 1, 1, -4, -7, -3,
-    	11, -4, 2, 2, 2, 2, -4, 11,
-    	8, 1, 2, -3, -3, 2, 1, 8,
-    	8, 1, 2, -3, -3, 2, 1, 8,
-    	11, -4, 2, 2, 2, 2, -4, 11,
-    	-3, -7, -4, 1, 1, -4, -7, -3,
-    	20, -3, 11, 8, 8, 11, -3, 20
-        ]
 
 MOVES = {i: 1 << (63^i) for i in range(64)}
 POS = {MOVES[63^i]: 63^i for i in range(64)}
@@ -56,7 +42,6 @@ EDGES = {0: {0,1,2,3,4,5,6,7}, 1:{56,57,58,59,60,61,62,6}, 2:{7,15,23,31,39,47,5
 HAMMING_CACHE = {}
 POSSIBLE_CACHE = {(68853694464, 34628173824, 0): ({34, 43, 20, 29},4), (68853694464, 34628173824, 1): ({26, 19, 44, 37},4)}
 TREE_CACHE = {}
-WEIGHT_CACHE = {}
 
 
 def string_to_board(board):
@@ -129,15 +114,6 @@ def place(b, piece, move):
     return board
 
 
-def weight_table(board):
-    h = 0
-    while(board):
-        b = board&-board
-        h += WEIGHT_TABLE[LOG[b]]
-        board ^= b
-    return h
-
-
 def coin_heuristic(board, move, piece): # MAX: 100 MIN: -100
     placed = place(board,piece,move)
     num_player = hamming_weight(placed[piece])
@@ -177,21 +153,18 @@ def stable_edge(board, move, piece):
     return h
 
 
-def evaluate_move(board, move, piece, empty):
-    strat = coin_heuristic if empty <= 8 else mobility_heuristic
-
+def evaluate_move(board, move, piece):
     actual_move = MOVES[move]
-    h = strat(board, actual_move, piece)
+    h = coin_heuristic(board, actual_move, piece)
+    h += mobility_heuristic(board, actual_move, piece)
     h += next_to_corner(board, move, piece)
     h += stable_edge(board, move, piece)
 
     return h
 
 
-
 def endgame_negamax(board, current, depth, alpha, beta, possible=[]):
     opponent = 1^current
-
 
     if not possible:
         (current_moves, length), (opponent_moves, opponent_length) = possible_moves(board, current), possible_moves(board, opponent)
@@ -217,9 +190,8 @@ def endgame_negamax(board, current, depth, alpha, beta, possible=[]):
     return best_score, best_move
 
 
-def endgame(board, moves, piece, empty):
-    sorted_moves = sorted(moves, key=lambda x: possible_moves(place(board, piece, MOVES[x]), 1^piece)[1])
-    val = endgame_negamax(board, piece, 12, -1000, 1000, possible=sorted_moves)
+def endgame(board, moves, piece):
+    val = endgame_negamax(board, piece, 11, -1000, 1000, possible=sorted(moves, key=lambda x: possible_moves(place(board, piece, MOVES[x]), 1^piece)[1]))
     print("My move is {0}".format(val[1]))
 
 
@@ -231,7 +203,7 @@ def heuristic(board, current, opponent, current_moves, current_length, opponent_
     return h
 
 
-def negascout(board, current, depth, alpha, beta, empty):
+def negascout(board, current, depth, alpha, beta):
     opponent = 1^current
 
     (current_moves, length), (opponent_moves, opponent_length) = possible_moves(board, current), possible_moves(board, opponent)
@@ -242,19 +214,19 @@ def negascout(board, current, depth, alpha, beta, empty):
         return heuristic(board, current, opponent, current_moves, length, opponent_moves, opponent_length),0
 
     if length==0 and opponent_length!=0:
-        val = negascout(board, opponent, depth, -beta, -alpha, empty)
+        val = negascout(board, opponent, depth, -beta, -alpha)
         return  -val[0], val[1] 
     
-    current_moves = sorted(current_moves, key=lambda x: evaluate_move(board, x, current, empty), reverse=True)
-    best_score, best_move = -inf, 0
+    current_moves = sorted(current_moves, key=lambda x: evaluate_move(board, x, current), reverse=True)
+    best_score, best_move = -100, 0
     for pos, move in enumerate(current_moves):
         child = place(board, current, MOVES[move])
         if pos == 0:
-            score = -negascout(child, opponent, depth-1, -beta, -alpha, empty-1)[0]
+            score = -negascout(child, opponent, depth-1, -beta, -alpha)[0]
         else:
-            score = -negascout(child, opponent, depth-1, -alpha-1, -alpha, empty-1)[0]
+            score = -negascout(child, opponent, depth-1, -alpha-1, -alpha)[0]
             if alpha < score < beta:
-                score = -negascout(child, opponent, depth-1, -beta, -score, empty-1)[0]
+                score = -negascout(child, opponent, depth-1, -beta, -score)[0]
         if score > best_score:
             best_score = score
             best_move = move
@@ -264,10 +236,10 @@ def negascout(board, current, depth, alpha, beta, empty):
     return alpha, best_move
 
 
-def midgame(board, moves, piece, empty):
+def midgame(board, moves, piece):
     best = (-1000, 0)
     for max_depth in range(3,50):
-        val = negascout(board, piece, max_depth, best[0], 1000, empty)
+        val = negascout(board, piece, max_depth, best[0], 1000)
         best = max(val, best)
         print("My move is", best[1])
 
@@ -276,13 +248,12 @@ def main():
     string_board, piece = argv[1].upper(), argv[2].upper()
     board = string_to_board(string_board)
     piece = 0 if piece == 'O' else 1
-    possible, _ = possible_moves(board, piece)
+    possible = possible_moves(board, piece)[0]
     num_empty = hamming_weight(FULL_BOARD ^ (board[0]|board[1]))
     if possible:
         if num_empty >= 14:
-            midgame(board, possible, piece, num_empty)
+            midgame(board, possible, piece)
         else:
-            endgame(board, possible, piece, num_empty)
+            endgame(board, possible, piece)
 
-if __name__ == "__main__":
-    main()
+main()
