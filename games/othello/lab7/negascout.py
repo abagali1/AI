@@ -4,6 +4,7 @@ from time import time
 from re import compile, IGNORECASE, match
 
 
+inf = float('inf')
 FULL_BOARD = 0xffffffffffffffff
 RIGHT_MASK = 0xfefefefefefefefe
 LEFT_MASK = 0x7f7f7f7f7f7f7f7f
@@ -25,15 +26,16 @@ STABLE_EDGE_REGEX = {
     0: compile(r"^o+[x.]*o+", IGNORECASE)
 }
 
-WEIGHT_TABLE = [4, -3, 2, 2, 2, 2, -3, 4,
-          -3, -4, -1, -1, -1, -1, -4, -3,
-           2, -1, 1, 0, 0, 1, -1, 2,
-           2, -1, 0, 1, 1, 0, -1, 2,
-           2, -1, 0, 1, 1, 0, -1, 2,
-           2, -1, 1, 0, 0, 1, -1, 2,
-          -3, -4, -1, -1, -1, -1, -4,
-          4, -3, -3, 2, 2, 2, 2, -3, 4
-          ]
+WEIGHT_TABLE = [
+        20, -3, 11, 8, 8, 11, -3, 20,
+    	-3, -7, -4, 1, 1, -4, -7, -3,
+    	11, -4, 2, 2, 2, 2, -4, 11,
+    	8, 1, 2, -3, -3, 2, 1, 8,
+    	8, 1, 2, -3, -3, 2, 1, 8,
+    	11, -4, 2, 2, 2, 2, -4, 11,
+    	-3, -7, -4, 1, 1, -4, -7, -3,
+    	20, -3, 11, 8, 8, 11, -3, 20
+        ]
 
 MOVES = {i: 1 << (63^i) for i in range(64)}
 POS = {MOVES[63^i]: 63^i for i in range(64)}
@@ -153,11 +155,6 @@ def mobility_heuristic(board, move, piece): # MAX: 0 MIN: -340
 
 
 def next_to_corner(board, move, piece): # MAX: 150 MIN: -100000
-    """
-    Return 10 if next to a captured(own) corner
-    Return 0 if not next to a corner
-    Return -10 if next to an empty/taken(opponent) corner
-    """
     if move not in CORNER_NEIGHBORS:
         return 0
     elif is_on(board[piece], CORNER_NEIGHBORS[move]):
@@ -204,7 +201,7 @@ def endgame_negamax(board, current, depth, alpha, beta, possible=[]):
         if length==0 and opponent_length!=0:
             val = endgame_negamax(board, opponent, depth, -beta, -alpha)
             return -val[0], val[1]
-        current_moves = sorted(current_moves, key=lambda x: len(possible_moves(place(board, current, MOVES[x]), opponent)))
+        current_moves = sorted(current_moves, key=lambda x: possible_moves(place(board, current, MOVES[x]), opponent)[1])
     else:
         current_moves = possible
 
@@ -253,9 +250,8 @@ def negascout(board, current, depth, alpha, beta, empty):
         val = negascout(board, opponent, depth, -beta, -alpha, empty)
         return  -val[0], val[1] 
     
-    #current_moves = sorted(current_moves, key=lambda x: hamming_weight(place(board, current, MOVES[x])[current])-hamming_weight(place(board, current, MOVES[x])[opponent]))
     current_moves = sorted(current_moves, key=lambda x: evaluate_move(board, x, current, empty), reverse=True)
-    best_score, best_move = -10000000, 0
+    best_score, best_move = -inf, 0
     for pos, move in enumerate(current_moves):
         child = place(board, current, MOVES[move])
         if pos == 0:
@@ -267,7 +263,7 @@ def negascout(board, current, depth, alpha, beta, empty):
         if score > best_score:
             best_score = score
             best_move = move
-        alpha = max(alpha, score)
+            alpha = max(alpha, score)
         if alpha >= beta:
             break
     return alpha, best_move
