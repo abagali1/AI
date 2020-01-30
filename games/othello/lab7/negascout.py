@@ -7,7 +7,6 @@ FULL_BOARD = 0xffffffffffffffff
 RIGHT_MASK = 0xfefefefefefefefe
 LEFT_MASK = 0x7f7f7f7f7f7f7f7f
 CORNER_BOARD = 0x8100000000000081
-CORNER_NEIGHBORS = 0x42c300000000c342
 MASKS = {
     -1: RIGHT_MASK,
     1: LEFT_MASK,
@@ -196,10 +195,13 @@ def endgame(board, moves, piece):
 
 
 def heuristic(board, current, opponent, current_moves, current_length, opponent_moves, opponent_length):
+    current_board, opponent_board = board[current], board[opponent]
     h = ((current_length-opponent_length)/(current_length+opponent_length+1))
-    current_corners = hamming_weight(board[current]&CORNER_BOARD)
-    opponent_corners = hamming_weight(board[opponent]&CORNER_BOARD)
+
+    current_corners = hamming_weight(current_board & CORNER_BOARD)
+    opponent_corners = hamming_weight(opponent_board & CORNER_BOARD)
     h += ((current_corners-opponent_corners)/(current_corners+opponent_corners+1))
+
     return h
 
 
