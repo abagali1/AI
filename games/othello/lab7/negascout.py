@@ -29,7 +29,9 @@ LOG = {MOVES[63^i]:i for i in range(64)}
 bit_not = lambda x: FULL_BOARD ^ x
 is_on = lambda x, pos: x & MOVES[63^pos]
 binary_to_board = lambda board: "".join(['o' if is_on(board[0], 63^i) else 'x' if is_on(board[1],63^i) else '.' for i in range(64)])
+binary_to_string = lambda x: '\n'.join([''.join(['{:064b}'.format(x)[i*8 +j][0] for j in range(8)]) for i in range(8)]).strip().lower()
 
+print_binary = lambda x: print(binary_to_string(x))
 
 CORNERS = {0, 7, 56, 63}
 CORNER_NEIGHBORS = {1:63, 6:56, 8:63, 9:63, 14:56, 15:56, 48:7, 49:7, 54:0, 55:0, 57:7, 62:0}
@@ -200,7 +202,7 @@ def heuristic(board, current, opponent, current_moves, current_length, opponent_
 
     current_corners = hamming_weight(current_board & CORNER_BOARD)
     opponent_corners = hamming_weight(opponent_board & CORNER_BOARD)*10
-    h += ((current_corners-opponent_corners)/(current_corners+opponent_corners+1))*50
+    h += ((current_corners-opponent_corners)/(current_corners+opponent_corners+1))*20
 
     return h
 
