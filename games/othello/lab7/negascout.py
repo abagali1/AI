@@ -185,13 +185,13 @@ def endgame_negamax(board, current, depth, alpha, beta, possible=[]):
             best_score = score
             best_move = move
             alpha = max(alpha, score)
-        if beta <= alpha:
-            break
+            if beta <= alpha:
+                break
     return best_score, best_move
 
 
 def endgame(board, moves, piece):
-    val = endgame_negamax(board, piece, 11, -1000, 1000, possible=sorted(moves, key=lambda x: possible_moves(place(board, piece, MOVES[x]), 1^piece)[1]))
+    val = endgame_negamax(board, piece, 9, -1000, 1000, possible=sorted(moves, key=lambda x: possible_moves(place(board, piece, MOVES[x]), 1^piece)[1]))
     print("My move is {0}".format(val[1]))
 
 
@@ -205,6 +205,10 @@ def heuristic(board, current, opponent, current_moves, current_length, opponent_
 
 def negascout(board, current, depth, alpha, beta):
     opponent = 1^current
+
+    key = (board[current], board[opponent], depth)
+    if key in TREE_CACHE:
+        return TREE_CACHE[key]
 
     (current_moves, length), (opponent_moves, opponent_length) = possible_moves(board, current), possible_moves(board, opponent)
 
@@ -231,8 +235,9 @@ def negascout(board, current, depth, alpha, beta):
             best_score = score
             best_move = move
             alpha = max(alpha, score)
-        if alpha >= beta:
-            break
+            if alpha >= beta:
+                break
+    TREE_CACHE[key] = (alpha, best_move)
     return alpha, best_move
 
 
