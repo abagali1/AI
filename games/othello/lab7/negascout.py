@@ -190,7 +190,7 @@ def endgame_negamax(board, current, depth, alpha, beta, possible=[]):
 
 
 def endgame(board, moves, piece):
-    val = endgame_negamax(board, piece, 9, -1000, 1000, possible=sorted(moves, key=lambda x: possible_moves(place(board, piece, MOVES[x]), 1^piece)[1]))
+    val = endgame_negamax(board, piece, 11, -1000, 1000, possible=sorted(moves, key=lambda x: possible_moves(place(board, piece, MOVES[x]), 1^piece)[1]))
     print("My move is {0}".format(val[1]))
 
 
@@ -199,8 +199,8 @@ def heuristic(board, current, opponent, current_moves, current_length, opponent_
     h = ((current_length-opponent_length)/(current_length+opponent_length+1))
 
     current_corners = hamming_weight(current_board & CORNER_BOARD)
-    opponent_corners = hamming_weight(opponent_board & CORNER_BOARD)
-    h += ((current_corners-opponent_corners)/(current_corners+opponent_corners+1))
+    opponent_corners = hamming_weight(opponent_board & CORNER_BOARD)*10
+    h += ((current_corners-opponent_corners)/(current_corners+opponent_corners+1))*50
 
     return h
 
