@@ -1,5 +1,14 @@
 #!/bin/bash
 
+if [ $# -eq 0 ]
+  then
+    echo "Missing required parameter: <year>"
+    echo "Usage: ./wthor.sh <year>"
+    echo "Required Parameter: <year> WTHOR Tournament Year to download database from"
+    echo "<year> must be in the range of 1990-2019"
+    exit 1
+fi
+
 YEAR=$1
 
 mkdir WTH_$YEAR
