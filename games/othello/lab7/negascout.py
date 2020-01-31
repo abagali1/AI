@@ -265,4 +265,6 @@ def main():
         else:
             endgame(board, possible, piece)
 
-main()
+
+if __name__ == '__main__':
+    main()
