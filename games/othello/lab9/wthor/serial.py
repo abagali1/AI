@@ -1,10 +1,6 @@
 #!/usr/bin/env python3
-
 import sys
 from time import time
-import multiprocessing
-from functools import partial
-
 
 FULL_BOARD = 0xffffffffffffffff
 RIGHT_MASK = 0xfefefefefefefefe
@@ -43,8 +39,6 @@ print_board_binary = lambda x: print(board_to_string(binary_to_board(x)))
 
 
 HAMMING_CACHE = {}
-OPENING_BOOK = {}
-merge_lock = multiprocessing.Lock()
 
 
 def hamming_weight(n):
@@ -106,9 +100,9 @@ def place(b, piece, move):
     return board
 
 
-def parse_file(f, o_b):
+def parse_file(f):
+    global OPENING_BOOK, merge_lock
     tmp = {}
-    print(f, o_b)
     file = open(f).read().splitlines()
     for s in file:
         board, piece = {0: 68853694464, 1: 34628173824}, 1
@@ -128,21 +122,40 @@ def parse_file(f, o_b):
                 tmp[key] = [move]
             board = place(board, piece, MOVES[move])
             piece ^= 1
-        o_b = {**o_b, **tmp}
+        with merge_lock:
+            OPENING_BOOK = {**OPENING_BOOK, **tmp}
 
 
 def main():
     start = time()
     games = 0
-    manager = multiprocessing.Manager()
-    opening_book = manager.dict()
-    f = partial(parse_file, o_b=opening_book)
-    with multiprocessing.Pool(multiprocessing.cpu_count()) as p:
-        p.map(f, sys.argv[1:])
-
+    OPENING_BOOK = {}
+    for f in sys.argv[1:]:
+        file = open(f).read().splitlines()
+        for s in file:
+            board, piece = {0: 68853694464, 1: 34628173824}, 1
+            moves = [LETTERS[x] for x in [s[i:i+2] for i in range(0, len(s), 2)]]
+            possible = possible_moves(board, piece)
+            for move in moves:
+                if hamming_weight(FULL_BOARD-(board[0]|board[1])) <= 14:
+                    break
+                possible = possible_moves(board, piece)
+                if move not in possible:
+                    piece ^= 1
+                    continue
+                key = (board[0], board[1], piece)
+                if key in OPENING_BOOK:
+                    OPENING_BOOK[key].append(move)
+                else: 
+                    OPENING_BOOK[key] = [move]
+                board = place(board, piece, MOVES[move])
+                piece ^= 1
     
-    opening_book = {x: max(y, key=lambda x: y.count(x)) for x,y in opening_book.items()}
-    print(opening_book)
+    OPENING_BOOK = {x: max(y, key=lambda x: y.count(x)) for x,y in OPENING_BOOK.items()}
+    print(OPENING_BOOK)
+    print(len(OPENING_BOOK))
+    print(len(str(OPENING_BOOK)))
+    print(games)
     print(time()-start)
 
 if __name__ == '__main__':
