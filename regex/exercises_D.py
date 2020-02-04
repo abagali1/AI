@@ -16,3 +16,4 @@ expressions = [
 
 if __name__ == '__main__':
     print(expressions[int(argv[1])-60])
+
