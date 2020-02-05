@@ -1,10 +1,12 @@
 from collections import deque
 import random
+
 EMPTY, BLACK, WHITE, OUTER = '.', '@', 'o', '?'
 BONUS = 1<<20
 LEFTSHIFTS=[0,0,0,0,1,9,8,7]
 RIGHTSHIFTS=[1,9,8,7,0,0,0,0]
 MASKS = {0:0x7F7F7F7F7F7F7F7F,1:0x007F7F7F7F7F7F7F,2:0xFFFFFFFFFFFFFFFF,3:0x00FEFEFEFEFEFEFE,4:0xFEFEFEFEFEFEFEFE,5:0xFEFEFEFEFEFEFE00,6:0xFFFFFFFFFFFFFFFF,7:0x7F7F7F7F7F7F7F00}
+
 def make_move( my_disks, opp_disks, move):
 	my_new_disks,opp_new_disks=my_disks,opp_disks
 	newdisk=1<<move
@@ -35,6 +37,7 @@ def make_move( my_disks, opp_disks, move):
 	opp_new_disks^=captured
 	return (my_new_disks,opp_new_disks)
 
+
 def parseBoard(my_disks,opp_disks):
 	blackStable,whiteStable,full=255,255,255
 	fringe=deque([(my_disks,opp_disks)])
@@ -60,6 +63,8 @@ def parseBoard(my_disks,opp_disks):
 						seen.add((newWhite,newBlack))
 						fringe.append((newWhite,newBlack))
 	return (whiteStable,blackStable)
+
+
 def display(white,black):
 	board=''
 	for x in range(8):
@@ -71,12 +76,14 @@ def display(white,black):
 			board+='.'
 	print(board)
 
+
 def count(disks):
 	num=disks&1
 	while disks:
 		disks=disks>>1
 		num+=disks&1
 	return num
+
 
 def boardgen():
 	seen=set()
@@ -96,16 +103,21 @@ def boardgen():
 						seen.add(new)
 						fringe.append(new)
 	return seen
+
+
 import time,pickle
+
 stableEdge=dict()
 t0=time.time()
 pos=0
+
 for white,black in boardgen():
 	stableW,stableB=parseBoard(white,black)
 	swcount=count(stableW)
 	sbcount=count(stableB)
 	if (white,black) not in stableEdge:
 		stableEdge[(white,black)]=swcount-sbcount
+
 print(time.time()-t0)
 print(len(stableEdge))
 print(len(str(stableEdge)))
