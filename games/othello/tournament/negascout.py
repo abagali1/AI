@@ -255,7 +255,7 @@ def heuristic(board, current, opponent, current_moves, current_length, opponent_
 
     current_count = hamming_weight(current_board)
     opponent_count = hamming_weight(opponent_board)
-    tkc= ((current_count-opponent_count)/(current_count+opponent_count))
+    tc= ((current_count-opponent_count)/(current_count+opponent_count))
     
     current_weights = weight_table(current_board)
     opponent_weights = weight_table(opponent_board)
