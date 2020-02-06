@@ -25,7 +25,7 @@ WEIGHT_MATRIX = {
     'tc': 20,
     'cc': 50,
     'se': 75,
-    'wt': 20
+    'w': 20
 }
 STABLE_EDGE_REGEX = {
     1: compile(r"^x+[o.]*x+$", IGNORECASE),
