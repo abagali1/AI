@@ -71,6 +71,8 @@ PLAYER = {
     'X': 1,
     '@': 1
 }
+OPENING_BOOK = {('0x8000000', '0x101810000000', 0): 34, ('0x30000000', '0x101808040000', 0): 37, ('0x34000000', '0x1018080c0000', 0): 20, ('0x80024000000', '0x1018181c0000', 0): 53, ('0x80020000400', '0x10181c1e0000', 0): 52, ('0x80028180c00', '0x101c14060000', 0): 26, ('0x82028000c00', '0x101c143e0000', 0): 18, ('0x383028000400', '0xc143e0810', 0): 60, ('0x383028000c08', '0xc143e1010', 0): 58, ('0x383008000c38', '0xc743e1000', 0): 41, ('0x380008400c38', '0x7c743e1000', 0): 24, ('0x388048401c38', '0x7c343e2000', 0): 32, ('0x38c0c8401838', '0x3c343e2402', 0): 57, ('0x30c0c8503878', '0x4083c342e0402', 0): 21, ('0x24c0c8503878', '0xc183c342e0402', 0): 11, ('0x1004d0d8503878', '0xc782c242e0402', 0): 3, ('0x100004d0d8503878', '0x81c782c242e0402', 0): 5, ('0x1c0c14b0d8503878', '0x10e84c242e0402', 0): 30, ('0x1c0c04b6d8583878', '0x30f84824260402', 0): 38, ('0x1c0c04b6c05c3878', '0x30f8483f220402', 0): 49, ('0x1c0c04bcd07c7878', '0x30f9422f020402', 0): 31, ('0x1c0c00b9d07c7878', '0x30ff462f020402', 0): 61, ('0x1c0c00b1c05c3c00', '0x30ff4e3f2240fe', 0): 2, ('0x3c2020b1c05c3c00', '0x1edf4e3f2240fe', 0): 6, ('0x3e2428b1c0580000', '0x1ad74e3f267efe', 0): 47, ('0x3e0408a5c35f0000', '0x7af75a3c207efe', 0): 63, ('0x3e0408a4c25c0001', '0x7af75b3d237ffe', 0): 0, ('0xbe0428b4ca5c0001', '0x407ad74b35237ffe', 0): 8, ('0x80fce8b4ca5c0001', '0x7f02174b35237ffe', 0): 15, ('0x80ffebb5cb1d0101', '0x7f00144a3462fefe', 0): 40}
+
 
 
 def string_to_board(board):
@@ -333,7 +335,11 @@ class Strategy:
         if 1^self.ordered_moves:
             self.ordered_moves = sorted(moves, key=lambda x: evaluate_move(board, x, piece, self.num_empty), reverse=True)
 
-        best_move.value = GRADER_MOVE[self.ordered_moves[0]]
+        key = (hex(board[0]), hex(board[1]), piece)
+        if key in OPENING_BOOK:
+            best_move.value = GRADER_MOVE[OPENING_BOOK[key]]
+        else:
+            best_move.value = GRADER_MOVE[self.ordered_moves[0]]
         self.choose_move(board, moves, piece, best_move)
         self.ordered_moves = 0
 
