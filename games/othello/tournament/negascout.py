@@ -20,6 +20,13 @@ MASKS = {
     -7: LEFT_MASK,
     -9: RIGHT_MASK
 }
+WEIGHT_MATRIX = {
+    'm': 20,
+    'tc': 20,
+    'cc': 50,
+    'se': 75,
+    'wt': 20
+}
 STABLE_EDGE_REGEX = {
     1: compile(r"^x+[o.]*x+$", IGNORECASE),
     0: compile(r"^o+[x.]*o+", IGNORECASE)
@@ -143,7 +150,7 @@ def weight_table(board):
         b = board&-board
         h += WEIGHT_TABLE[LOG[b]]
         board ^= b
-    return h
+    return h+1
 
 
 def coin_heuristic(board, move, piece): # MAX: 100 MIN: -100
@@ -237,16 +244,21 @@ def endgame(board, moves, piece, empty):
 
 
 def heuristic(board, current, opponent, current_moves, current_length, opponent_moves, opponent_length):
-    h = 20*current_length - 20*opponent_length
+    current_board, opponent_board = board[current], board[opponent]
+    m = ((current_length-opponent_length)/(current_length+opponent_length+1))
 
-    h += 20*hamming_weight(board[current] & CORNER_BOARD)
-    h -= 50*hamming_weight(board[opponent] & CORNER_BOARD)
+    current_corners = hamming_weight(current_board & CORNER_BOARD)
+    opponent_corners = hamming_weight(opponent_board & CORNER_BOARD)
+    cc = ((current_corners - opponent_corners)/(current_corners+opponent_corners+1))
+
+    current_count = hamming_weight(current_board)
+    opponent_count = hamming_weight(opponent_board)
+    tkc= ((current_count-opponent_count)/(current_count+opponent_count))
     
-    h += hamming_weight(board[current])-hamming_weight(board[0])
-
-    h += weight_table(board[current])*20
-    h -= weight_table(board[opponent])*20
-    return h
+    current_weights = weight_table(current_board)
+    opponent_weights = weight_table(opponent_board)
+    w = current_weights-opponent_weights
+    return m*WEIGHT_MATRIX['m']+cc*WEIGHT_MATRIX['cc']+tc*WEIGHT_MATRIX['tc']+w*WEIGHT_MATRIX['w']
 
 
 def negascout(board, current, depth, alpha, beta, empty):
