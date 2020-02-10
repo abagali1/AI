@@ -18,9 +18,37 @@ def to_string(pzl):
     return '\n'.join([''.join([pzl[INDICES_2D[(i, j)]][0] for j in range(WIDTH)]) for i in range(HEIGHT)]).strip()
 
 
-def rotate180(pivot):
-    return (WIDTH - pivot[0] - 1, HEIGHT - pivot[1] - 1)
+def rotate180(board, pivot):
+    return board[INDICES_2D[(WIDTH - pivot[0] - 1, HEIGHT - pivot[1] - 1)]]
 
+
+def is_invalid(board, remaining_blocks):
+  if remaining_blocks == 0:
+    for pos in range(AREA):
+      if board[pos] != rotate180(board, INDICES[pos]):
+        return False
+  
+  if "#"*WIDTH in board:
+    return False
+  
+
+
+
+def brute_force(board, blocks):
+  if not blocks:
+    return board
+  
+  if is_invalid(board, blocks):
+    return False
+  
+  set_of_choices = [pos for pos, elem in enumerate(board) if elem == '-']
+
+  for choice in set_of_choices:
+    board[choice] = '#'
+    b_f = brute_force(board, blocks-1)
+    if b_f:
+      return b_f
+    board[choice] = '-'
 
 def place_words():
   global BOARD, SEEDS
