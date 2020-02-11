@@ -259,9 +259,9 @@ def main():
     num_empty = hamming_weight(FULL_BOARD ^ (board[0]|board[1]))
 
     key = (hex(board[0]), hex(board[1]), piece)
-    if key in OPENING_BOOK:
-        print("My move is {0}".format(OPENING_BOOK[key]))
-        return
+    # if key in OPENING_BOOK:
+    #     print("My move is {0}".format(OPENING_BOOK[key]))
+    #     return
 
 
     if possible:

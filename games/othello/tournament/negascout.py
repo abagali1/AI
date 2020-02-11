@@ -2,6 +2,7 @@
 from sys import argv
 from time import time
 from re import compile, IGNORECASE, match
+import ctypes
 
 
 FULL_BOARD = 0xffffffffffffffff
