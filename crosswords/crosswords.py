@@ -13,12 +13,34 @@ INDICES = {} # idx -> (row, col)
 INDICES_2D = {} # (row, col) -> idx
 ROTATIONS = {} # idx -> rotated 180 idx
 NEIGHBORS = {} # idx -> [neighbors]
+ROWS = [] # [ [idxs in row 0], [idxs in row 1]]
+COLS = [] # [ [idxs in col 0], [idxs in col 1]]
+CONSTRAINTS = [] # [[row0], [row1], [col0], col[1]]
+FULL_WALL = [] # [*'#'*WIDTH]
 
 # print 2d board
 to_string = lambda pzl: '\n'.join([''.join([pzl[INDICES_2D[(i, j)]][0] for j in range(WIDTH)]) for i in range(HEIGHT)]).strip()
 
 
-def brute_force(board, possible=[])
+def is_invalid(board, remaining_blocks):
+  return False
+
+
+def brute_force(board, num_blocks, possible=[]):
+  if not num_blocks:
+    return board
+  
+  if is_invalid(board, num_blocks):
+    return False
+
+  set_of_choices = possible if possible else [pos for pos,elem in enumerate(board) if elem == EMPTY]
+
+  for choice in set_of_choices:
+    board[choice] = BLOCK
+    b_f = brute_force(board, num_blocks-1)
+    if b_f:
+      return b_f
+    board[choice] = EMPTY 
 
 
 # helper methods try not to use these
@@ -55,7 +77,7 @@ def place_words():
 
 
 def parse_args():
-  global HEIGHT, WIDTH, SEEDS, FILE, BOARD, BLOCKS, INDICES, INDICES_2D, ROTATIONS, NEIGHBORS
+  global HEIGHT, WIDTH, SEEDS, FILE, BOARD, BLOCKS, INDICES, INDICES_2D, ROTATIONS, NEIGHBORS, AREA, FULL_WALL
   for arg in sys.argv[1:]:
     if 'H' == arg[0].upper() or 'V' == arg[0].upper():
       groups = match(SEED_REGEX, arg).groups()
@@ -67,12 +89,13 @@ def parse_args():
     else:
       HEIGHT, WIDTH = (int(x) for x in arg.split('x'))
   AREA = HEIGHT*WIDTH
+  FULL_WALL = [*BLOCK*WIDTH]
   INDICES = {index: (index // WIDTH, (index % WIDTH)) for index in range(AREA)} # idx -> (row, col)
   INDICES_2D = {(i, j): i * WIDTH + j for i in range(HEIGHT) for j in range(WIDTH)} # (row, col) -> idx
 
 
 def gen_lookups():
-  global NEIGHBORS, ROTATIONS
+  global NEIGHBORS, ROTATIONS, ROWS, COLS, CONSTRAINTS
   for index in range(0, AREA):  # saves all possible neighbors for all indices
     row = index // WIDTH
     neighbors = [i for i in [index + WIDTH, index - WIDTH] if 0 <= i < AREA]
@@ -80,10 +103,13 @@ def gen_lookups():
         neighbors.append(index + 1)
     if (index - 1) // WIDTH == row and index - 1 >= 0:
         neighbors.append(index - 1)
-  NEIGHBORS[index] = neighbors
+    NEIGHBORS[index] = neighbors
 
   ROTATIONS = {i: INDICES_2D[(HEIGHT - INDICES[i][0] - 1, WIDTH - INDICES[i][1] - 1)] for i in range(AREA)}
 
+  ROWS = [[*range(i, i+WIDTH)] for i in range(0, AREA, WIDTH)]
+  COLS = [[*range(i,AREA,WIDTH)] for i in range(0, WIDTH)]
+  CONSTRAINTS = ROWS + COLS
 
 
 def main():
@@ -102,7 +128,7 @@ def main():
   # generate any lookup tables, including constraints
   gen_lookups()
 
-  sol = brute_force()
+  return to_string(brute_force(BOARD, BLOCKS))
 
 
 
