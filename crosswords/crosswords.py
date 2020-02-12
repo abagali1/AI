@@ -3,6 +3,8 @@ import sys
 from re import compile, IGNORECASE, match
 
 SEED_REGEX = compile(r"(V|H)(\d*)x(\d*)(.+)", IGNORECASE)
+WORD_REGEX = compile(r"(#([^#]{1,2})#)")
+
 BLOCK = '#'
 EMPTY = '-'
 FILE = ""
@@ -42,16 +44,18 @@ def bfs(board, starting_index):
 
 
 def is_invalid(board, remaining_blocks):
-  for row in ROWS:
-    
-      return True
+  if SEED_REGEX.match("".join(board)):
+    return True
   return False
 
 
 def brute_force(board, num_blocks, possible=[]):
   if num_blocks <= 0:
     return board
-  
+  if num_blocks == 1:
+    board[AREA//2] = BLOCK
+    return board
+
   if is_invalid(board, num_blocks):
     return False
 
@@ -103,8 +107,10 @@ def cw_180(pzl):
 
 
 def place_words():
-  global BOARD
+  global BOARD, BLOCKS
   for seed in SEEDS:
+    if BLOCK in seed:
+      BLOCKS -= 1
     if seed[0] == 'H':
       idx = INDICES_2D[(seed[1],seed[2])]
       BOARD[idx:idx+len(seed[3])] = seed[3]
@@ -168,15 +174,9 @@ def main():
   # generate any lookup tables, including constraints
   gen_lookups()
   
-  BLOCKS -= BOARD.count(BLOCK)
-  if AREA % 2:
-    center = AREA//2
-    if BOARD[center] == EMPTY:
-      BOARD[center] = BLOCK
-      BLOCKS -= 1
-
   sol = brute_force(BOARD, BLOCKS)
   if sol:
+    print(sol.count(BLOCK))
     return to_string(sol)
 
 
