@@ -9,6 +9,8 @@ FILE = ""
 
 BOARD, SEEDS = [], []
 HEIGHT, WIDTH, AREA, BLOCKS = 0,0,0,0
+ALL_INDICES = set() # set of all indices
+PLACED = set()
 INDICES = {} # idx -> (row, col)
 INDICES_2D = {} # (row, col) -> idx
 ROTATIONS = {} # idx -> rotated 180 idx
@@ -22,25 +24,60 @@ FULL_WALL = [] # [*'#'*WIDTH]
 to_string = lambda pzl: '\n'.join([''.join([pzl[INDICES_2D[(i, j)]][0] for j in range(WIDTH)]) for i in range(HEIGHT)]).strip()
 
 
+def bfs(board, starting_index):
+  visited = set()
+  queue = []
+
+  queue.append(starting_index)
+  visited.add(starting_index)
+
+  for index in queue:
+    for neighbor in NEIGHBORS[index]:
+      if neighbor == EMPTY:
+        if neighbor not in visited:
+          queue.append(neighbor)
+          visited.add(neighbor)
+
+  return visited
+
+
 def is_invalid(board, remaining_blocks):
+  for row in ROWS:
+    
+      return True
   return False
 
 
 def brute_force(board, num_blocks, possible=[]):
-  if not num_blocks:
+  if num_blocks <= 0:
     return board
   
   if is_invalid(board, num_blocks):
     return False
 
-  set_of_choices = possible if possible else [pos for pos,elem in enumerate(board) if elem == EMPTY]
+  set_of_choices = [pos for pos,elem in enumerate(board) if elem == EMPTY]
+  tried = set()
 
   for choice in set_of_choices:
-    board[choice] = BLOCK
-    b_f = brute_force(board, num_blocks-1)
-    if b_f:
-      return b_f
-    board[choice] = EMPTY 
+    rotated = ROTATIONS[choice]
+    if board[rotated] != EMPTY or choice in tried:
+      continue
+    else:
+
+      board[rotated] = BLOCK
+      board[choice] = BLOCK
+      if choice == rotated:
+        b_f = brute_force(board, num_blocks-1)
+      else:
+        b_f = brute_force(board, num_blocks-2)
+      if b_f:
+        return b_f
+      board[choice] = EMPTY 
+      board[rotated] = EMPTY
+      tried.add(choice)
+      tried.add(rotated)
+
+  return None
 
 
 # helper methods try not to use these
@@ -69,7 +106,8 @@ def place_words():
   global BOARD
   for seed in SEEDS:
     if seed[0] == 'H':
-      BOARD[INDICES_2D[(seed[1],seed[2])]:len(seed[3])] = seed[3]
+      idx = INDICES_2D[(seed[1],seed[2])]
+      BOARD[idx:idx+len(seed[3])] = seed[3]
     if seed[0] == 'V':
       idx = INDICES_2D[(seed[1],seed[2])]
       for i in range(len(seed[3])):
@@ -77,7 +115,7 @@ def place_words():
 
 
 def parse_args():
-  global HEIGHT, WIDTH, SEEDS, FILE, BOARD, BLOCKS, INDICES, INDICES_2D, ROTATIONS, NEIGHBORS, AREA, FULL_WALL
+  global HEIGHT, WIDTH, SEEDS, FILE, BOARD, BLOCKS, INDICES, INDICES_2D, ROTATIONS, NEIGHBORS, AREA, FULL_WALL, ALL_INDICES
   for arg in sys.argv[1:]:
     if 'H' == arg[0].upper() or 'V' == arg[0].upper():
       groups = match(SEED_REGEX, arg).groups()
@@ -91,6 +129,7 @@ def parse_args():
   AREA = HEIGHT*WIDTH
   FULL_WALL = [*BLOCK*WIDTH]
   INDICES = {index: (index // WIDTH, (index % WIDTH)) for index in range(AREA)} # idx -> (row, col)
+  ALL_INDICES = {*INDICES}
   INDICES_2D = {(i, j): i * WIDTH + j for i in range(HEIGHT) for j in range(WIDTH)} # (row, col) -> idx
 
 
@@ -113,7 +152,7 @@ def gen_lookups():
 
 
 def main():
-  global BOARD
+  global BOARD, BLOCKS
   parse_args()
 
   # bailouts
@@ -128,8 +167,17 @@ def main():
   
   # generate any lookup tables, including constraints
   gen_lookups()
+  
+  BLOCKS -= BOARD.count(BLOCK)
+  if AREA % 2:
+    center = AREA//2
+    if BOARD[center] == EMPTY:
+      BOARD[center] = BLOCK
+      BLOCKS -= 1
 
-  #return to_string(brute_force(BOARD, BLOCKS))
+  sol = brute_force(BOARD, BLOCKS)
+  if sol:
+    return to_string(sol)
 
 
 
