@@ -113,6 +113,7 @@ def gen_lookups():
 
 
 def main():
+  global BOARD
   parse_args()
 
   # bailouts
@@ -128,7 +129,7 @@ def main():
   # generate any lookup tables, including constraints
   gen_lookups()
 
-  return to_string(brute_force(BOARD, BLOCKS))
+  #return to_string(brute_force(BOARD, BLOCKS))
 
 
 
