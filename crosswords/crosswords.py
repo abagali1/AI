@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 import sys
-from re import compile, IGNORECASE, match
+from re import compile, IGNORECASE, match, sub
 
 SEED_REGEX = compile(r"(V|H)(\d*)x(\d*)(.+)", IGNORECASE)
-WORD_REGEX = compile(r"(#([^#]{1,2})#)")
+WORD_REGEX = compile(r"(#([-\w]{1,2})#)|(^([-\w]{1,2})#)|(([^-\w]{1,2})$)")
 
 BLOCK = '#'
 EMPTY = '-'
@@ -43,21 +43,26 @@ def bfs(board, starting_index):
   return visited
 
 
+    
+
+
 def is_invalid(board, remaining_blocks):
-  if SEED_REGEX.match("".join(board)):
+  m = WORD_REGEX.match("".join(board))
+  if m:
     return True
   return False
 
 
 def brute_force(board, num_blocks, possible=[]):
-  if num_blocks <= 0:
-    return board
+  if is_invalid(board, num_blocks):
+    return False
+  
   if num_blocks == 1:
     board[AREA//2] = BLOCK
     return board
+  elif num_blocks <= 0:
+    return board
 
-  if is_invalid(board, num_blocks):
-    return False
 
   set_of_choices = [pos for pos,elem in enumerate(board) if elem == EMPTY]
   tried = set()
@@ -177,6 +182,8 @@ def main():
   sol = brute_force(BOARD, BLOCKS)
   if sol:
     print(sol.count(BLOCK))
+    print("".join(sol))
+    print()
     return to_string(sol)
 
 
