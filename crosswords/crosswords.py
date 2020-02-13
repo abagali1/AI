@@ -43,13 +43,11 @@ def bfs(board, starting_index):
 
 
 def is_invalid(board, remaining_blocks):
-    m = WORD_REGEX.search("".join(board))
-    print(board)
-    if "#-#" in "".join(board):
-        print('hello')
-        print(m)
-    if m:
-        return True
+    for constraint in CONSTRAINTS:
+        con = "".join(board[x] for x in constraint)
+        m = WORD_REGEX.search("".join(con))
+        if m:
+            return True
     return False
 
 
