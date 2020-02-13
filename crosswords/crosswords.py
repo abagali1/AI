@@ -63,7 +63,6 @@ def brute_force(board, num_blocks, possible=[]):
   elif num_blocks <= 0:
     return board
 
-
   set_of_choices = [pos for pos,elem in enumerate(board) if elem == EMPTY]
   tried = set()
 
@@ -75,16 +74,17 @@ def brute_force(board, num_blocks, possible=[]):
 
       board[rotated] = BLOCK
       board[choice] = BLOCK
+      tried.add(choice)
+      tried.add(rotated)
       if choice == rotated:
         b_f = brute_force(board, num_blocks-1)
       else:
         b_f = brute_force(board, num_blocks-2)
       if b_f:
         return b_f
-      board[choice] = EMPTY 
-      board[rotated] = EMPTY
-      tried.add(choice)
-      tried.add(rotated)
+      for i in tried:
+        BOARD[i] = EMPTY
+
 
   return None
 
