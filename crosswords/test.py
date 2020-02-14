@@ -1,22 +1,21 @@
 #!/usr/bin/env python3
 import sys
-from re import compile, IGNORECASE, match, sub
+from re import compile, IGNORECASE, match
 from time import time as time
 
-SEED_REGEX = compile(r"(V|H)(\d*)x(\d*)(.+)", IGNORECASE)
-WORD_REGEX = compile(r"#([-\w]{1,2})#|^([-\w]{1,2})#|#([-\w]{1,2})$")
-WORD_START_REGEX = compile(r"^([-\w]{1,2})#")
-WORD_MIDDLE_REGEX = compile(r"#([-\w]{1,2})#")
-WORD_END_REGEX = compile(r"#([-\w]{1,2})$")
-ALPHABET = "abcdefghijklmnopqrstuvwxyz"
+SEED_REGEX = compile(r"([VH])(\d*)x(\d*)(.+)", IGNORECASE)
+WORD_REGEX = compile(r"#([-$]{1,2})#|^([-$]{1,2})#|#([-$]{1,2})$")
+WORD_START_REGEX = compile(r"^([-$]{1,2})#")
+WORD_MIDDLE_REGEX = compile(r"#([-$]{1,2})#")
+WORD_END_REGEX = compile(r"#([-$]{1,2})$")
 
 BLOCK = "#"
 EMPTY = "-"
+PROTECTED = "$"
 FILE = ""
 
-BOARD, SEEDS = [], []
+SEEDS = []
 HEIGHT, WIDTH, AREA, BLOCKS = 0, 0, 0, 0
-ALL_INDICES = set()  # set of all indices
 PLACED = set()
 INDICES = {}  # idx -> (row, col)
 INDICES_2D = {}  # (row, col) -> idx
@@ -25,27 +24,11 @@ NEIGHBORS = {}  # idx -> [neighbors]
 ROWS = []  # [ [idxs in row 0], [idxs in row 1]]
 COLS = []  # [ [idxs in col 0], [idxs in col 1]]
 CONSTRAINTS = []  # [[row0], [row1], [col0], col[1]]
-FULL_WALL = []  # [*'#'*WIDTH]
 SEARCH_CACHE = {}
 
-# print 2d board
 to_string = lambda pzl: "\n".join(
     ["".join([pzl[INDICES_2D[(i, j)]][0] for j in range(WIDTH)]) for i in range(HEIGHT)]
 ).strip()
-
-
-def bfs(board, starting_index):
-    visited = {starting_index}
-    queue = [starting_index]
-
-    for index in queue:
-        for neighbor in NEIGHBORS[index]:
-            if board[neighbor] != BLOCK:
-                if neighbor not in visited:
-                    queue.append(neighbor)
-                    visited.add(neighbor)
-
-    return visited
 
 
 def search(regex, constraint, **kwargs):
@@ -58,12 +41,8 @@ def search(regex, constraint, **kwargs):
         return m
 
 
-def can_place(board, index):
-    return board[index] == BLOCK or board[index] == EMPTY
-
-
-def implicit_blocks(board, blocks):
-    tried = set()
+def implicit_blocks(board):
+    tried, blocks = set(), 0
     for constraint in CONSTRAINTS:
         con = "".join(board[x] for x in constraint)
         for r in [search(WORD_START_REGEX, con), search(WORD_MIDDLE_REGEX, con), search(WORD_END_REGEX, con)]:
@@ -72,19 +51,13 @@ def implicit_blocks(board, blocks):
                     return False
                 indices = [constraint[x] for x in range(*r.span(1))]
                 for i in indices:
-                    rotated = ROTATIONS[i]
-                    if board[i] in ALPHABET or board[rotated] in ALPHABET or blocks <= 0:
+                    n = place_block(board, i)
+                    if not n:
                         for t in tried:
                             board[t] = EMPTY
                         return False
-                    if board[i] == EMPTY:
-                        board[i] = BLOCK
-                        tried.add(i)
-                        blocks -= 1
-                    if board[rotated] == EMPTY:
-                        board[rotated] = BLOCK
-                        tried.add(rotated)
-                        blocks -= 1
+                    blocks += n[0]
+                    tried.union(n[1])
     return tried, blocks
 
 
@@ -98,11 +71,12 @@ def is_invalid(board):
 
 
 def brute_force(board, num_blocks):
-    implicit = implicit_blocks(board, num_blocks)
+    implicit = implicit_blocks(board)
     if not implicit:
         return False
     else:
-        tried, num_blocks = implicit
+        tried, removed = implicit
+        num_blocks -= removed
 
     if num_blocks == 1:
         board[AREA // 2] = BLOCK
@@ -112,68 +86,68 @@ def brute_force(board, num_blocks):
 
     set_of_choices = [pos for pos, elem in enumerate(board) if elem == EMPTY]
     for choice in set_of_choices:
-        rotated = ROTATIONS[choice]
-        if board[rotated] != EMPTY or choice in tried:
+        if choice in tried:
             continue
         else:
-            board[rotated] = board[choice] = BLOCK
-            tried.add(choice)
-            tried.add(rotated)
-            if choice == rotated:
-                b_f = brute_force(board, num_blocks - 1)
-            else:
-                b_f = brute_force(board, num_blocks - 2)
-            if b_f:
-                return b_f
-            for i in tried:
-                BOARD[i] = EMPTY
-
+            n = place_block(board, choice)
+            if n:
+                num_blocks -= n[0]
+                tried = tried.union(n[1])
+                b_f = brute_force(board, num_blocks)
+                if b_f:
+                    return b_f
+                for i in tried:
+                    board[i] = EMPTY
+                    num_blocks += 1
+                tried = set()
     return None
 
 
-def main():
-    global BOARD, BLOCKS
-    parse_args()
+def place_block(board, index):
+    tried = set()
+    count = 0
+    rotated = ROTATIONS[index]
+    if board[index] == PROTECTED and board[rotated] == PROTECTED:
+        return False
+    if board[index] == EMPTY:
+        board[index] = BLOCK
+        tried.add(index)
+        count += 1
+    if board[rotated] == EMPTY:
+        board[rotated] = BLOCK
+        tried.add(rotated)
+        count += 1
+    return count, tried
 
-    # bailouts
+
+def place_protected(board, index):
+    rotated = ROTATIONS[index]
+    if board[index] != BLOCK and board[rotated] != BLOCK:
+        board[index] = board[rotated] = PROTECTED
+        return True
+    return False
+
+
+def main():
+    global BLOCKS
+    parse_args()
     if BLOCKS == AREA:
         return to_string(BLOCK * AREA)
 
-    BOARD = [*EMPTY * AREA]
     gen_lookups()
-    place_words()
+    board, blocks = place_words([*EMPTY*AREA], BLOCKS)
 
-    if BLOCKS == 0:
-        return to_string(BOARD)
+    if blocks == 0:
+        return to_string(finish(board))
 
-    sol = brute_force(BOARD,BLOCKS-BOARD.count('#'))
+    sol = brute_force(board, blocks)
     if sol:
-        print(sol.count(BLOCK))
-        return to_string("".join(sol).replace('~','-'))
-
-
-def place_words():
-    global BOARD, BLOCKS
-    for seed in SEEDS:
-        if seed[0] == "H":
-            idx = INDICES_2D[(seed[1], seed[2])]
-            for i in range(len(seed[3])):
-                index = idx + i
-                if seed[3][i] == BLOCK:
-                    BOARD[ROTATIONS[index]] = BLOCK
-                BOARD[index] = seed[3][i]
-            BOARD[idx : idx + len(seed[3])] = seed[3]
-        if seed[0] == "V":
-            idx = INDICES_2D[(seed[1], seed[2])]
-            for i in range(len(seed[3])):
-                index = idx + (WIDTH * i)
-                if seed[3][i] == BLOCK:
-                    BOARD[ROTATIONS[index]] = BLOCK
-                BOARD[index] = seed[3][i]
+        print(sol.count(BLOCK), BLOCKS)
+        return to_string(finish(sol))
 
 
 def parse_args():
-    global HEIGHT, WIDTH, SEEDS, FILE, BOARD, BLOCKS, INDICES, INDICES_2D, ROTATIONS, NEIGHBORS, AREA, FULL_WALL, ALL_INDICES
+    global HEIGHT, WIDTH, SEEDS, FILE, BOARD, BLOCKS, INDICES, INDICES_2D, AREA
     for arg in sys.argv[1:]:
         if "H" == arg[0].upper() or "V" == arg[0].upper():
             groups = match(SEED_REGEX, arg).groups()
@@ -192,11 +166,9 @@ def parse_args():
         else:
             HEIGHT, WIDTH = (int(x) for x in arg.split("x"))
     AREA = HEIGHT * WIDTH
-    FULL_WALL = [*BLOCK * WIDTH]
     INDICES = {
         index: (index // WIDTH, (index % WIDTH)) for index in range(AREA)
     }  # idx -> (row, col)
-    ALL_INDICES = {*INDICES}
     INDICES_2D = {
         (i, j): i * WIDTH + j for i in range(HEIGHT) for j in range(WIDTH)
     }  # (row, col) -> idx
@@ -223,8 +195,41 @@ def gen_lookups():
     CONSTRAINTS = ROWS + COLS
 
 
-if __name__ == "__main__":
+def place_words(board, num_blocks):
+    for seed in SEEDS:
+        if seed[0] == "H":
+            idx = INDICES_2D[(seed[1], seed[2])]
+            for i in range(len(seed[3])):
+                index = idx + i
+                if seed[3][i] == BLOCK:
+                    num_blocks -= place_block(board, index)[0]
+                else:
+                    place_protected(board, index)
+        elif seed[0] == "V":
+            idx = INDICES_2D[(seed[1], seed[2])]
+            for i in range(len(seed[3])):
+                index = idx + (WIDTH * i)
+                if seed[3][i] == BLOCK:
+                    num_blocks -= place_block(board, index)[0]
+                else:
+                    place_protected(board, index)
+    return board, num_blocks
+
+
+def finish(board):
+    for seed in SEEDS:
+        if seed[0] == "H":
+            idx = INDICES_2D[(seed[1], seed[2])]
+            for i in range(len(seed[3])):
+                board[idx+i] = seed[3][i]
+        elif seed[0] == "V":
+            idx = INDICES_2D[(seed[1], seed[2])]
+            for i in range(len(seed[3])):
+                board[idx + (WIDTH * i)] = seed[3][i]
+    return "".join(board).replace(PROTECTED, EMPTY)
+
+
+if __name__ == '__main__':
     start = time()
     print(main())
     print(time()-start)
-
