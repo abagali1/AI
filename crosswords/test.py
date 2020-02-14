@@ -41,7 +41,7 @@ def search(regex, constraint, **kwargs):
         return m
 
 
-def implicit_blocks(board):
+def implicit_blocks(board, blocks):
     tried, blocks = set(), 0
     for constraint in CONSTRAINTS:
         con = "".join(board[x] for x in constraint)
@@ -51,13 +51,16 @@ def implicit_blocks(board):
                     return False
                 indices = [constraint[x] for x in range(*r.span(1))]
                 for i in indices:
-                    n = place_block(board, i)
+                    if i == 39:
+                        print('whoops1')
+                    n = place_block(board, i, blocks)
                     if not n:
+                        print('whoops')
                         for t in tried:
                             board[t] = EMPTY
                         return False
-                    blocks += n[0]
-                    tried.union(n[1])
+                    blocks -= n[0]
+                    tried = tried.union(n[1])
     return tried, blocks
 
 
@@ -71,12 +74,11 @@ def is_invalid(board):
 
 
 def brute_force(board, num_blocks):
-    implicit = implicit_blocks(board)
+    implicit = implicit_blocks(board, num_blocks)
     if not implicit:
         return False
     else:
-        tried, removed = implicit
-        num_blocks -= removed
+        tried, num_blocks = implicit
 
     if num_blocks == 1:
         board[AREA // 2] = BLOCK
@@ -85,13 +87,14 @@ def brute_force(board, num_blocks):
         return board
 
     set_of_choices = [pos for pos, elem in enumerate(board) if elem == EMPTY]
+    tried = set()
     for choice in set_of_choices:
         if choice in tried:
             continue
         else:
-            n = place_block(board, choice)
+            n = place_block(board, choice, num_blocks)
             if n:
-                num_blocks -= n[0]
+                num_blocks = n[0]
                 tried = tried.union(n[1])
                 b_f = brute_force(board, num_blocks)
                 if b_f:
@@ -103,20 +106,24 @@ def brute_force(board, num_blocks):
     return None
 
 
-def place_block(board, index):
+def place_block(board, index, blocks):
     tried = set()
     count = 0
     rotated = ROTATIONS[index]
     if board[index] == PROTECTED and board[rotated] == PROTECTED:
         return False
     if board[index] == EMPTY:
+        count += 1
+        if blocks-count < 0:
+            return False
         board[index] = BLOCK
         tried.add(index)
-        count += 1
     if board[rotated] == EMPTY:
+        count += 1
+        if blocks-count < 0:
+            return False
         board[rotated] = BLOCK
         tried.add(rotated)
-        count += 1
     return count, tried
 
 
@@ -202,7 +209,7 @@ def place_words(board, num_blocks):
             for i in range(len(seed[3])):
                 index = idx + i
                 if seed[3][i] == BLOCK:
-                    num_blocks -= place_block(board, index)[0]
+                    num_blocks -= place_block(board, index, num_blocks)[0]
                 else:
                     place_protected(board, index)
         elif seed[0] == "V":
@@ -210,7 +217,7 @@ def place_words(board, num_blocks):
             for i in range(len(seed[3])):
                 index = idx + (WIDTH * i)
                 if seed[3][i] == BLOCK:
-                    num_blocks -= place_block(board, index)[0]
+                    num_blocks -= place_block(board, index, num_blocks)[0]
                 else:
                     place_protected(board, index)
     return board, num_blocks
