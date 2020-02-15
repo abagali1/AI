@@ -57,15 +57,14 @@ def bfs(board, starting_index, blocking_token=BLOCK):
 
 
 def connected_components(board):
-    visited, components, count = set(), [], 0
+    visited, components = set(), []
     for pos, elem in enumerate(board):
         if elem == BLOCK or pos in visited:
             continue
         tmp = bfs(board, pos)
         visited |= tmp[1]
         components.append(tmp)
-        count += 1
-    return sorted(components), count
+    return sorted(components)
 
 
 def implicit_blocks(board, blocks):
@@ -86,8 +85,11 @@ def implicit_blocks(board, blocks):
                             board[t] = PROTECTED
                         return False
                     blocks, tried = n[0], tried | n[1]
-    components, amt = connected_components(board)
+    components = connected_components(board)
+    amt_cut = 0
     for component in components:
+        if component[0] - amt_cut == 0:
+            break
         cut = False
         for i in component[1]:
             if ROTATIONS[i] not in component[1]:
@@ -102,6 +104,7 @@ def implicit_blocks(board, blocks):
                             board[t] = PROTECTED
                         return False
                     blocks, tried = n[0], tried | n[1]
+            amt_cut += component[0]
 
     return tried, blocks
 
