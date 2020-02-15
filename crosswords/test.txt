@@ -1,0 +1,10 @@
+4x4 2 xwords.txt
+6x6 0 xwords.txt "V0x0Arcane" "V0x5Either"
+11x9 16 xwords.txt "V0x1Why"
+15x15 39 xwords.txt "H0x0Mute" "V0x0mule" "V10x13Funny" "H7x5#" "V3x4#" "H6x7#" "V11x3#"
+9x12 32 xwords.txt "V5x0#" "V8x3#" "H3x8#" "V0x5Inclement"
+9x9 14 xwords.txt "V0x4aim" "V6x4sly"
+13x13 32 xwords.txt "H1x4#Toe#" "H9x2#" "V3x6#" "H10x0Scintillating" "V0x5stirrup" "H4x2##Ordained" "V0x1Come" "V0x12Hot" "V5x0ent"
+13x13 32 xwords.txt "V2x4#" "V1x9#" "V3x2#" "h8x2#moo#" "v5x5#two#" "h6x4#ten#" "v3x7#own#" "h4x6#orb#" "H12x4Here"
+13x13 25 xwords.txt "H6x4no#on" "v5x5rot" "v0x0stride" "h0x4Trot" "H0x9gait" "V0x12toed"
+9x24 40 xwords.txt "h4x9d#" "h3x6r#" "h2x6#" "v2x0pan" "V5x1#i" "V8x20f"

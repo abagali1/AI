@@ -15,7 +15,7 @@ PROTECTED = "$"
 FILE = ""
 
 SEEDS = []
-HEIGHT, WIDTH, AREA, BLOCKS = 0, 0, 0, 0
+HEIGHT, WIDTH, AREA, BLOCKS, CENTER = 0, 0, 0, 0, 0
 PLACED = set()
 INDICES = {}  # idx -> (row, col)
 INDICES_2D = {}  # (row, col) -> idx
@@ -37,8 +37,22 @@ def search(regex, constraint, **kwargs):
         return SEARCH_CACHE[key]
     else:
         m = regex.search(constraint, **kwargs)
-        SEARCH_CACHE[key] = m
+        SEARCH_CACHE[key] = regex.search(constraint, **kwargs)
         return m
+
+
+def bfs(board, starting_index, blocking_token=BLOCK):
+    visited = {starting_index}
+    queue = [starting_index]
+
+    for index in queue:
+        for neighbor in NEIGHBORS[index]:
+            if board[neighbor] != blocking_token:
+                if neighbor not in visited:
+                    queue.append(neighbor)
+                    visited.add(neighbor)
+
+    return visited
 
 
 def implicit_blocks(board, blocks):
@@ -59,14 +73,13 @@ def implicit_blocks(board, blocks):
                             board[t] = EMPTY
                         return False
                     blocks = n[0]
-                    tried = tried.union(n[1])
+                    tried = tried | n[1]
     return tried, blocks
 
 
 def is_invalid(board):
     for constraint in CONSTRAINTS:
-        con = "".join(board[x] for x in constraint)
-        m = search(WORD_REGEX, con)
+        m = search(WORD_REGEX, "".join(board[x] for x in constraint))
         if m:
             return True
     return False
@@ -80,10 +93,10 @@ def brute_force(board, num_blocks):
         tried, num_blocks = implicit
 
     if num_blocks == 1:
-        board[AREA // 2] = BLOCK
+        board[CENTER] = BLOCK
         return board if not is_invalid(board) else False
     elif num_blocks <= 0:
-        return board
+        return board if not is_invalid(board) else False
 
     set_of_choices = [pos for pos, elem in enumerate(board) if elem == EMPTY]
     tried = set()
@@ -93,13 +106,12 @@ def brute_force(board, num_blocks):
         else:
             n = place_block(board, choice, num_blocks)
             if n:
-                num_blocks = n[0]
-                tried = tried.union(n[1])
+                num_blocks, tried = n[0], tried | n[1]
                 b_f = brute_force(board, num_blocks)
                 if b_f:
                     return b_f
                 for i in tried:
-                    board[i] = EMPTY
+                    board[i] = PROTECTED
                     num_blocks += 1
                 tried = set()
     return None
@@ -153,7 +165,7 @@ def main():
 
 
 def parse_args():
-    global HEIGHT, WIDTH, SEEDS, FILE, BOARD, BLOCKS, INDICES, INDICES_2D, AREA
+    global HEIGHT, WIDTH, SEEDS, FILE, BLOCKS, INDICES, INDICES_2D, AREA, CENTER
     for arg in sys.argv[1:]:
         if "H" == arg[0].upper() or "V" == arg[0].upper():
             groups = match(SEED_REGEX, arg).groups()
@@ -172,6 +184,7 @@ def parse_args():
         else:
             HEIGHT, WIDTH = (int(x) for x in arg.split("x"))
     AREA = HEIGHT * WIDTH
+    CENTER = AREA//2
     INDICES = {
         index: (index // WIDTH, (index % WIDTH)) for index in range(AREA)
     }  # idx -> (row, col)
