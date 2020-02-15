@@ -87,7 +87,6 @@ def implicit_blocks(board, blocks):
                         return False
                     blocks, tried = n[0], tried | n[1]
     components, amt = connected_components(board)
-    amt_cut = 0
     if amt > 1:
         amt_cut = 0
         for component in components:
