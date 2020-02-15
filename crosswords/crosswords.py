@@ -44,25 +44,28 @@ def search(regex, constraint, **kwargs):
 def bfs(board, starting_index, blocking_token=BLOCK):
     visited = {starting_index}
     queue = [starting_index]
+    count = 0
 
     for index in queue:
         for neighbor in NEIGHBORS[index]:
             if board[neighbor] != blocking_token and neighbor not in visited:
                 queue.append(neighbor)
                 visited.add(neighbor)
+                count += 1
 
-    return visited
+    return count, visited
 
 
 def connected_components(board):
-    visited, components = set(), []
+    visited, components, count = set(), [], 0
     for pos, elem in enumerate(board):
         if elem == BLOCK or pos in visited:
             continue
         tmp = bfs(board, pos)
-        visited |= tmp
+        visited |= tmp[1]
         components.append(tmp)
-    return sorted(components, key=lambda x: len(x))
+        count += 1
+    return sorted(components), count
 
 
 def implicit_blocks(board, blocks):
@@ -80,19 +83,27 @@ def implicit_blocks(board, blocks):
                     n = place_block(board, i, blocks)
                     if not n:
                         for t in tried:
-                            board[t] = EMPTY
+                            board[t] = PROTECTED
                         return False
                     blocks, tried = n[0], tried | n[1]
-    components = connected_components(board)
+    components, amt = connected_components(board)
+    for component in components:
+        cut = False
+        for i in component[1]:
+            if ROTATIONS[i] not in component[1]:
+                cut = True
+                break
+        if cut:
+            for i in component[1]:
+                if i not in tried:
+                    n = place_block(board, i, blocks)
+                    if not n:
+                        for t in tried:
+                            board[t] = PROTECTED
+                        return False
+                    blocks, tried = n[0], tried | n[1]
+
     return tried, blocks
-
-
-def is_invalid(board):
-    for constraint in CONSTRAINTS:
-        m = search(WORD_REGEX, "".join(board[x] for x in constraint))
-        if m:
-            return True
-    return False
 
 
 def brute_force(board, num_blocks):
@@ -104,9 +115,9 @@ def brute_force(board, num_blocks):
 
     if num_blocks == 1:
         board[CENTER] = BLOCK
-        return board if not is_invalid(board) else False
+        return board
     elif num_blocks <= 0:
-        return board if not is_invalid(board) else False
+        return board
 
     set_of_choices = [pos for pos, elem in enumerate(board) if elem == EMPTY]
     tried = set()
