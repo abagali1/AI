@@ -113,9 +113,6 @@ def implicit_blocks(board, blocks):
 
 
 def brute_force(board, num_blocks):
-    print(to_string(board), '\n'*3)
-    if num_blocks == 8:
-        print('break')
     implicit = implicit_blocks(board, num_blocks)
     if not implicit:
         return False
