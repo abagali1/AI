@@ -47,12 +47,22 @@ def bfs(board, starting_index, blocking_token=BLOCK):
 
     for index in queue:
         for neighbor in NEIGHBORS[index]:
-            if board[neighbor] != blocking_token:
-                if neighbor not in visited:
-                    queue.append(neighbor)
-                    visited.add(neighbor)
+            if board[neighbor] != blocking_token and neighbor not in visited:
+                queue.append(neighbor)
+                visited.add(neighbor)
 
     return visited
+
+
+def connected_components(board):
+    visited, components = set(), []
+    for pos, elem in enumerate(board):
+        if elem == BLOCK or pos in visited:
+            continue
+        tmp = bfs(board, pos)
+        visited |= tmp
+        components.append(tmp)
+    return sorted(components, key=lambda x: len(x))
 
 
 def implicit_blocks(board, blocks):
@@ -72,8 +82,8 @@ def implicit_blocks(board, blocks):
                         for t in tried:
                             board[t] = EMPTY
                         return False
-                    blocks = n[0]
-                    tried = tried | n[1]
+                    blocks, tried = n[0], tried | n[1]
+    components = connected_components(board)
     return tried, blocks
 
 
