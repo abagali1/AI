@@ -25,6 +25,7 @@ ROWS = []  # [ [idxs in row 0], [idxs in row 1]]
 COLS = []  # [ [idxs in col 0], [idxs in col 1]]
 CONSTRAINTS = []  # [[row0], [row1], [col0], col[1]]
 SEARCH_CACHE = {}
+ALPHABET = "abcdefghijklmnopqrstuvxwyz"
 
 to_string = lambda pzl: "\n".join(
     ["".join([pzl[INDICES_2D[(i, j)]][0] for j in range(WIDTH)]) for i in range(HEIGHT)]
@@ -111,7 +112,7 @@ def implicit_blocks(board, blocks):
     return tried, blocks
 
 
-def brute_force(board, num_blocks):
+def create_board(board, num_blocks):
     implicit = implicit_blocks(board, num_blocks)
     if not implicit:
         return False
@@ -130,7 +131,7 @@ def brute_force(board, num_blocks):
         n = place_block(board, choice, num_blocks)
         if n:
             num_blocks, tried = n[0], tried | n[1]
-            b_f = brute_force(board, num_blocks)
+            b_f = create_board(board, num_blocks)
             if b_f:
                 return b_f
             for i in tried:
@@ -169,22 +170,44 @@ def place_protected(board, index):
     return False
 
 
+def is_invalid(board):
+    if ALPHABET not in board:
+        return False
+
+
+
+def solve(board, words):
+    if EMPTY not in board:
+        return board
+    if is_invalid(board):
+        return False
+
+    idxs = [pos for pos, elem in enumerate(board) if elem == EMPTY]
+
+
+
+
+
 def main():
     global BLOCKS
     parse_args()
-    if BLOCKS == AREA:
-        return to_string(BLOCK * AREA)
 
     gen_lookups()
     board, blocks = place_words([*EMPTY*AREA], BLOCKS)
 
-    if blocks == 0:
-        return to_string(finish(board))
+    if BLOCKS == AREA:
+        board = [*BLOCK * AREA]
+    elif blocks == 0:
+         board = finish(board)
+    else:
+        board = finish(create_board(board, blocks))
 
-    sol = brute_force(board, blocks)
+    print(to_string(board))
+
+    words = load_words(FILE)
+    sol = solve(board, words)
     if sol:
-        print(sol.count(BLOCK), BLOCKS)
-        return to_string(finish(sol))
+        return to_string(sol)
 
 
 def parse_args():
@@ -258,6 +281,18 @@ def place_words(board, num_blocks):
     return board, num_blocks
 
 
+def load_words(file):
+    start = ord('a')
+    max_length = len(max(open(file).read().splitlines(), key=lambda x: len(x)))
+    words_by_alpha, words_by_length = [[] for i in range(26)], [[] for i in range(max_length)]
+    for word in open(file).read().splitlines():
+        w = word.lower()
+        words_by_alpha[ord(w[0])-start].append(word)
+        words_by_length[len(word)].append(word)
+
+    return [sorted(word_list, key=lambda x: len(x)) for word_list in words_by_alpha], words_by_length
+
+
 def finish(board):
     for seed in SEEDS:
         if seed[0] == "H":
@@ -268,7 +303,7 @@ def finish(board):
             idx = INDICES_2D[(seed[1], seed[2])]
             for i in range(len(seed[3])):
                 board[idx + (WIDTH * i)] = seed[3][i]
-    return "".join(board).replace(PROTECTED, EMPTY)
+    return [x if x != PROTECTED else EMPTY for x in board]
 
 
 if __name__ == '__main__':
