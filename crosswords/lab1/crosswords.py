@@ -23,7 +23,7 @@ ROTATIONS = {}  # idx -> rotated 180 idx
 NEIGHBORS = {}  # idx -> [neighbors]
 ROWS = []  # [ [idxs in row 0], [idxs in row 1]]
 COLS = []  # [ [idxs in col 0], [idxs in col 1]]
-CONSTRAINTS = []  # [[row0], [row1], [col0], col[1]]
+ALL_CONSTRAINTS = []  # [[row0], [row1], [col0], col[1]]
 SEARCH_CACHE = {}
 
 to_string = lambda pzl: "\n".join(
@@ -70,7 +70,7 @@ def connected_components(board):
 
 def implicit_blocks(board, blocks):
     tried = set()
-    for constraint in CONSTRAINTS:
+    for constraint in ALL_CONSTRAINTS:
         con = "".join(board[x] for x in constraint)
         if BLOCK not in con:
             continue
@@ -217,7 +217,7 @@ def parse_args():
 
 
 def gen_lookups():
-    global NEIGHBORS, ROTATIONS, ROWS, COLS, CONSTRAINTS
+    global NEIGHBORS, ROTATIONS, ROWS, COLS, ALL_CONSTRAINTS
     for index in range(0, AREA):  # saves all possible neighbors for all indices
         row = index // WIDTH
         neighbors = [i for i in [index + WIDTH, index - WIDTH] if 0 <= i < AREA]

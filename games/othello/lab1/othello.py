@@ -16,14 +16,14 @@ REGEX = {
         1: compile(r"\.x+o", IGNORECASE)
     }
 }
-CONSTRAINTS = {}
+ALL_CONSTRAINTS = {}
 
 def possible_moves(pzl, piece):
     possible = []
     for pos, elem in enumerate(pzl):
         if elem != piece:
             continue
-        con = CONSTRAINTS[pos]
+        con = ALL_CONSTRAINTS[pos]
         idx = INDICES[pos]
         r, c = "".join(pzl[x] for x in con[0]), "".join(pzl[x] for x in con[1])
         ld, rd = "".join(pzl[x] for x in con[2]), "".join(pzl[x] for x in con[3])
@@ -72,7 +72,7 @@ def gen_constraints():
             rd.add(INDICES_2D[(r_r,r_c)])
             r_r -= 1
             r_c += 1
-        CONSTRAINTS[i] = (sorted(rows[idx[0]]), sorted(col), sorted([*ld]), sorted([*rd]))
+        ALL_CONSTRAINTS[i] = (sorted(rows[idx[0]]), sorted(col), sorted([*ld]), sorted([*rd]))
 
 def to_string(pzl):
     return '\n'.join(

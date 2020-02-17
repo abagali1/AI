@@ -3,7 +3,7 @@ from sys import argv
 from functools import lru_cache 
 from math import sqrt
 
-CONSTRAINTS = {}
+ALL_CONSTRAINTS = {}
 ALL_CONSTRAINTS = []
 INDICES_2D = {}
 INDICES = {}
@@ -61,7 +61,7 @@ def gen_constraints(board):
         c = sorted(col)
         ld = sorted([*ld])
         rd = sorted([*rd])
-        CONSTRAINTS[i] = (r,c,ld,rd)
+        ALL_CONSTRAINTS[i] = (r, c, ld, rd)
         ALL_CONSTRAINTS.append(r)
         ALL_CONSTRAINTS.append(c)
         ALL_CONSTRAINTS.append(ld)

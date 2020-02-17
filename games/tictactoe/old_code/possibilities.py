@@ -9,7 +9,7 @@ SPACE = '.'
 CACHE = set()
 LOOKUP = {}
 INDICES, INDICES_2D ={}, {}
-CONSTRAINTS = []
+ALL_CONSTRAINTS = []
 all_boards = set()
 x_boards, o_boards, tie = set(), set(), set()
 terminal_board = set()
@@ -20,7 +20,7 @@ PZL_CACHE  = {}
 
 
 def generate_constraints():
-    global CONSTRAINTS
+    global ALL_CONSTRAINTS
     for i in range(WIDTH):
         row = []
         for j in range(HEIGHT):
@@ -46,7 +46,7 @@ def generate_constraints():
     print(CONSTRAINTS)
 
 def finished(pzl):
-    for i in CONSTRAINTS:
+    for i in ALL_CONSTRAINTS:
         con = [pzl[j] for j in i]
         if con.count(X) >= WIN:
             return X

@@ -23,9 +23,11 @@ ROTATIONS = {}  # idx -> rotated 180 idx
 NEIGHBORS = {}  # idx -> [neighbors]
 ROWS = []  # [ [idxs in row 0], [idxs in row 1]]
 COLS = []  # [ [idxs in col 0], [idxs in col 1]]
-CONSTRAINTS = []  # [[row0], [row1], [col0], col[1]]
+ALL_CONSTRAINTS = []  # [[row0], [row1], [col0], col[1]]
+CONSTRAINTS = {}
 SEARCH_CACHE = {}
 ALPHABET = "abcdefghijklmnopqrstuvxwyz"
+WORDS_BY_ALPHA, WORDS_BY_LENGTH, COMMON_LETTERS = [], [], []
 
 to_string = lambda pzl: "\n".join(
     ["".join([pzl[INDICES_2D[(i, j)]][0] for j in range(WIDTH)]) for i in range(HEIGHT)]
@@ -71,7 +73,7 @@ def connected_components(board):
 
 def implicit_blocks(board, blocks):
     tried = set()
-    for constraint in CONSTRAINTS:
+    for constraint in ALL_CONSTRAINTS:
         con = "".join(board[x] for x in constraint)
         if BLOCK not in con:
             continue
@@ -170,26 +172,34 @@ def place_protected(board, index):
     return False
 
 
+def find_best_index(board):
+    min_pos = (100, set())
+    for pos, elem in enumerate(board):
+        if elem == EMPTY:
+            possibilities =
+
+
+
 def is_invalid(board):
     if ALPHABET not in board:
         return False
 
 
-
-def solve(board, words):
-    if EMPTY not in board:
-        return board
+def solve(board):
     if is_invalid(board):
         return False
+    if EMPTY not in board:
+        return board
 
-    idxs = [pos for pos, elem in enumerate(board) if elem == EMPTY]
+
+    idx, choices = find_best_index(board)
 
 
 
 
 
 def main():
-    global BLOCKS
+    global BLOCKS, WORDS_BY_ALPHA, WORDS_BY_LENGTH, COMMON_LETTERS
     parse_args()
 
     gen_lookups()
@@ -204,8 +214,8 @@ def main():
 
     print(to_string(board))
 
-    words = load_words(FILE)
-    sol = solve(board, words)
+    WORDS_BY_ALPHA, WORDS_BY_LENGTH, COMMON_LETTERS = load_words(FILE)
+    sol = solve(board)
     if sol:
         return to_string(sol)
 
@@ -240,7 +250,7 @@ def parse_args():
 
 
 def gen_lookups():
-    global NEIGHBORS, ROTATIONS, ROWS, COLS, CONSTRAINTS
+    global NEIGHBORS, ROTATIONS, ROWS, COLS, ALL_CONSTRAINTS, CONSTRAINTS
     for index in range(0, AREA):  # saves all possible neighbors for all indices
         row = index // WIDTH
         neighbors = [i for i in [index + WIDTH, index - WIDTH] if 0 <= i < AREA]
@@ -257,7 +267,8 @@ def gen_lookups():
 
     ROWS = [[*range(i, i + WIDTH)] for i in range(0, AREA, WIDTH)]
     COLS = [[*range(i, AREA, WIDTH)] for i in range(0, WIDTH)]
-    CONSTRAINTS = ROWS + COLS
+    ALL_CONSTRAINTS = ROWS + COLS
+    CONSTRAINTS = {i: (ROWS[i//WIDTH], COLS[i%WIDTH], set(ROWS[i//WIDTH]+COLS[i%WIDTH])) for i in range(AREA)}
 
 
 def place_words(board, num_blocks):
@@ -283,14 +294,16 @@ def place_words(board, num_blocks):
 
 def load_words(file):
     start = ord('a')
-    max_length = len(max(open(file).read().splitlines(), key=lambda x: len(x)))
+    max_length = len(max(open(file).read().splitlines(), key=lambda x: len(x)))+1
     words_by_alpha, words_by_length = [[] for i in range(26)], [[] for i in range(max_length)]
+    letters = [[0, chr(i+start)] for i in range(26)]
     for word in open(file).read().splitlines():
         w = word.lower()
         words_by_alpha[ord(w[0])-start].append(word)
         words_by_length[len(word)].append(word)
-
-    return [sorted(word_list, key=lambda x: len(x)) for word_list in words_by_alpha], words_by_length
+        for letter in word:
+            letters[ord(letter)-start][0] += 1
+    return [sorted(word_list, key=lambda x: len(x)) for word_list in words_by_alpha], words_by_length, [x[1] for x in sorted(letters, reverse=True)]
 
 
 def finish(board):

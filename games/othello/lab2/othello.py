@@ -16,7 +16,7 @@ REGEX = {
         1: compile(r"\.x+o", IGNORECASE)
     }
 }
-CONSTRAINTS = {}
+ALL_CONSTRAINTS = {}
 ALL_CONSTRAINTS = []
 moves = []
 
@@ -72,7 +72,7 @@ def gen_constraints():
         c = sorted(col)
         ld = sorted([*ld])
         rd = sorted([*rd])
-        CONSTRAINTS[i] = (r,c,ld,rd)
+        ALL_CONSTRAINTS[i] = (r, c, ld, rd)
         ALL_CONSTRAINTS.append(r)
         ALL_CONSTRAINTS.append(c)
         ALL_CONSTRAINTS.append(ld)
