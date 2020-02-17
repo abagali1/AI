@@ -28,6 +28,7 @@ CONSTRAINTS = {}
 SEARCH_CACHE = {}
 ALPHABET = "abcdefghijklmnopqrstuvxwyz"
 WORDS_BY_ALPHA, WORDS_BY_LENGTH, COMMON_LETTERS = [], [], []
+DICTIONARY = set()
 
 to_string = lambda pzl: "\n".join(
     ["".join([pzl[INDICES_2D[(i, j)]][0] for j in range(WIDTH)]) for i in range(HEIGHT)]
@@ -172,17 +173,43 @@ def place_protected(board, index):
     return False
 
 
-def find_best_index(board):
-    min_pos = (100, set())
+def place_word(board, word, index, horizontal):
+    if horizontal:
+        for i in range(len(word)):
+            idx = index+i
+            if board[idx] != EMPTY and board[idx] != word[i]:
+                return False
+            board[index+i] = word[i]
+    else:
+        for i in range(len(word)):
+            idx = index + (WIDTH*i)
+            if board[idx] != EMPTY and board[idx] != word[i]:
+                return False
+            board[index + (WIDTH * i)] = word[i]
+
+
+
+def find_indices(board):
+    idxs = []
     for pos, elem in enumerate(board):
         if elem == EMPTY:
-            possibilities =
-
+            horiz, vert = CONSTRAINTS[pos][:-1]
+            h_con, v_con = "".join(board[x] for x in horiz), "".join(board[x] for x in vert)
+            h_end, v_end = h_con.find(BLOCK), v_con.find(BLOCK)
+            if h_end == -1:
+                idxs.append()
 
 
 def is_invalid(board):
     if ALPHABET not in board:
         return False
+    for pos, elem in enumerate(board):
+        if elem == BLOCK:
+            continue
+        if "".join(board[x] for x in CONSTRAINTS[pos][0]) not in DICTIONARY or \
+                "".join(board[x] for x in CONSTRAINTS[pos][1]) not in DICTIONARY:
+            return True
+    return False
 
 
 def solve(board):
@@ -299,6 +326,7 @@ def load_words(file):
     letters = [[0, chr(i+start)] for i in range(26)]
     for word in open(file).read().splitlines():
         w = word.lower()
+        DICTIONARY.add(w)
         words_by_alpha[ord(w[0])-start].append(word)
         words_by_length[len(word)].append(word)
         for letter in word:
