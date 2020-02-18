@@ -34,6 +34,8 @@ FIT_CACHE = {}
 ALPHABET = "abcdefghijklmnopqrstuvxwyz"
 WORDS_BY_ALPHA, WORDS_BY_LENGTH, COMMON_LETTERS, STARTS_WITH = [], [], [], {}
 DICTIONARY = set()
+INTERSECTIONS = {}
+
 
 to_string = lambda pzl: "\n".join(
     ["".join([pzl[INDICES_2D[(i, j)]][0] for j in range(WIDTH)]) for i in range(HEIGHT)]
@@ -209,6 +211,16 @@ def can_fit(template, word):
         return fit
 
 
+def update_indices(board, indices, removed_index):
+    intersections = INTERSECTIONS[(removed_index[0], removed_index[2])]
+    for i in range(len(indices)):
+        old = indices[i]
+        if (old[0], old[2]) in intersections:
+            template = "".join(board[x] for x in old[4])
+            indices[i] = (old[0], old[1], old[2], template, old[4], [x for x in old[5] if can_fit(template, x)])
+    return indices
+
+
 def possible_words(indices):
     idxs = []
     for i in indices:
@@ -227,7 +239,7 @@ def find_indices(board):
                 continue
             s = r.span(1)
             if s[1]-s[0] >= 3:
-                idxs.append((row[s[0]], s[1]-s[0], HORIZONTAL, con[s[0]:s[1]], [row[x] for x in range(s[0], s[1])]))
+                idxs.append((row[s[0]], s[1]-s[0], HORIZONTAL, con[s[0]:s[1]], {row[x] for x in range(s[0], s[1])}))
     for col in COLS:
         con = "".join(board[x] for x in col)
         if EMPTY not in con:
@@ -237,8 +249,16 @@ def find_indices(board):
                 continue
             s = r.span(1)
             if s[1]-s[0] >= 3:
-                idxs.append((col[s[0]], s[1]-s[0], VERTICAL, con[s[0]:s[1]], [col[x] for x in range(s[0], s[1])]))
-    return idxs
+                idxs.append((col[s[0]], s[1]-s[0], VERTICAL, con[s[0]:s[1]], {col[x] for x in range(s[0], s[1])}))
+    for i in idxs:
+        for j in idxs:
+            key = (i[0], i[2])
+            if j[4]&i[4]:
+                if key in INTERSECTIONS:
+                    INTERSECTIONS[key].add((j[0], j[2]))
+                else:
+                    INTERSECTIONS[key] = {(j[0], j[2])}
+    return sorted(possible_words(idxs), key=lambda x: sum(x[3].count(a) for a in ALPHABET))
 
 
 def is_invalid(board):
@@ -254,12 +274,19 @@ def is_invalid(board):
     return False
 
 
-def solve(board, indices, previous_words=0, prev=HORIZONTAL):
+def solve(board, indices):
     print(to_string(board), '\n'*3)
     if EMPTY not in board:
         return board
 
-
+    i = indices.pop(-1)
+    for word in i[5]:
+        new_board = place_word(board, word, i[0], i[2])
+        if new_board:
+            s = solve(new_board, update_indices(board, indices, i))
+            if s:
+                return s
+    return None
 
 
     # tried = previous_words if previous_words else set()
@@ -298,16 +325,13 @@ def main():
 
     #return to_string(board)
 
-    words = load_words(FILE)
-    WORDS_BY_ALPHA, WORDS_BY_LENGTH, COMMON_LETTERS, STARTS_WITH = words
+    load_words(FILE)
     indices = find_indices(board)
-    index_words = possible_words(indices)
-    print(to_string(board))
-    print(index_words)
+    print(to_string(board),'\n\n')
 
-    # sol = solve(board, index_words)
-    # if sol:
-    #     return to_string(sol)
+    sol = solve(board, indices)
+    if sol:
+        return to_string(sol)
 
 
 def parse_args():
@@ -383,12 +407,12 @@ def place_words(board, num_blocks):
 
 
 def load_words(file):
+    global WORDS_BY_ALPHA, WORDS_BY_LENGTH, COMM
     start = ord('a')
     DICTIONARY.add(EMPTY*WIDTH)
     DICTIONARY.add(EMPTY*HEIGHT)
     max_length = len(max(open(file).read().splitlines(), key=lambda x: len(x)))+1
     words_by_alpha, words_by_length = [[] for i in range(26)], [[] for i in range(max_length)]
-    starts_with = {}
     letters = [[0, chr(i+start)] for i in range(26)]
     for word in open(file).read().splitlines():
         if len(word) <= 2:
@@ -398,17 +422,12 @@ def load_words(file):
         words_by_alpha[ord(w[0])-start].append(w)
         words_by_length[len(word)].append(w)
         for pos, letter in enumerate(w):
-            if pos != 0 and pos != len(w):
-                key = w[:pos]
-                if key in starts_with:
-                    starts_with[key].append(w)
-                else:
-                    starts_with[key] = [w]
             if letter not in ALPHABET:
                 continue
             letters[ord(letter)-start][0] += 1
     letters = [x[0] for x in letters]
-    return [sorted(word_list, key=lambda x: len(x)) for word_list in words_by_alpha], [sorted(x, key=lambda y: word_occurrence(y, letters)) for x in words_by_length], letters, starts_with
+    WORDS_BY_ALPHA = [sorted(word_list, key=lambda x: len(x)) for word_list in words_by_alpha]
+    WORDS_BY_LENGTH = [sorted(x, key=lambda y: word_occurrence(y, letters)) for x in words_by_length]
 
 
 def word_occurrence(word, letter_occurrences):
