@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
+# Anup Bagali Period 2
 import sys
 from re import compile, IGNORECASE, match
 from time import time as time
 
 SEED_REGEX = compile(r'([VH])(\d*)x(\d*)(.+)', IGNORECASE)
-WORD_REGEX = compile(r'#([-$]{1,2})#|^([-$]{1,2})#|#([-$]{1,2})$')
 WORD_START_REGEX = compile(r'^([-$]{1,2})#')
 WORD_MIDDLE_REGEX = compile(r'#([-$]{1,2})#')
 WORD_END_REGEX = compile(r'#([-$]{1,2})$')
+POSSIBLE_REGEX = compile(r"([-\w]+)", IGNORECASE)
+
 
 BLOCK = "#"
 EMPTY = "-"
@@ -24,7 +26,11 @@ NEIGHBORS = {}  # idx -> [neighbors]
 ROWS = []  # [ [idxs in row 0], [idxs in row 1]]
 COLS = []  # [ [idxs in col 0], [idxs in col 1]]
 ALL_CONSTRAINTS = []  # [[row0], [row1], [col0], col[1]]
+CONSTRAINTS = {}
 SEARCH_CACHE = {}
+ALPHABET = "abcdefghijklmnopqrstuvxwyz"
+WORDS_BY_ALPHA, WORDS_BY_LENGTH, COMMON_LETTERS = [], [], []
+DICTIONARY = set()
 
 to_string = lambda pzl: "\n".join(
     ["".join([pzl[INDICES_2D[(i, j)]][0] for j in range(WIDTH)]) for i in range(HEIGHT)]
@@ -76,7 +82,7 @@ def implicit_blocks(board, blocks):
             continue
         for r in [search(WORD_START_REGEX, con), search(WORD_MIDDLE_REGEX, con), search(WORD_END_REGEX, con)]:
             if r:
-                if '-' not in r.group(1):
+                if EMPTY not in r.group(1):
                     return False
                 indices = [constraint[x] for x in range(*r.span(1))]
                 for i in indices:
@@ -111,9 +117,7 @@ def implicit_blocks(board, blocks):
     return tried, blocks
 
 
-def brute_force(board, num_blocks):
-    if num_blocks == 1:
-        print('b')
+def create_board(board, num_blocks):
     implicit = implicit_blocks(board, num_blocks)
     if not implicit:
         return False
@@ -132,7 +136,7 @@ def brute_force(board, num_blocks):
         n = place_block(board, choice, num_blocks)
         if n:
             num_blocks, tried = n[0], tried | n[1]
-            b_f = brute_force(board, num_blocks)
+            b_f = create_board(board, num_blocks)
             if b_f:
                 return b_f
             for i in tried:
@@ -171,22 +175,103 @@ def place_protected(board, index):
     return False
 
 
+def place_word(board, word, index, horizontal):
+    tmp = board.copy()
+    if horizontal:
+        for i in range(len(word)):
+            idx = index+i
+            if tmp[idx] != EMPTY and tmp[idx] != word[i]:
+                return False
+            tmp[index+i] = word[i]
+    else:
+        for i in range(len(word)):
+            idx = index + (WIDTH*i)
+            if tmp[idx] != EMPTY and tmp[idx] != word[i]:
+                return False
+            tmp[index + (WIDTH * i)] = word[i]
+    return tmp
+
+
+def find_indices(board):
+    idxs = []
+    for constraint in ALL_CONSTRAINTS:
+        con = "".join(board[x] for x in constraint)
+        if EMPTY not in con:
+            continue
+        r = search(POSSIBLE_REGEX, con)
+        if r:
+            if EMPTY not in r.group(1):
+                continue
+            s = r.span(1)
+            start, end = constraint[s[0]], constraint[s[1]-1]
+            if end-start >= 3:
+                idxs.append((start, end, s[1]-s[0]))
+
+
+    # for pos, elem in enumerate(board):
+    #     if elem == EMPTY:
+    #         horiz, vert = CONSTRAINTS[pos][:-1]
+    #         h_con, v_con = "".join(board[x] for x in horiz), "".join(board[x] for x in vert)
+    #         h_end, v_end = h_con.find(EMPTY+BLOCK), v_con.find(EMPTY+BLOCK)
+    #         h_l = horiz[h_end] - pos + 1
+    #         if h_l >= 3:
+    #             idxs.append((pos, horiz[h_end], h_l))
+    return idxs
+
+
+def is_invalid(board):
+    for pos, elem in enumerate(board):
+        if elem == BLOCK:
+            continue
+        h = "".join(board[x] for x in CONSTRAINTS[pos][0]).replace(BLOCK, "")
+        if EMPTY not in h and h not in DICTIONARY:
+            return True
+        v = "".join(board[x] for x in CONSTRAINTS[pos][1]).replace(BLOCK, "")
+        if EMPTY not in v and v not in DICTIONARY:
+            return True
+    return False
+
+
+def solve(board, words):
+    print(to_string(board), '\n'*3)
+    if is_invalid(board):
+        return False
+    if EMPTY not in board:
+        return board
+
+    indices = find_indices(board)
+    for index in indices:
+        for word in words[index[2]][::-1]:
+            new_board = place_word(board, word, index[0], True)
+            if new_board:
+                del words[index[2]][-1]
+                s = solve(new_board, words)
+                if s:
+                    return s
+                words[index[2]].append(word)
+
+
 def main():
-    global BLOCKS
+    global BLOCKS, WORDS_BY_ALPHA, WORDS_BY_LENGTH, COMMON_LETTERS
     parse_args()
-    if BLOCKS == AREA:
-        return to_string(BLOCK * AREA)
 
     gen_lookups()
     board, blocks = place_words([*EMPTY*AREA], BLOCKS)
 
-    if blocks == 0:
-        return to_string(finish(board))
+    if BLOCKS == AREA:
+        board = [*BLOCK * AREA]
+    elif blocks == 0:
+         board = finish(board)
+    else:
+        board = finish(create_board(board, blocks))
 
-    sol = brute_force(board, blocks)
+    print(to_string(board))
+
+    words = load_words(FILE)
+    WORDS_BY_ALPHA, WORDS_BY_LENGTH, COMMON_LETTERS = words
+    sol = solve(board, words[1])
     if sol:
-        print(sol.count(BLOCK), BLOCKS)
-        return to_string(finish(sol))
+        return to_string(sol)
 
 
 def parse_args():
@@ -219,7 +304,7 @@ def parse_args():
 
 
 def gen_lookups():
-    global NEIGHBORS, ROTATIONS, ROWS, COLS, ALL_CONSTRAINTS
+    global NEIGHBORS, ROTATIONS, ROWS, COLS, ALL_CONSTRAINTS, CONSTRAINTS
     for index in range(0, AREA):  # saves all possible neighbors for all indices
         row = index // WIDTH
         neighbors = [i for i in [index + WIDTH, index - WIDTH] if 0 <= i < AREA]
@@ -236,7 +321,8 @@ def gen_lookups():
 
     ROWS = [[*range(i, i + WIDTH)] for i in range(0, AREA, WIDTH)]
     COLS = [[*range(i, AREA, WIDTH)] for i in range(0, WIDTH)]
-    CONSTRAINTS = ROWS + COLS
+    ALL_CONSTRAINTS = ROWS + COLS
+    CONSTRAINTS = {i: (ROWS[i//WIDTH], COLS[i%WIDTH], set(ROWS[i//WIDTH]+COLS[i%WIDTH])) for i in range(AREA)}
 
 
 def place_words(board, num_blocks):
@@ -260,17 +346,42 @@ def place_words(board, num_blocks):
     return board, num_blocks
 
 
+def load_words(file):
+    start = ord('a')
+    DICTIONARY.add(EMPTY*WIDTH)
+    DICTIONARY.add(EMPTY*HEIGHT)
+    max_length = len(max(open(file).read().splitlines(), key=lambda x: len(x)))+1
+    words_by_alpha, words_by_length = [[] for i in range(26)], [[] for i in range(max_length)]
+    letters = [[0, chr(i+start)] for i in range(26)]
+    for word in open(file).read().splitlines():
+        if len(word) <= 2:
+            continue
+        w = word.lower()
+        DICTIONARY.add(w)
+        words_by_alpha[ord(w[0])-start].append(w)
+        words_by_length[len(word)].append(w)
+        for letter in w:
+            letters[ord(letter)-start][0] += 1
+    letters = [x[0] for x in letters]
+    return [sorted(word_list, key=lambda x: len(x)) for word_list in words_by_alpha], [sorted(x, key=lambda y: word_occurrence(y, letters)) for x in words_by_length], letters
+
+
+def word_occurrence(word, letter_occurrences):
+    d = {x: word.count(x) for x in word}
+    return sum(letter_occurrences[ord(x)-ord('a')]*y for x, y in d.items())
+
+
 def finish(board):
     for seed in SEEDS:
         if seed[0] == "H":
             idx = INDICES_2D[(seed[1], seed[2])]
             for i in range(len(seed[3])):
-                board[idx+i] = seed[3][i]
+                board[idx+i] = seed[3][i].lower()
         elif seed[0] == "V":
             idx = INDICES_2D[(seed[1], seed[2])]
             for i in range(len(seed[3])):
-                board[idx + (WIDTH * i)] = seed[3][i]
-    return "".join(board).replace(PROTECTED, EMPTY)
+                board[idx + (WIDTH * i)] = seed[3][i].lower()
+    return [x if x != PROTECTED else EMPTY for x in board]
 
 
 if __name__ == '__main__':
