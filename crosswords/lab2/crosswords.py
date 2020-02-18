@@ -29,8 +29,9 @@ COLS = []  # [ [idxs in col 0], [idxs in col 1]]
 ALL_CONSTRAINTS = []  # [[row0], [row1], [col0], col[1]]
 CONSTRAINTS = {}
 SEARCH_CACHE = {}
+FIND_CACHE = {}
 ALPHABET = "abcdefghijklmnopqrstuvxwyz"
-WORDS_BY_ALPHA, WORDS_BY_LENGTH, COMMON_LETTERS = [], [], []
+WORDS_BY_ALPHA, WORDS_BY_LENGTH, COMMON_LETTERS, STARTS_WITH = [], [], [], {}
 DICTIONARY = set()
 
 to_string = lambda pzl: "\n".join(
@@ -44,7 +45,7 @@ def search(regex, constraint, **kwargs):
         return SEARCH_CACHE[key]
     else:
         m = regex.search(constraint, **kwargs)
-        SEARCH_CACHE[key] = regex.search(constraint, **kwargs)
+        SEARCH_CACHE[key] = m
         return m
 
 
@@ -197,27 +198,26 @@ def place_word(board, word, index, horizontal):
 
 def find_indices(board):
     idxs = []
-    for constraint in ROWS:
-        con = "".join(board[x] for x in constraint)
+    for row in ROWS:
+        con = "".join(board[x] for x in row)
         if EMPTY not in con:
             continue
         for r in POSSIBLE_REGEX.finditer(con):
             if EMPTY not in r.group(1):
                 continue
             s = r.span(1)
-            start, end = constraint[s[0]], constraint[s[1]-1]
             if s[1]-s[0] >= 3:
-                idxs.append((start, end, s[1]-s[0]))
-
-
-    # for pos, elem in enumerate(board):
-    #     if elem == EMPTY:
-    #         horiz, vert = CONSTRAINTS[pos][:-1]
-    #         h_con, v_con = "".join(board[x] for x in horiz), "".join(board[x] for x in vert)
-    #         h_end, v_end = h_con.find(EMPTY+BLOCK), v_con.find(EMPTY+BLOCK)
-    #         h_l = horiz[h_end] - pos + 1
-    #         if h_l >= 3:
-    #             idxs.append((pos, horiz[h_end], h_l))
+                idxs.append((row[s[0]], s[1]-s[0], 1, con))
+    for col in COLS:
+        con = "".join(board[x] for x in col)
+        if EMPTY not in con:
+            continue
+        for r in POSSIBLE_REGEX.finditer(con):
+            if EMPTY not in r.group(1):
+                continue
+            s = r.span(1)
+            if s[1]-s[0] >= 3:
+                idxs.append((col[s[0]], s[1]-s[0], 0, con))
     return idxs
 
 
@@ -234,7 +234,7 @@ def is_invalid(board):
     return False
 
 
-def solve(board, words):
+def solve(board, words, prev=1):
     print(to_string(board), '\n'*3)
     # if is_invalid(board):
     #     return False
@@ -243,11 +243,14 @@ def solve(board, words):
 
     indices = find_indices(board)
     for index in indices:
-        for word in words[index[2]][::-1]:
-            new_board = place_word(board, word, index[0], True)
+        if prev == index[2]:
+            continue
+        for word in words[index[1]][::-1]:
+            new_board = place_word(board, word, index[0], index[2])
             if new_board:
-                del words[index[2]][-1]
-                s = solve(new_board, words)
+                if words[index[1]]:
+                    del words[index[1]][-1]
+                s = solve(new_board, words, 1)
                 if s:
                     return s
                 words[index[2]].append(word)
@@ -273,7 +276,7 @@ def main():
     print(to_string(board))
 
     words = load_words(FILE)
-    WORDS_BY_ALPHA, WORDS_BY_LENGTH, COMMON_LETTERS = words
+    WORDS_BY_ALPHA, WORDS_BY_LENGTH, COMMON_LETTERS, STARTS_WITH = words
     sol = solve(board, words[1])
     if sol:
         return to_string(sol)
@@ -357,6 +360,7 @@ def load_words(file):
     DICTIONARY.add(EMPTY*HEIGHT)
     max_length = len(max(open(file).read().splitlines(), key=lambda x: len(x)))+1
     words_by_alpha, words_by_length = [[] for i in range(26)], [[] for i in range(max_length)]
+    starts_with = {}
     letters = [[0, chr(i+start)] for i in range(26)]
     for word in open(file).read().splitlines():
         if len(word) <= 2:
@@ -365,12 +369,18 @@ def load_words(file):
         DICTIONARY.add(w)
         words_by_alpha[ord(w[0])-start].append(w)
         words_by_length[len(word)].append(w)
-        for letter in w:
+        for pos, letter in enumerate(w):
+            if pos != 0 and pos != len(w):
+                key = w[:pos]
+                if key in starts_with:
+                    starts_with[key].append(w)
+                else:
+                    starts_with[key] = [w]
             if letter not in ALPHABET:
                 continue
             letters[ord(letter)-start][0] += 1
     letters = [x[0] for x in letters]
-    return [sorted(word_list, key=lambda x: len(x)) for word_list in words_by_alpha], [sorted(x, key=lambda y: word_occurrence(y, letters)) for x in words_by_length], letters
+    return [sorted(word_list, key=lambda x: len(x)) for word_list in words_by_alpha], [sorted(x, key=lambda y: word_occurrence(y, letters)) for x in words_by_length], letters, starts_with
 
 
 def word_occurrence(word, letter_occurrences):
