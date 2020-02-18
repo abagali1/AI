@@ -197,17 +197,16 @@ def place_word(board, word, index, horizontal):
 
 def find_indices(board):
     idxs = []
-    for constraint in ALL_CONSTRAINTS:
+    for constraint in ROWS:
         con = "".join(board[x] for x in constraint)
         if EMPTY not in con:
             continue
-        r = search(POSSIBLE_REGEX, con)
-        if r:
+        for r in POSSIBLE_REGEX.finditer(con):
             if EMPTY not in r.group(1):
                 continue
             s = r.span(1)
             start, end = constraint[s[0]], constraint[s[1]-1]
-            if end-start >= 3:
+            if s[1]-s[0] >= 3:
                 idxs.append((start, end, s[1]-s[0]))
 
 
@@ -237,8 +236,8 @@ def is_invalid(board):
 
 def solve(board, words):
     print(to_string(board), '\n'*3)
-    if is_invalid(board):
-        return False
+    # if is_invalid(board):
+    #     return False
     if EMPTY not in board:
         return board
 
