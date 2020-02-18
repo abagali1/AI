@@ -4,13 +4,13 @@ import sys
 from re import compile, IGNORECASE, match
 from time import time as time
 
-sys.setrecursionlimit(100000)
 SEED_REGEX = compile(r'([VH])(\d*)x(\d*)(.+)', IGNORECASE)
 WORD_START_REGEX = compile(r'^([-$]{1,2})#')
 WORD_MIDDLE_REGEX = compile(r'#([-$]{1,2})#')
 WORD_END_REGEX = compile(r'#([-$]{1,2})$')
 POSSIBLE_REGEX = compile(r"([-\w]+)", IGNORECASE)
-
+HORIZONTAL = 1
+VERTICAL = 0
 
 BLOCK = "#"
 EMPTY = "-"
@@ -120,8 +120,6 @@ def implicit_blocks(board, blocks):
 
 
 def create_board(board, num_blocks):
-    if num_blocks == 1:
-        print('b')
     implicit = implicit_blocks(board, num_blocks)
     if not implicit:
         return False
@@ -207,7 +205,7 @@ def find_indices(board):
                 continue
             s = r.span(1)
             if s[1]-s[0] >= 3:
-                idxs.append((row[s[0]], s[1]-s[0], 1, con))
+                idxs.append((row[s[0]], s[1]-s[0], HORIZONTAL, con))
     for col in COLS:
         con = "".join(board[x] for x in col)
         if EMPTY not in con:
@@ -217,7 +215,7 @@ def find_indices(board):
                 continue
             s = r.span(1)
             if s[1]-s[0] >= 3:
-                idxs.append((col[s[0]], s[1]-s[0], 0, con))
+                idxs.append((col[s[0]], s[1]-s[0], VERTICAL, con))
     return idxs
 
 
@@ -234,7 +232,7 @@ def is_invalid(board):
     return False
 
 
-def solve(board, words, prev=1):
+def solve(board, words, previous_words=0, prev=HORIZONTAL):
     print(to_string(board), '\n'*3)
     # if is_invalid(board):
     #     return False
@@ -242,18 +240,20 @@ def solve(board, words, prev=1):
         return board
 
     indices = find_indices(board)
+    tried = previous_words if previous_words else set()
     for index in indices:
         if prev == index[2]:
             continue
         for word in words[index[1]][::-1]:
+            if word in tried:
+                continue
             new_board = place_word(board, word, index[0], index[2])
             if new_board:
-                if words[index[1]]:
-                    del words[index[1]][-1]
-                s = solve(new_board, words, 1)
+                tried.add(word)
+                s = solve(new_board, words, tried, VERTICAL)
                 if s:
                     return s
-                words[index[2]].append(word)
+                tried.remove(word)
 
 
 def main():
@@ -273,7 +273,7 @@ def main():
             blocks -= 1
         board = finish(create_board(board, blocks))
 
-    print(to_string(board))
+    #return to_string(board)
 
     words = load_words(FILE)
     WORDS_BY_ALPHA, WORDS_BY_LENGTH, COMMON_LETTERS, STARTS_WITH = words
