@@ -30,7 +30,6 @@ ALL_CONSTRAINTS = []  # [[row0], [row1], [col0], col[1]]
 CONSTRAINTS = {}
 SEARCH_CACHE = {}
 FIND_CACHE = {}
-FIT_CACHE = {}
 ALPHABET = "abcdefghijklmnopqrstuvxwyz"
 WORDS_BY_ALPHA, WORDS_BY_LENGTH, COMMON_LETTERS, STARTS_WITH = [], [], [], {}
 DICTIONARY = set()
@@ -195,27 +194,6 @@ def place_word(board, word, index, horizontal):
     return tmp
 
 
-def can_fit(template, word):
-    key = (template, word)
-    if key in FIT_CACHE:
-        return FIT_CACHE[key]
-    else:
-        fit = True
-        for x,y in zip(template, word):
-            if x != y and x != EMPTY:
-                fit = False
-                break
-        FIT_CACHE[key] = fit
-        return fit
-
-
-def possible_words(indices):
-    idxs = []
-    for i in indices:
-        idxs.append((*i, {word for word in WORDS_BY_LENGTH[i[1]] if can_fit(i[3], word)}))
-    return idxs
-
-
 def find_indices(board):
     idxs = []
     for row in ROWS:
@@ -227,7 +205,7 @@ def find_indices(board):
                 continue
             s = r.span(1)
             if s[1]-s[0] >= 3:
-                idxs.append((row[s[0]], s[1]-s[0], HORIZONTAL, con[s[0]:s[1]], [row[x] for x in range(s[0], s[1])]))
+                idxs.append((row[s[0]], s[1]-s[0], HORIZONTAL, con))
     for col in COLS:
         con = "".join(board[x] for x in col)
         if EMPTY not in con:
@@ -237,7 +215,7 @@ def find_indices(board):
                 continue
             s = r.span(1)
             if s[1]-s[0] >= 3:
-                idxs.append((col[s[0]], s[1]-s[0], VERTICAL, con[s[0]:s[1]], [col[x] for x in range(s[0], s[1])]))
+                idxs.append((col[s[0]], s[1]-s[0], VERTICAL, con))
     return idxs
 
 
@@ -254,29 +232,28 @@ def is_invalid(board):
     return False
 
 
-def solve(board, indices, previous_words=0, prev=HORIZONTAL):
+def solve(board, words, previous_words=0, prev=HORIZONTAL):
     print(to_string(board), '\n'*3)
+    # if is_invalid(board):
+    #     return False
     if EMPTY not in board:
         return board
 
-
-
-
-    # tried = previous_words if previous_words else set()
-    # for index in indices:
-    #     if prev == index[2]:
-    #         continue
-    #     for word in words[index[1]][::-1]:
-    #         if index[3].replace(EMPTY, "") not in word:
-    #             continue
-    #         new_board = place_word(board, word, index[0], index[2])
-    #         if new_board:
-    #             tried.add(word)
-    #             s = solve(new_board, words, tried, VERTICAL)
-    #             if s:
-    #                 return s
-    #             tried.remove(word)
-    #     return None
+    indices = find_indices(board)
+    tried = previous_words if previous_words else set()
+    for index in indices:
+        if prev == index[2]:
+            continue
+        for word in words[index[1]][::-1]:
+            if word in tried:
+                continue
+            new_board = place_word(board, word, index[0], index[2])
+            if new_board:
+                tried.add(word)
+                s = solve(new_board, words, tried, VERTICAL)
+                if s:
+                    return s
+                tried.remove(word)
 
 
 def main():
@@ -300,14 +277,9 @@ def main():
 
     words = load_words(FILE)
     WORDS_BY_ALPHA, WORDS_BY_LENGTH, COMMON_LETTERS, STARTS_WITH = words
-    indices = find_indices(board)
-    index_words = possible_words(indices)
-    print(to_string(board))
-    print(index_words)
-
-    # sol = solve(board, index_words)
-    # if sol:
-    #     return to_string(sol)
+    sol = solve(board, words[1])
+    if sol:
+        return to_string(sol)
 
 
 def parse_args():
