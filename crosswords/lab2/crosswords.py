@@ -2,7 +2,7 @@
 # Anup Bagali Period 2
 import sys
 from re import compile, IGNORECASE, match
-from time import time as time
+from time import time, sleep
 
 SEED_REGEX = compile(r'([VH])(\d*)x(\d*)(.+)', IGNORECASE)
 WORD_START_REGEX = compile(r'^([-$]{1,2})#')
@@ -118,7 +118,6 @@ def implicit_blocks(board, blocks):
                             return False
                         blocks, tried = n[0], tried | n[1]
                 amt_cut += component[0]
-
     return tried, blocks
 
 
@@ -215,16 +214,17 @@ def update_indices(board, indices, removed_index, placed_word):
     intersections = INTERSECTIONS[(removed_index[0], removed_index[2])]
     for i in range(len(indices)):
         old = indices[i]
-        if (old[0], old[2]) in intersections:
-            template = "".join(board[x] for x in old[4])
-            indices[i] = (old[0], old[1], old[2], template, old[4], [x for x in old[5] if can_fit(template, x) and x != placed_word ])
-    return sorted(indices, key=lambda x: sum(x[3].count(a) for a in ALPHABET))
+        #if (old[0], old[2]) in intersections:
+        template = "".join(board[x] for x in old[4])
+        new_words = [word for word in old[5] if can_fit(template, word) and word != placed_word] if EMPTY in template else []
+        indices[i] = (old[0], old[1], old[2], template, old[4], new_words)
+    return sorted(indices, key=lambda x: -sum(x[3].count(a) for a in ALPHABET))
 
 
 def possible_words(indices):
     idxs = []
     for i in indices:
-        idxs.append((*i, sorted([word for word in WORDS_BY_LENGTH[i[1]] if can_fit(i[3], word)], key=lambda x: -word_occurrence(x, COMMON_LETTERS))))
+        idxs.append((*i, sorted([word for word in WORDS_BY_LENGTH[i[1]]], key=lambda x: -word_occurrence(x, COMMON_LETTERS))))
     return idxs
 
 
@@ -239,7 +239,7 @@ def find_indices(board):
                 continue
             s = r.span(1)
             if s[1]-s[0] >= 3:
-                idxs.append((row[s[0]], s[1]-s[0], HORIZONTAL, con[s[0]:s[1]], {row[x] for x in range(s[0], s[1])}))
+                idxs.append((row[s[0]], s[1]-s[0], HORIZONTAL, con[s[0]:s[1]], [row[x] for x in range(s[0], s[1])]))
     for col in COLS:
         con = "".join(board[x] for x in col)
         if EMPTY not in con:
@@ -247,13 +247,13 @@ def find_indices(board):
         for r in POSSIBLE_REGEX.finditer(con):
             if EMPTY not in r.group(1):
                 continue
-            s = r.sp0an(1)
+            s = r.span(1)
             if s[1]-s[0] >= 3:
-                idxs.append((col[s[0]], s[1]-s[0], VERTICAL, con[s[0]:s[1]], {col[x] for x in range(s[0], s[1])}))
+                idxs.append((col[s[0]], s[1]-s[0], VERTICAL, con[s[0]:s[1]], [col[x] for x in range(s[0], s[1])]))
     for i in idxs:
         for j in idxs:
             key = (i[0], i[2])
-            if j[4]&i[4]:
+            if {*j[4]}&{*i[4]}:
                 if key in INTERSECTIONS:
                     INTERSECTIONS[key].add((j[0], j[2]))
                 else:
@@ -279,36 +279,17 @@ def solve(board, indices, tried=0):
     if EMPTY not in board:
         return board
 
-    i = indices.pop(-1)
     tried = tried if tried else set()
-    for word in i[5]:
-        if word in tried:
-            continue
-        new_board = place_word(board, word, i[0], i[2])
-        if new_board:
-            tried.add(word)
-            s = solve(new_board, update_indices(new_board, indices, i, word), tried)
-            if s:
-                return s
-            tried.remove(word)
+    for i in indices:
+        for word in i[5]:
+            if word in tried:
+                continue
+            new_board = place_word(board, word, i[0], i[2])
+            if new_board:
+                s = solve(new_board, update_indices(new_board, indices, i, word), tried)
+                if s:
+                    return s
     return None
-
-
-    # tried = previous_words if previous_words else set()
-    # for index in indices:
-    #     if prev == index[2]:
-    #         continue
-    #     for word in words[index[1]][::-1]:
-    #         if index[3].replace(EMPTY, "") not in word:
-    #             continue
-    #         new_board = place_word(board, word, index[0], index[2])
-    #         if new_board:
-    #             tried.add(word)
-    #             s = solve(new_board, words, tried, VERTICAL)
-    #             if s:
-    #                 return s
-    #             tried.remove(word)
-    #     return None
 
 
 def main():
