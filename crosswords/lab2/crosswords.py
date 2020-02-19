@@ -211,20 +211,20 @@ def can_fit(template, word):
         return fit
 
 
-def update_indices(board, indices, removed_index):
+def update_indices(board, indices, removed_index, placed_word):
     intersections = INTERSECTIONS[(removed_index[0], removed_index[2])]
     for i in range(len(indices)):
         old = indices[i]
         if (old[0], old[2]) in intersections:
             template = "".join(board[x] for x in old[4])
-            indices[i] = (old[0], old[1], old[2], template, old[4], [x for x in old[5] if can_fit(template, x)])
-    return indices
+            indices[i] = (old[0], old[1], old[2], template, old[4], [x for x in old[5] if can_fit(template, x) and x != placed_word ])
+    return sorted(indices, key=lambda x: sum(x[3].count(a) for a in ALPHABET))
 
 
 def possible_words(indices):
     idxs = []
     for i in indices:
-        idxs.append((*i, {word for word in WORDS_BY_LENGTH[i[1]] if can_fit(i[3], word)}))
+        idxs.append((*i, sorted([word for word in WORDS_BY_LENGTH[i[1]] if can_fit(i[3], word)], key=lambda x: -word_occurrence(x, COMMON_LETTERS))))
     return idxs
 
 
@@ -247,7 +247,7 @@ def find_indices(board):
         for r in POSSIBLE_REGEX.finditer(con):
             if EMPTY not in r.group(1):
                 continue
-            s = r.span(1)
+            s = r.sp0an(1)
             if s[1]-s[0] >= 3:
                 idxs.append((col[s[0]], s[1]-s[0], VERTICAL, con[s[0]:s[1]], {col[x] for x in range(s[0], s[1])}))
     for i in idxs:
@@ -274,18 +274,23 @@ def is_invalid(board):
     return False
 
 
-def solve(board, indices):
+def solve(board, indices, tried=0):
     print(to_string(board), '\n'*3)
     if EMPTY not in board:
         return board
 
     i = indices.pop(-1)
+    tried = tried if tried else set()
     for word in i[5]:
+        if word in tried:
+            continue
         new_board = place_word(board, word, i[0], i[2])
         if new_board:
-            s = solve(new_board, update_indices(board, indices, i))
+            tried.add(word)
+            s = solve(new_board, update_indices(new_board, indices, i, word), tried)
             if s:
                 return s
+            tried.remove(word)
     return None
 
 
@@ -407,7 +412,7 @@ def place_words(board, num_blocks):
 
 
 def load_words(file):
-    global WORDS_BY_ALPHA, WORDS_BY_LENGTH, COMM
+    global WORDS_BY_ALPHA, WORDS_BY_LENGTH, COMMON_LETTERS
     start = ord('a')
     DICTIONARY.add(EMPTY*WIDTH)
     DICTIONARY.add(EMPTY*HEIGHT)
@@ -425,9 +430,9 @@ def load_words(file):
             if letter not in ALPHABET:
                 continue
             letters[ord(letter)-start][0] += 1
-    letters = [x[0] for x in letters]
+    COMMON_LETTERS = [x[0] for x in letters]
     WORDS_BY_ALPHA = [sorted(word_list, key=lambda x: len(x)) for word_list in words_by_alpha]
-    WORDS_BY_LENGTH = [sorted(x, key=lambda y: word_occurrence(y, letters)) for x in words_by_length]
+    WORDS_BY_LENGTH = [sorted(x, key=lambda y: word_occurrence(y, COMMON_LETTERS)) for x in words_by_length]
 
 
 def word_occurrence(word, letter_occurrences):
