@@ -187,13 +187,13 @@ def place_word(board, word, index, horizontal):
             idx = index+i
             if tmp[idx] != EMPTY and tmp[idx] != word[i]:
                 return False
-            tmp[index+i] = word[i]
+            tmp[idx] = word[i]
     else:
         for i in range(len(word)):
             idx = index + (WIDTH*i)
             if tmp[idx] != EMPTY and tmp[idx] != word[i]:
                 return False
-            tmp[index + (WIDTH * i)] = word[i]
+            tmp[idx] = word[i]
     return tmp
 
 
