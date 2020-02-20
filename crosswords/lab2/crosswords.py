@@ -35,6 +35,7 @@ ALPHABET = "abcdefghijklmnopqrstuvxwyz"
 WORDS_BY_ALPHA, WORDS_BY_LENGTH, COMMON_LETTERS, STARTS_WITH = [], [], [], {}
 DICTIONARY = set()
 INTERSECTIONS = {}
+BEST_DEPTH = 0
 
 
 to_string = lambda pzl: "\n".join(
@@ -210,25 +211,21 @@ def can_fit(template, word):
         return fit
 
 
-def update_indices(board, indices, removed_index, placed_word):
+def update_indices(board, indices, removed_index):
     intersections = INTERSECTIONS[(removed_index[0], removed_index[2])]
     new_indices = []
     for i in range(len(indices)):
         old = indices[i]
-        template = old[3]
+        template, new_words = old[3], old[5]
         if (old[0], old[2]) in intersections:
             template = "".join(board[x] for x in old[4])
-            new_words = [word for word in old[5] if
-                         can_fit(template, word) and word != placed_word]
-        else:
-            new_words = [word for word in old[5] if word != placed_word]
+            new_words = [word for word in new_words if can_fit(template, word)]
         new_indices.append((old[0], old[1], old[2], template, old[4], new_words))
-    return sorted(new_indices, key=lambda x: -sum(x[3].count(a) for a in ALPHABET) + len(x[5]))
+    return sorted(new_indices, key=lambda x: sum(x[3].count(a) for a in ALPHABET) - len(x[5]))
 
 
 def possible_words(indices):
-    return [(*i, sorted([word for word in WORDS_BY_LENGTH[i[1]]], key=lambda x: -word_occurrence(x, COMMON_LETTERS)))
-            for i in indices]
+    return [(*i, sorted([word for word in WORDS_BY_LENGTH[i[1]]], key=lambda x: -word_occurrence(x, COMMON_LETTERS))) for i in indices]
 
 
 def find_indices(board):
@@ -265,37 +262,37 @@ def find_indices(board):
 
 
 def is_invalid(board):
-    if EMPTY in board:
-        return False
     for pos, elem in enumerate(board):
         if elem == BLOCK:
             continue
-        h = "".join(board[x] for x in CONSTRAINTS[pos][0]).replace(BLOCK, "")
-        if EMPTY not in h and h not in DICTIONARY:
-            return True
-        v = "".join(board[x] for x in CONSTRAINTS[pos][1]).replace(BLOCK, "")
-        if EMPTY not in v and v not in DICTIONARY:
+        if "".join(board[x] for x in CONSTRAINTS[pos][0]).replace(BLOCK, "") not in DICTIONARY or "".join(board[x] for x in CONSTRAINTS[pos][1]).replace(BLOCK, "") not in DICTIONARY:
             return True
     return False
 
 
-def solve(board, indices, tried=0):
-    # if is_invalid(board):
-    #     return False
-    print(to_string(board), '\n')
-    if EMPTY not in board:
-        return board
-
-    tried = tried if tried else set()
+def solve(board, indices, tried, depth=0):
+    global BEST_DEPTH
     for i in indices:
-        for word in i[5]:
-            if word in tried:
-                continue
-            new_board = place_word(board, word, i[0], i[2])
-            if new_board:
-                s = solve(new_board, update_indices(new_board, indices, i, word), tried)
-                if s:
-                    return s
+        if not i[5]:
+            return False
+    if EMPTY not in board:
+        return board #if not is_invalid(board) else False
+    if depth > BEST_DEPTH:
+        print(to_string(board), '\n')
+        BEST_DEPTH = depth
+
+    i = indices.pop(-1)
+    for word in i[5]:
+        if word in tried:
+            continue
+        new_board = place_word(board, word, i[0], i[2])
+        if new_board:
+            tried.add(word)
+            s = solve(new_board, update_indices(new_board, indices, i), tried, depth+1)
+            if s:
+                return s
+            tried.remove(word)
+    indices.append(i)
     return False
 
 
@@ -316,13 +313,11 @@ def main():
             blocks -= 1
         board = finish(create_board(board, blocks))
 
-    #return to_string(board)
-
     load_words(FILE)
     indices = find_indices(board)
     print(to_string(board),'\n\n')
 
-    sol = solve(board, indices)
+    sol = solve(board, indices, set())
     if sol:
         return to_string(sol)
 
