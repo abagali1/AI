@@ -225,7 +225,8 @@ def update_indices(board, indices, removed_index):
 
 
 def possible_words(indices):
-    return [(*i, sorted([word for word in WORDS_BY_LENGTH[i[1]]], key=lambda x: -word_occurrence(x, COMMON_LETTERS))) for i in indices]
+    return [(*i, sorted([word for word in WORDS_BY_LENGTH[i[1]] if can_fit(i[3], word)],
+                        key=lambda x: -word_occurrence(x, COMMON_LETTERS))) for i in indices]
 
 
 def find_indices(board):
