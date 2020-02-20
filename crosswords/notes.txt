@@ -1,0 +1,43 @@
+indices = [
+(idx, length, H|V, str, indices affected, [words])
+]
+
+words = ['abc', 'abcd', 'code', 'done', 'corn']
+
+indices = [
+(0, 4, H, '----', [0-4], ['abcd','code','done','corn'])
+(0, 4, V, '----', [0,4,8,12], ['abcd', 'code','done','corn'])
+...
+]
+
+----
+----
+----
+----
+
+
+code
+----
+----
+----
+
+indices = [
+(0, 4, V, 'c---', [0,4,8,12], ['corn'])
+...
+]
+
+INTERSECTIONS = {
+	(0,V): (0,H)
+}
+
+
+#----
+-----
+-----
+-----
+----#
+
+code
+code
+code
+code

@@ -112,18 +112,13 @@ def implicit_blocks(board, blocks):
 
 
 def brute_force(board, num_blocks):
-    if num_blocks == 1:
-        print('b')
     implicit = implicit_blocks(board, num_blocks)
     if not implicit:
         return False
     else:
         tried, num_blocks = implicit
 
-    if num_blocks == 1:
-        board[CENTER] = BLOCK
-        return board
-    elif num_blocks <= 0:
+    if num_blocks <= 0:
         return board
 
     set_of_choices = [pos for pos, elem in enumerate(board) if elem == EMPTY]
@@ -180,8 +175,13 @@ def main():
     gen_lookups()
     board, blocks = place_words([*EMPTY*AREA], BLOCKS)
 
-    if blocks == 0:
+    if BLOCKS == AREA:
+        return to_string(BLOCK * AREA)
+    elif blocks == 0:
         return to_string(finish(board))
+    elif AREA&2 and BLOCKS&2:
+        board[CENTER] = BLOCK
+        blocks -= 1
 
     sol = brute_force(board, blocks)
     if sol:
@@ -236,7 +236,7 @@ def gen_lookups():
 
     ROWS = [[*range(i, i + WIDTH)] for i in range(0, AREA, WIDTH)]
     COLS = [[*range(i, AREA, WIDTH)] for i in range(0, WIDTH)]
-    CONSTRAINTS = ROWS + COLS
+    ALL_CONSTRAINTS = ROWS + COLS
 
 
 def place_words(board, num_blocks):
