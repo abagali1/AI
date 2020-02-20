@@ -2,7 +2,7 @@
 # Anup Bagali Period 2
 import sys
 from re import compile, IGNORECASE, match
-from time import time, sleep
+from time import time
 
 SEED_REGEX = compile(r'([VH])(\d*)x(\d*)(.+)', IGNORECASE)
 WORD_START_REGEX = compile(r'^([-$]{1,2})#')
@@ -212,13 +212,15 @@ def can_fit(template, word):
 
 def update_indices(board, indices, removed_index, placed_word):
     intersections = INTERSECTIONS[(removed_index[0], removed_index[2])]
+    new_indices = []
     for i in range(len(indices)):
         old = indices[i]
-        #if (old[0], old[2]) in intersections:
+        # if (old[0], old[2]) in intersections:
         template = "".join(board[x] for x in old[4])
-        new_words = [word for word in old[5] if can_fit(template, word) and word != placed_word] if EMPTY in template else []
-        indices[i] = (old[0], old[1], old[2], template, old[4], new_words)
-    return sorted(indices, key=lambda x: -sum(x[3].count(a) for a in ALPHABET))
+        new_words = [word for word in old[5] if
+                     can_fit(template, word) and word != placed_word] if EMPTY in template else []
+        new_indices.append((old[0], old[1], old[2], template, old[4], new_words))
+    return sorted(new_indices, key=lambda x: -sum(x[3].count(a) for a in ALPHABET) + len(x[5]))
 
 
 def possible_words(indices):
@@ -262,6 +264,8 @@ def find_indices(board):
 
 
 def is_invalid(board):
+    if EMPTY in board:
+        return False
     for pos, elem in enumerate(board):
         if elem == BLOCK:
             continue
@@ -275,7 +279,8 @@ def is_invalid(board):
 
 
 def solve(board, indices, tried=0):
-    print(to_string(board), '\n'*3)
+    if is_invalid(board):
+        return False
     if EMPTY not in board:
         return board
 
@@ -286,10 +291,11 @@ def solve(board, indices, tried=0):
                 continue
             new_board = place_word(board, word, i[0], i[2])
             if new_board:
+                print(to_string(new_board), '\n')
                 s = solve(new_board, update_indices(new_board, indices, i, word), tried)
                 if s:
                     return s
-    return None
+    return False
 
 
 def main():
