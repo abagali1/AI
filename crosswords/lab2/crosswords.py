@@ -32,7 +32,7 @@ SEARCH_CACHE = {}
 FIND_CACHE = {}
 FIT_CACHE = {}
 ALPHABET = {*"abcdefghijklmnopqrstuvxwyz"}
-WORDS_BY_ALPHA, WORDS_BY_LENGTH, COMMON_LETTERS, STARTS_WITH = [], [], [], {}
+WORDS_BY_ALPHA, WORDS_BY_LENGTH, COMMON_LETTERS, STARTS_WITH, ALL_INDICES = [], [], [], {}, []
 DICTIONARY = set()
 INTERSECTIONS = {}
 BEST_DEPTH = 0
@@ -269,11 +269,12 @@ def find_indices(board):
 
 
 def is_invalid(board):
-    for pos, elem in enumerate(board):
-        if elem == BLOCK:
-            continue
-        if "".join(board[x] for x in CONSTRAINTS[pos][0]).replace(BLOCK, "") not in DICTIONARY or "".join(board[x] for x in CONSTRAINTS[pos][1]).replace(BLOCK, "") not in DICTIONARY:
+    tried = set()
+    for index in ALL_INDICES:
+        con = "".join(board[x] for x in index[3])
+        if con not in DICTIONARY or con in tried:
             return True
+        tried.add(con)
     return False
 
 
@@ -283,7 +284,7 @@ def solve(board, indices, tried, depth=0):
         if not i[6]:
             return False
     if EMPTY not in board:
-        return board # if not is_invalid(board) else False
+        return board if not is_invalid(board) else False
     if depth > BEST_DEPTH:
         print(to_string(board), '\n')
         BEST_DEPTH = depth
@@ -304,7 +305,7 @@ def solve(board, indices, tried, depth=0):
 
 
 def main():
-    global BLOCKS, WORDS_BY_ALPHA, WORDS_BY_LENGTH, COMMON_LETTERS
+    global BLOCKS, WORDS_BY_ALPHA, WORDS_BY_LENGTH, COMMON_LETTERS, ALL_INDICES
     parse_args()
 
     gen_lookups()
@@ -322,6 +323,7 @@ def main():
 
     load_words(FILE)
     indices = find_indices(board)
+    ALL_INDICES = indices
     print(to_string(board),'\n\n')
 
     sol = solve(board, indices, set())
