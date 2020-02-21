@@ -185,13 +185,13 @@ def place_word(board, word, index, horizontal):
     tmp = board.copy()
     if horizontal:
         for i in range(len(word)):
-            idx = index+i
+            idx = index + i
             if tmp[idx] != EMPTY and tmp[idx] != word[i]:
                 return False
             tmp[idx] = word[i]
     else:
         for i in range(len(word)):
-            idx = index + (WIDTH*i)
+            idx = index + (WIDTH * i)
             if tmp[idx] != EMPTY and tmp[idx] != word[i]:
                 return False
             tmp[idx] = word[i]
@@ -226,7 +226,7 @@ def update_indices(board, indices, removed_index):
                     count += 1
             new_words = [word for word in new_words if can_fit(template, word)]
         new_indices.append((*old[:4], count, template, new_words))
-    return sorted(new_indices, key=lambda x: x[4] - len(x[6]) )
+    return sorted(new_indices, key=lambda x: x[4] - len(x[6]))
 
 
 def possible_words(indices):
@@ -243,9 +243,10 @@ def find_indices(board):
             if EMPTY not in r.group(1):
                 continue
             s = r.span(1)
-            if s[1]-s[0] >= 3:
+            if s[1] - s[0] >= 3:
                 template = con[s[0]:s[1]]
-                idxs.append((row[s[0]], s[1]-s[0], HORIZONTAL, [row[x] for x in range(s[0], s[1])], sum(template.count(a) for a in ALPHABET), template))
+                idxs.append((row[s[0]], s[1] - s[0], HORIZONTAL, [row[x] for x in range(s[0], s[1])],
+                             sum(template.count(a) for a in ALPHABET), template))
     for col in COLS:
         con = "".join(board[x] for x in col)
         if EMPTY not in con:
@@ -254,9 +255,10 @@ def find_indices(board):
             if EMPTY not in r.group(1):
                 continue
             s = r.span(1)
-            if s[1]-s[0] >= 3:
+            if s[1] - s[0] >= 3:
                 template = con[s[0]:s[1]]
-                idxs.append((col[s[0]], s[1]-s[0], VERTICAL, [col[x] for x in range(s[0], s[1])], sum(template.count(a) for a in ALPHABET), template))
+                idxs.append((col[s[0]], s[1] - s[0], VERTICAL, [col[x] for x in range(s[0], s[1])],
+                             sum(template.count(a) for a in ALPHABET), template))
     for i in idxs:
         for j in idxs:
             key = (i[0], i[2])
@@ -268,14 +270,14 @@ def find_indices(board):
     return sorted(possible_words(idxs), key=lambda x: x[4])
 
 
-def is_invalid(board):
+def is_valid(board):
     tried = set()
     for index in ALL_INDICES:
         con = "".join(board[x] for x in index[3])
         if con not in DICTIONARY or con in tried:
-            return True
+            return False
         tried.add(con)
-    return False
+    return board
 
 
 def solve(board, indices, tried, depth=0):
@@ -284,7 +286,7 @@ def solve(board, indices, tried, depth=0):
         if not i[6]:
             return False
     if EMPTY not in board:
-        return board if not is_invalid(board) else False
+        return is_valid(board)
     if depth > BEST_DEPTH:
         print(to_string(board), '\n')
         BEST_DEPTH = depth
@@ -296,7 +298,7 @@ def solve(board, indices, tried, depth=0):
         new_board = place_word(board, word, i[0], i[2])
         if new_board:
             tried.add(word)
-            s = solve(new_board, update_indices(new_board, indices, i), tried, depth+1)
+            s = solve(new_board, update_indices(new_board, indices, i), tried, depth + 1)
             if s:
                 return s
             tried.remove(word)
@@ -309,26 +311,23 @@ def main():
     parse_args()
 
     gen_lookups()
-    board, blocks = place_words([*EMPTY*AREA], BLOCKS)
+    board, blocks = place_words([*EMPTY * AREA], BLOCKS)
 
     if BLOCKS == AREA:
         board = [*BLOCK * AREA]
     elif blocks == 0:
-         board = finish(board)
-    else:
-        if AREA % 2 and blocks % 2:
-            board[CENTER] = BLOCK
-            blocks -= 1
-        board = finish(create_board(board, blocks))
+        board = finish(board)
+    elif AREA % 2 and blocks % 2:
+        board[CENTER] = BLOCK
+        blocks -= 1
+    board = finish(create_board(board, blocks))
 
     load_words(FILE)
     indices = find_indices(board)
     ALL_INDICES = indices
-    print(to_string(board),'\n\n')
+    print(to_string(board), '\n\n')
 
-    sol = solve(board, indices, set())
-    if sol:
-        return to_string(sol)
+    return to_string(solve(board, indices, set()))
 
 
 def parse_args():
@@ -351,7 +350,7 @@ def parse_args():
         else:
             HEIGHT, WIDTH = (int(x) for x in arg.split("x"))
     AREA = HEIGHT * WIDTH
-    CENTER = AREA//2
+    CENTER = AREA // 2
     INDICES = {
         index: (index // WIDTH, (index % WIDTH)) for index in range(AREA)
     }  # idx -> (row, col)
@@ -379,7 +378,7 @@ def gen_lookups():
     ROWS = [[*range(i, i + WIDTH)] for i in range(0, AREA, WIDTH)]
     COLS = [[*range(i, AREA, WIDTH)] for i in range(0, WIDTH)]
     ALL_CONSTRAINTS = ROWS + COLS
-    CONSTRAINTS = {i: (ROWS[i//WIDTH], COLS[i%WIDTH], set(ROWS[i//WIDTH]+COLS[i%WIDTH])) for i in range(AREA)}
+    CONSTRAINTS = {i: (ROWS[i // WIDTH], COLS[i % WIDTH], set(ROWS[i // WIDTH] + COLS[i % WIDTH])) for i in range(AREA)}
 
 
 def place_words(board, num_blocks):
@@ -405,23 +404,23 @@ def place_words(board, num_blocks):
 
 def load_words(file):
     global WORDS_BY_ALPHA, WORDS_BY_LENGTH, COMMON_LETTERS
-    start = ord('a')
-    DICTIONARY.add(EMPTY*WIDTH)
-    DICTIONARY.add(EMPTY*HEIGHT)
-    max_length = len(max(open(file).read().splitlines(), key=lambda x: len(x)))+1
-    words_by_alpha, words_by_length = [[] for i in range(26)], [[] for i in range(max_length)]
-    letters = [[0, chr(i+start)] for i in range(26)]
+    alpha_start = ord('a')
+    DICTIONARY.add(EMPTY * WIDTH)
+    DICTIONARY.add(EMPTY * HEIGHT)
+    max_length = len(max(open(file).read().splitlines(), key=lambda x: len(x))) + 1
+    words_by_alpha, words_by_length = [[] for _ in range(26)], [[] for _ in range(max_length)]
+    letters = [[0, chr(i + alpha_start)] for i in range(26)]
     for word in open(file).read().splitlines():
         if len(word) <= 2:
             continue
         w = word.lower()
         DICTIONARY.add(w)
-        words_by_alpha[ord(w[0])-start].append(w)
+        words_by_alpha[ord(w[0]) - alpha_start].append(w)
         words_by_length[len(word)].append(w)
         for pos, letter in enumerate(w):
             if letter not in ALPHABET:
                 continue
-            letters[ord(letter)-start][0] += 1
+            letters[ord(letter) - alpha_start][0] += 1
     COMMON_LETTERS = [x[0] for x in letters]
     WORDS_BY_ALPHA = [sorted(word_list, key=lambda x: len(x)) for word_list in words_by_alpha]
     WORDS_BY_LENGTH = [sorted(x, key=lambda y: word_occurrence(y, COMMON_LETTERS)) for x in words_by_length]
@@ -429,7 +428,7 @@ def load_words(file):
 
 def word_occurrence(word, letter_occurrences):
     d = {x: word.count(x) for x in word}
-    return sum(letter_occurrences[ord(x)-ord('a')]*y for x, y in d.items() if x in ALPHABET)
+    return sum(letter_occurrences[ord(x) - ord('a')] * y for x, y in d.items() if x in ALPHABET)
 
 
 def finish(board):
@@ -437,7 +436,7 @@ def finish(board):
         if seed[0] == "H":
             idx = INDICES_2D[(seed[1], seed[2])]
             for i in range(len(seed[3])):
-                board[idx+i] = seed[3][i].lower()
+                board[idx + i] = seed[3][i].lower()
         elif seed[0] == "V":
             idx = INDICES_2D[(seed[1], seed[2])]
             for i in range(len(seed[3])):
@@ -448,4 +447,4 @@ def finish(board):
 if __name__ == '__main__':
     start = time()
     print(main())
-    print(time()-start)
+    print(time() - start)
