@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # Anup Bagali Period 2
 import sys
-from re import compile, IGNORECASE, match
+from re import compile, IGNORECASE
 from time import time
 
 SEED_REGEX = compile(r'([VH])(\d*)x(\d*)(.+)', IGNORECASE)
@@ -27,21 +27,17 @@ NEIGHBORS = {}  # idx -> [neighbors]
 ROWS = []  # [ [idxs in row 0], [idxs in row 1]]
 COLS = []  # [ [idxs in col 0], [idxs in col 1]]
 ALL_CONSTRAINTS = []  # [[row0], [row1], [col0], col[1]]
-CONSTRAINTS = {}
-SEARCH_CACHE = {}
-FIND_CACHE = {}
-FIT_CACHE = {}
+SEARCH_CACHE, FIT_CACHE = {}, {}
 ALPHABET = {*"abcdefghijklmnopqrstuvxwyz"}
-WORDS_BY_ALPHA, WORDS_BY_LENGTH, COMMON_LETTERS, STARTS_WITH, ALL_INDICES = [], [], [], {}, []
+WORDS_BY_LENGTH, COMMON_LETTERS, ALL_INDICES = [], [], []
 DICTIONARY = set()
 INTERSECTIONS = {}
+ALPHA_START = ord('a')
 BEST_DEPTH = 0
 # INDEX, LENGTH, ORIENTATION, AFFECTED, LETTERS, TEMPLATE, WORDS = 0, 1, 2, 3, 4, 5, 6
 
 
-to_string = lambda pzl: "\n".join(
-    ["".join([pzl[INDICES_2D[(i, j)]][0] for j in range(WIDTH)]) for i in range(HEIGHT)]
-).strip()
+to_string = lambda pzl: "\n".join(["".join([pzl[INDICES_2D[(i, j)]][0] for j in range(WIDTH)]) for i in range(HEIGHT)]).strip()
 
 
 def search(regex, constraint, **kwargs):
@@ -245,8 +241,7 @@ def find_indices(board):
             s = r.span(1)
             if s[1] - s[0] >= 3:
                 template = con[s[0]:s[1]]
-                idxs.append((row[s[0]], s[1] - s[0], HORIZONTAL, [row[x] for x in range(s[0], s[1])],
-                             sum(template.count(a) for a in ALPHABET), template))
+                idxs.append((row[s[0]], s[1] - s[0], HORIZONTAL, [row[x] for x in range(s[0], s[1])], sum(template.count(a) for a in ALPHABET), template))
     for col in COLS:
         con = "".join(board[x] for x in col)
         if EMPTY not in con:
@@ -257,8 +252,7 @@ def find_indices(board):
             s = r.span(1)
             if s[1] - s[0] >= 3:
                 template = con[s[0]:s[1]]
-                idxs.append((col[s[0]], s[1] - s[0], VERTICAL, [col[x] for x in range(s[0], s[1])],
-                             sum(template.count(a) for a in ALPHABET), template))
+                idxs.append((col[s[0]], s[1] - s[0], VERTICAL, [col[x] for x in range(s[0], s[1])], sum(template.count(a) for a in ALPHABET), template))
     for i in idxs:
         for j in idxs:
             key = (i[0], i[2])
@@ -307,7 +301,7 @@ def solve(board, indices, tried, depth=0):
 
 
 def main():
-    global BLOCKS, WORDS_BY_ALPHA, WORDS_BY_LENGTH, COMMON_LETTERS, ALL_INDICES
+    global BLOCKS, WORDS_BY_LENGTH, COMMON_LETTERS, ALL_INDICES
     parse_args()
 
     gen_lookups()
@@ -334,15 +328,8 @@ def parse_args():
     global HEIGHT, WIDTH, SEEDS, FILE, BLOCKS, INDICES, INDICES_2D, AREA, CENTER
     for arg in sys.argv[1:]:
         if "H" == arg[0].upper() or "V" == arg[0].upper():
-            groups = match(SEED_REGEX, arg).groups()
-            SEEDS.append(
-                (
-                    groups[0].upper(),
-                    int(groups[1]),
-                    int(groups[2]),
-                    [*groups[3].lower()],
-                )
-            )
+            groups = search(SEED_REGEX, arg).groups()
+            SEEDS.append((groups[0].upper(), int(groups[1]), int(groups[2]), [*groups[3].lower()]))
         elif ".txt" in arg:
             FILE = arg
         elif arg.isdigit():
@@ -351,16 +338,12 @@ def parse_args():
             HEIGHT, WIDTH = (int(x) for x in arg.split("x"))
     AREA = HEIGHT * WIDTH
     CENTER = AREA // 2
-    INDICES = {
-        index: (index // WIDTH, (index % WIDTH)) for index in range(AREA)
-    }  # idx -> (row, col)
-    INDICES_2D = {
-        (i, j): i * WIDTH + j for i in range(HEIGHT) for j in range(WIDTH)
-    }  # (row, col) -> idx
+    INDICES = {index: (index // WIDTH, (index % WIDTH)) for index in range(AREA)}  # idx -> (row, col)
+    INDICES_2D = {(i, j): i * WIDTH + j for i in range(HEIGHT) for j in range(WIDTH)}  # (row, col) -> idx
 
 
 def gen_lookups():
-    global NEIGHBORS, ROTATIONS, ROWS, COLS, ALL_CONSTRAINTS, CONSTRAINTS
+    global NEIGHBORS, ROTATIONS, ROWS, COLS, ALL_CONSTRAINTS
     for index in range(0, AREA):  # saves all possible neighbors for all indices
         row = index // WIDTH
         neighbors = [i for i in [index + WIDTH, index - WIDTH] if 0 <= i < AREA]
@@ -370,15 +353,11 @@ def gen_lookups():
             neighbors.append(index - 1)
         NEIGHBORS[index] = neighbors
 
-    ROTATIONS = {
-        i: INDICES_2D[(HEIGHT - INDICES[i][0] - 1, WIDTH - INDICES[i][1] - 1)]
-        for i in range(AREA)
-    }
+    ROTATIONS = {i: INDICES_2D[(HEIGHT - INDICES[i][0] - 1, WIDTH - INDICES[i][1] - 1)] for i in range(AREA)}
 
     ROWS = [[*range(i, i + WIDTH)] for i in range(0, AREA, WIDTH)]
     COLS = [[*range(i, AREA, WIDTH)] for i in range(0, WIDTH)]
     ALL_CONSTRAINTS = ROWS + COLS
-    CONSTRAINTS = {i: (ROWS[i // WIDTH], COLS[i % WIDTH], set(ROWS[i // WIDTH] + COLS[i % WIDTH])) for i in range(AREA)}
 
 
 def place_words(board, num_blocks):
@@ -403,32 +382,27 @@ def place_words(board, num_blocks):
 
 
 def load_words(file):
-    global WORDS_BY_ALPHA, WORDS_BY_LENGTH, COMMON_LETTERS
-    alpha_start = ord('a')
+    global WORDS_BY_LENGTH, COMMON_LETTERS
     DICTIONARY.add(EMPTY * WIDTH)
     DICTIONARY.add(EMPTY * HEIGHT)
-    max_length = len(max(open(file).read().splitlines(), key=lambda x: len(x))) + 1
-    words_by_alpha, words_by_length = [[] for _ in range(26)], [[] for _ in range(max_length)]
-    letters = [[0, chr(i + alpha_start)] for i in range(26)]
-    for word in open(file).read().splitlines():
+    words = open(file).read().splitlines()
+    max_length = len(max(words, key=lambda x: len(x))) + 1
+    WORDS_BY_LENGTH, COMMON_LETTERS = [[] for _ in range(max_length)], [0 for _ in range(26)]
+    for word in words:
         if len(word) <= 2:
             continue
         w = word.lower()
         DICTIONARY.add(w)
-        words_by_alpha[ord(w[0]) - alpha_start].append(w)
-        words_by_length[len(word)].append(w)
+        WORDS_BY_LENGTH[len(word)].append(w)
         for pos, letter in enumerate(w):
             if letter not in ALPHABET:
                 continue
-            letters[ord(letter) - alpha_start][0] += 1
-    COMMON_LETTERS = [x[0] for x in letters]
-    WORDS_BY_ALPHA = [sorted(word_list, key=lambda x: len(x)) for word_list in words_by_alpha]
-    WORDS_BY_LENGTH = [sorted(x, key=lambda y: word_occurrence(y, COMMON_LETTERS)) for x in words_by_length]
+            COMMON_LETTERS[ord(letter) - ALPHA_START] += 1
 
 
 def word_occurrence(word, letter_occurrences):
     d = {x: word.count(x) for x in word}
-    return sum(letter_occurrences[ord(x) - ord('a')] * y for x, y in d.items() if x in ALPHABET)
+    return sum(letter_occurrences[ord(x) - ALPHA_START] * y for x, y in d.items() if x in ALPHABET)
 
 
 def finish(board):
