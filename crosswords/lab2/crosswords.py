@@ -31,11 +31,12 @@ CONSTRAINTS = {}
 SEARCH_CACHE = {}
 FIND_CACHE = {}
 FIT_CACHE = {}
-ALPHABET = "abcdefghijklmnopqrstuvxwyz"
+ALPHABET = {*"abcdefghijklmnopqrstuvxwyz"}
 WORDS_BY_ALPHA, WORDS_BY_LENGTH, COMMON_LETTERS, STARTS_WITH = [], [], [], {}
 DICTIONARY = set()
 INTERSECTIONS = {}
 BEST_DEPTH = 0
+# INDEX, LENGTH, ORIENTATION, AFFECTED, LETTERS, TEMPLATE, WORDS = 0, 1, 2, 3, 4, 5, 6
 
 
 to_string = lambda pzl: "\n".join(
@@ -202,13 +203,12 @@ def can_fit(template, word):
     if key in FIT_CACHE:
         return FIT_CACHE[key]
     else:
-        fit = True
-        for x,y in zip(template, word):
+        for x, y in zip(template, word):
             if x != y and x != EMPTY:
-                fit = False
-                break
-        FIT_CACHE[key] = fit
-        return fit
+                FIT_CACHE[key] = False
+                return False
+        FIT_CACHE[key] = True
+        return True
 
 
 def update_indices(board, indices, removed_index):
@@ -216,17 +216,21 @@ def update_indices(board, indices, removed_index):
     new_indices = []
     for i in range(len(indices)):
         old = indices[i]
-        template, new_words = old[3], old[5]
-        if (old[0], old[2]) in intersections:
-            template = "".join(board[x] for x in old[4])
+        template, new_words = old[5], old[6]
+        count = old[4]
+        if intersections.__contains__((old[0], old[2])):
+            template, count = "", 0
+            for idx in old[3]:
+                template += board[idx]
+                if ALPHABET.__contains__(board[idx]):
+                    count += 1
             new_words = [word for word in new_words if can_fit(template, word)]
-        new_indices.append((old[0], old[1], old[2], template, old[4], new_words))
-    return sorted(new_indices, key=lambda x: sum(x[3].count(a) for a in ALPHABET) - len(x[5]))
+        new_indices.append((*old[:4], count, template, new_words))
+    return sorted(new_indices, key=lambda x: x[4] - len(x[6]) )
 
 
 def possible_words(indices):
-    return [(*i, sorted([word for word in WORDS_BY_LENGTH[i[1]] if can_fit(i[3], word)],
-                        key=lambda x: -word_occurrence(x, COMMON_LETTERS))) for i in indices]
+    return [(*i, sorted([word for word in WORDS_BY_LENGTH[i[1]] if can_fit(i[5], word)], key=lambda x: -word_occurrence(x, COMMON_LETTERS))) for i in indices]
 
 
 def find_indices(board):
@@ -240,7 +244,8 @@ def find_indices(board):
                 continue
             s = r.span(1)
             if s[1]-s[0] >= 3:
-                idxs.append((row[s[0]], s[1]-s[0], HORIZONTAL, con[s[0]:s[1]], [row[x] for x in range(s[0], s[1])]))
+                template = con[s[0]:s[1]]
+                idxs.append((row[s[0]], s[1]-s[0], HORIZONTAL, [row[x] for x in range(s[0], s[1])], sum(template.count(a) for a in ALPHABET), template))
     for col in COLS:
         con = "".join(board[x] for x in col)
         if EMPTY not in con:
@@ -250,16 +255,17 @@ def find_indices(board):
                 continue
             s = r.span(1)
             if s[1]-s[0] >= 3:
-                idxs.append((col[s[0]], s[1]-s[0], VERTICAL, con[s[0]:s[1]], [col[x] for x in range(s[0], s[1])]))
+                template = con[s[0]:s[1]]
+                idxs.append((col[s[0]], s[1]-s[0], VERTICAL, [col[x] for x in range(s[0], s[1])], sum(template.count(a) for a in ALPHABET), template))
     for i in idxs:
         for j in idxs:
             key = (i[0], i[2])
-            if {*j[4]}&{*i[4]}:
+            if {*j[3]} & {*i[3]}:
                 if key in INTERSECTIONS:
                     INTERSECTIONS[key].add((j[0], j[2]))
                 else:
                     INTERSECTIONS[key] = {(j[0], j[2])}
-    return sorted(possible_words(idxs), key=lambda x: sum(x[3].count(a) for a in ALPHABET))
+    return sorted(possible_words(idxs), key=lambda x: x[4])
 
 
 def is_invalid(board):
@@ -274,16 +280,16 @@ def is_invalid(board):
 def solve(board, indices, tried, depth=0):
     global BEST_DEPTH
     for i in indices:
-        if not i[5]:
+        if not i[6]:
             return False
     if EMPTY not in board:
-        return board #if not is_invalid(board) else False
+        return board # if not is_invalid(board) else False
     if depth > BEST_DEPTH:
         print(to_string(board), '\n')
         BEST_DEPTH = depth
 
     i = indices.pop(-1)
-    for word in i[5]:
+    for word in i[6]:
         if word in tried:
             continue
         new_board = place_word(board, word, i[0], i[2])
