@@ -1,5 +1,5 @@
 indices = [
-(idx, length, H|V, str, indices affected, [words])
+(idx, length, H|V, indices affected, amt_of_letters, str, [words])
 ]
 
 words = ['abc', 'abcd', 'code', 'done', 'corn']
