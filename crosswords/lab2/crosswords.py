@@ -148,10 +148,32 @@ def create_board(board, num_blocks):
     return None
 
 
+def h(x):
+    if not x:
+        return -100000
+
+
+def try_block(board, index, blocks):
+    tmp, rotated = board[:], ROTATIONS[index]
+    if tmp[index] == tmp[rotated] == PROTECTED:
+        return False
+    if tmp[index] == EMPTY:
+        blocks -= 1
+        if blocks < 0:
+            return False
+        tmp[index] = BLOCK
+    if tmp[rotated] == EMPTY:
+        blocks -= 1
+        if blocks < 0:
+            return False
+        tmp[index] = BLOCK
+    return tmp
+
+
 def place_block(board, index, blocks):
     tried = set()
     rotated = ROTATIONS[index]
-    if board[index] == PROTECTED and board[rotated] == PROTECTED:
+    if board[index] == board[rotated] == PROTECTED:
         return False
     if board[index] == EMPTY:
         blocks -= 1
