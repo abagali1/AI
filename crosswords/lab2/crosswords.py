@@ -9,6 +9,7 @@ WORD_START_REGEX = compile(r'^([-$]{1,2})#')
 WORD_MIDDLE_REGEX = compile(r'#([-$]{1,2})#')
 WORD_END_REGEX = compile(r'#([-$]{1,2})$')
 POSSIBLE_REGEX = compile(r"([-\w]+)", IGNORECASE)
+WORD_REGEX = compile(r"#*([-$]{3,})#*")
 HORIZONTAL = 1
 VERTICAL = 0
 
@@ -79,6 +80,8 @@ def connected_components(board):
 
 
 def implicit_blocks(board, blocks):
+    if not board:
+        return False
     tried = set()
     for constraint in ALL_CONSTRAINTS:
         con = "".join(board[x] for x in constraint)
@@ -121,6 +124,7 @@ def implicit_blocks(board, blocks):
 
 
 def create_board(board, num_blocks):
+    global H_CACHE
     implicit = implicit_blocks(board, num_blocks)
     if not implicit:
         return False
@@ -133,7 +137,9 @@ def create_board(board, num_blocks):
     elif num_blocks <= 0:
         return board
 
-    set_of_choices = sorted([pos for pos, elem in enumerate(board) if elem == EMPTY], key=lambda x: h(board, num_blocks, x))
+    set_of_choices = sorted([pos for pos, elem in enumerate(board) if elem == EMPTY],
+                            key=lambda x: h(board, num_blocks, x))
+    H_CACHE = {}
     tried = set()
     for choice in set_of_choices:
         n = place_block(board, choice, num_blocks)
@@ -149,39 +155,26 @@ def create_board(board, num_blocks):
     return None
 
 
-def bfs_blocks(board, start):
-    visited, queue = {start}, [start]
-    count = 0
-    for index in queue:
-        for neighbor in NEIGHBORS[index]:
-            if board[neighbor] == BLOCK and neighbor not in visited:
-                queue.append(neighbor)
-                visited.add(neighbor)
-                count += 1
-    return visited
-
-
-def h(board, blocks, x):
+def h(b, blocks, x):
+    board = b.copy()
     if x in H_CACHE:
         return H_CACHE[x]
     else:
         board = try_block(board, x, blocks)
+        # implicit = implicit_blocks(board, blocks)
         if not board:
-            H_CACHE[x] = H_CACHE[ROTATIONS[x]] = 1e9
-            return 1e9
+            H_CACHE[x] = H_CACHE[ROTATIONS[x]] = 1e99
+            return 1e99
         else:
-            visited, count = set(), 0
-            components = []
-            for pos, elem in enumerate(board):
-                if elem != BLOCK or pos in visited:
-                    continue
-                comp = bfs_blocks(board, pos)
-                visited |= comp
-                components.append(comp)
-                count += 1
-            val = count*.1 + sum(len(x) for x in components)*50
-            H_CACHE[x] = H_CACHE[ROTATIONS[x]] = val
-            return val
+            words, word_length = 0, 0
+            for constraint in ALL_CONSTRAINTS:
+                for r in WORD_REGEX.finditer("".join(board[x] for x in constraint)):
+                    if r:
+                        s, end = r.span(1)
+                        word_length += end - s
+                        words += 1
+            H_CACHE[x] = H_CACHE[ROTATIONS[x]] = -words * word_length
+            return -words + word_length
 
 
 def try_block(board, index, blocks):
