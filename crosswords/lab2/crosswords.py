@@ -32,6 +32,7 @@ ALPHABET = {*"abcdefghijklmnopqrstuvxwyz"}
 WORDS_BY_LENGTH, COMMON_LETTERS, ALL_INDICES = [], [], []
 DICTIONARY = set()
 INTERSECTIONS = {}
+H_CACHE = {}
 ALPHA_START = ord('a')
 BEST_DEPTH = 0
 # INDEX, LENGTH, ORIENTATION, AFFECTED, LETTERS, TEMPLATE, WORDS = 0, 1, 2, 3, 4, 5, 6
@@ -132,7 +133,7 @@ def create_board(board, num_blocks):
     elif num_blocks <= 0:
         return board
 
-    set_of_choices = [pos for pos, elem in enumerate(board) if elem == EMPTY]
+    set_of_choices = sorted([pos for pos, elem in enumerate(board) if elem == EMPTY], key=lambda x: h(board, num_blocks, x))
     tried = set()
     for choice in set_of_choices:
         n = place_block(board, choice, num_blocks)
@@ -148,9 +149,39 @@ def create_board(board, num_blocks):
     return None
 
 
-def h(x):
-    if not x:
-        return -100000
+def bfs_blocks(board, start):
+    visited, queue = {start}, [start]
+    count = 0
+    for index in queue:
+        for neighbor in NEIGHBORS[index]:
+            if board[neighbor] == BLOCK and neighbor not in visited:
+                queue.append(neighbor)
+                visited.add(neighbor)
+                count += 1
+    return visited
+
+
+def h(board, blocks, x):
+    if x in H_CACHE:
+        return H_CACHE[x]
+    else:
+        board = try_block(board, x, blocks)
+        if not board:
+            H_CACHE[x] = H_CACHE[ROTATIONS[x]] = 1e9
+            return 1e9
+        else:
+            visited, count = set(), 0
+            components = []
+            for pos, elem in enumerate(board):
+                if elem != BLOCK or pos in visited:
+                    continue
+                comp = bfs_blocks(board, pos)
+                visited |= comp
+                components.append(comp)
+                count += 1
+            val = count*.1 + sum(len(x) for x in components)*50
+            H_CACHE[x] = H_CACHE[ROTATIONS[x]] = val
+            return val
 
 
 def try_block(board, index, blocks):
@@ -337,11 +368,11 @@ def main():
         board[CENTER] = BLOCK
         blocks -= 1
     board = finish(create_board(board, blocks))
+    print(to_string(board), '\n\n')
 
     load_words(FILE)
     indices = find_indices(board)
     ALL_INDICES = indices
-    print(to_string(board), '\n\n')
 
     return to_string(solve(board, indices, set()))
 
