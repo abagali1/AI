@@ -18,6 +18,7 @@ EMPTY = "-"
 PROTECTED = "$"
 FILE = ""
 
+DEBUG = False
 SEEDS = []
 HEIGHT, WIDTH, AREA, BLOCKS, CENTER = 0, 0, 0, 0, 0
 PLACED = set()
@@ -35,7 +36,7 @@ DICTIONARY = set()
 INTERSECTIONS = {}
 H_CACHE = {}
 ALPHA_START = ord('a')
-BEST_DEPTH = 0
+BEST_DEPTH = -1
 # INDEX, LENGTH, ORIENTATION, AFFECTED, LETTERS, TEMPLATE, WORDS = 0, 1, 2, 3, 4, 5, 6
 
 
@@ -320,6 +321,15 @@ def is_valid(board):
     return board
 
 
+def debug(board, depth):
+    global BEST_DEPTH, DEBUG
+    if not DEBUG:
+        return
+    if depth > BEST_DEPTH:
+        print(to_string(board), '\n')
+        BEST_DEPTH = depth
+
+
 def solve(board, indices, tried, depth=0):
     global BEST_DEPTH
     for i in indices:
@@ -327,9 +337,7 @@ def solve(board, indices, tried, depth=0):
             return False
     if EMPTY not in board:
         return is_valid(board)
-    if depth > BEST_DEPTH:
-        print(to_string(board), '\n')
-        BEST_DEPTH = depth
+    debug(board, depth)
 
     i = indices.pop(-1)
     for word in i[6]:
@@ -361,7 +369,7 @@ def main():
         board[CENTER] = BLOCK
         blocks -= 1
     board = finish(create_board(board, blocks))
-    print(to_string(board), '\n\n')
+    debug(board, 0)
 
     load_words(FILE)
     indices = find_indices(board)
