@@ -157,7 +157,7 @@ def create_board(board, num_blocks):
 
 
 def h(b, blocks, x):
-    board = b.copy()
+    board = b[:]
     if x in H_CACHE:
         return H_CACHE[x]
     else:
