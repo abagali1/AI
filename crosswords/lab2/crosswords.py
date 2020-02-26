@@ -236,7 +236,7 @@ def can_fit(template, word):
     if key in FIT_CACHE:
         return FIT_CACHE[key]
     else:
-        for x, y in zip(template, word):
+        for x, y in zip(*key):
             if x != y and x != EMPTY:
                 FIT_CACHE[key] = False
                 return False
