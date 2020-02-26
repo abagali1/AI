@@ -121,7 +121,7 @@ def brute_force(board, num_blocks):
     if num_blocks <= 0:
         return board
 
-    set_of_choices = [pos for pos, elem in enumerate(board) if elem == EMPTY]
+    set_of_choices = [i for i in range(CENTER) if board[i] == EMPTY]
     tried = set()
     for choice in set_of_choices:
         n = place_block(board, choice, num_blocks)
@@ -135,6 +135,7 @@ def brute_force(board, num_blocks):
                 num_blocks += 1
             tried = set()
     return None
+
 
 
 def place_block(board, index, blocks):

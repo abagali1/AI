@@ -34,7 +34,6 @@ ALPHABET = {*"abcdefghijklmnopqrstuvxwyz"}
 WORDS_BY_LENGTH, COMMON_LETTERS, ALL_INDICES = [], [], []
 DICTIONARY = set()
 INTERSECTIONS = {}
-H_CACHE = {}
 ALPHA_START = ord('a')
 BEST_DEPTH = -1
 # INDEX, LENGTH, ORIENTATION, AFFECTED, LETTERS, TEMPLATE, WORDS = 0, 1, 2, 3, 4, 5, 6
@@ -125,7 +124,6 @@ def implicit_blocks(board, blocks):
 
 
 def create_board(board, num_blocks):
-    global H_CACHE
     implicit = implicit_blocks(board, num_blocks)
     if not implicit:
         return False
@@ -138,9 +136,7 @@ def create_board(board, num_blocks):
     elif num_blocks <= 0:
         return board
 
-    set_of_choices = sorted([pos for pos, elem in enumerate(board) if elem == EMPTY],
-                            key=lambda x: h(board, num_blocks, x))
-    H_CACHE = {}
+    set_of_choices= sorted([i for i in range(CENTER) if board[i] == EMPTY], key=lambda x: h(board, num_blocks, x))
     tried = set()
     for choice in set_of_choices:
         n = place_block(board, choice, num_blocks)
@@ -158,24 +154,19 @@ def create_board(board, num_blocks):
 
 def h(b, blocks, x):
     board = b[:]
-    if x in H_CACHE:
-        return H_CACHE[x]
+    board = try_block(board, x, blocks)
+    # implicit = implicit_blocks(board, blocks)
+    if not board:
+        return 1e99
     else:
-        board = try_block(board, x, blocks)
-        # implicit = implicit_blocks(board, blocks)
-        if not board:
-            H_CACHE[x] = H_CACHE[ROTATIONS[x]] = 1e99
-            return 1e99
-        else:
-            words, word_length = 0, 0
-            for constraint in ALL_CONSTRAINTS:
-                for r in WORD_REGEX.finditer("".join(board[x] for x in constraint)):
-                    if r:
-                        s, end = r.span(1)
-                        word_length += end - s
-                        words += 1
-            H_CACHE[x] = H_CACHE[ROTATIONS[x]] = -words * word_length
-            return -words + word_length
+        words, word_length = 0, 0
+        for constraint in ALL_CONSTRAINTS:
+            for r in WORD_REGEX.finditer("".join(board[x] for x in constraint)):
+                if r:
+                    s, end = r.span(1)
+                    word_length += end - s
+                    words += 1
+        return -words + word_length
 
 
 def try_block(board, index, blocks):
