@@ -224,20 +224,10 @@ def place_protected(board, index):
     return False
 
 
-def place_word(board, word, index, horizontal):
-    tmp = board.copy()
-    if horizontal:
-        for i in range(len(word)):
-            idx = index + i
-            if tmp[idx] != EMPTY and tmp[idx] != word[i]:
-                return False
-            tmp[idx] = word[i]
-    else:
-        for i in range(len(word)):
-            idx = index + (WIDTH * i)
-            if tmp[idx] != EMPTY and tmp[idx] != word[i]:
-                return False
-            tmp[idx] = word[i]
+def place_word(board, length, covered, word):
+    tmp = board[:]
+    for i in range(length):
+        tmp[covered[i]] = word[i]
     return tmp
 
 
@@ -343,7 +333,7 @@ def solve(board, indices, tried, depth=0):
     for word in i[6]:
         if word in tried:
             continue
-        new_board = place_word(board, word, i[0], i[2])
+        new_board = place_word(board, i[1], i[3], word)
         if new_board:
             tried.add(word)
             s = solve(new_board, update_indices(new_board, indices, i), tried, depth + 1)
