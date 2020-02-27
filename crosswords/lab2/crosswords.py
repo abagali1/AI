@@ -136,7 +136,7 @@ def create_board(board, num_blocks):
     elif num_blocks <= 0:
         return board
 
-    set_of_choices= sorted([i for i in range(CENTER) if board[i] == EMPTY], key=lambda x: h(board, num_blocks, x))
+    set_of_choices= sorted([i for i in range(CENTER) if board[i] == EMPTY], key=lambda x: h(board, x))
     tried = set()
     for choice in set_of_choices:
         n = place_block(board, choice, num_blocks)
@@ -152,38 +152,8 @@ def create_board(board, num_blocks):
     return None
 
 
-def h(b, blocks, x):
-    board = b[:]
-    board = try_block(board, x, blocks)
-    # implicit = implicit_blocks(board, blocks)
-    if not board:
-        return 1e99
-    else:
-        words, word_length = 0, 0
-        for constraint in ALL_CONSTRAINTS:
-            for r in WORD_REGEX.finditer("".join(board[x] for x in constraint)):
-                if r:
-                    s, end = r.span(1)
-                    word_length += end - s
-                    words += 1
-        return -words + word_length
-
-
-def try_block(board, index, blocks):
-    tmp, rotated = board[:], ROTATIONS[index]
-    if tmp[index] == tmp[rotated] == PROTECTED:
-        return False
-    if tmp[index] == EMPTY:
-        blocks -= 1
-        if blocks < 0:
-            return False
-        tmp[index] = BLOCK
-    if tmp[rotated] == EMPTY:
-        blocks -= 1
-        if blocks < 0:
-            return False
-        tmp[index] = BLOCK
-    return tmp
+def h(board, x):
+    pass
 
 
 def place_block(board, index, blocks):

@@ -137,7 +137,6 @@ def brute_force(board, num_blocks):
     return None
 
 
-
 def place_block(board, index, blocks):
     tried = set()
     rotated = ROTATIONS[index]
