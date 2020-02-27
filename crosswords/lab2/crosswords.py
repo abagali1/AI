@@ -18,7 +18,6 @@ EMPTY = "-"
 PROTECTED = "$"
 FILE = ""
 
-DEBUG = False
 SEEDS = []
 HEIGHT, WIDTH, AREA, BLOCKS, CENTER = 0, 0, 0, 0, 0
 PLACED = set()
@@ -34,8 +33,9 @@ ALPHABET = {*"abcdefghijklmnopqrstuvxwyz"}
 WORDS_BY_LENGTH, COMMON_LETTERS, ALL_INDICES = [], [], []
 DICTIONARY = set()
 INTERSECTIONS = {}
+H_CACHE = {}
 ALPHA_START = ord('a')
-BEST_DEPTH = -1
+BEST_DEPTH = 0
 # INDEX, LENGTH, ORIENTATION, AFFECTED, LETTERS, TEMPLATE, WORDS = 0, 1, 2, 3, 4, 5, 6
 
 
@@ -124,6 +124,7 @@ def implicit_blocks(board, blocks):
 
 
 def create_board(board, num_blocks):
+    global H_CACHE
     implicit = implicit_blocks(board, num_blocks)
     if not implicit:
         return False
@@ -136,7 +137,9 @@ def create_board(board, num_blocks):
     elif num_blocks <= 0:
         return board
 
-    set_of_choices= sorted([i for i in range(CENTER) if board[i] == EMPTY], key=lambda x: h(board, x))
+    set_of_choices = sorted([pos for pos, elem in enumerate(board) if elem == EMPTY],
+                            key=lambda x: h(board, num_blocks, x))
+    H_CACHE = {}
     tried = set()
     for choice in set_of_choices:
         n = place_block(board, choice, num_blocks)
@@ -152,8 +155,43 @@ def create_board(board, num_blocks):
     return None
 
 
-def h(board, x):
-    pass
+def h(b, blocks, x):
+    board = b.copy()
+    if x in H_CACHE:
+        return H_CACHE[x]
+    else:
+        board = try_block(board, x, blocks)
+        # implicit = implicit_blocks(board, blocks)
+        if not board:
+            H_CACHE[x] = H_CACHE[ROTATIONS[x]] = 1e99
+            return 1e99
+        else:
+            words, word_length = 0, 0
+            for constraint in ALL_CONSTRAINTS:
+                for r in WORD_REGEX.finditer("".join(board[x] for x in constraint)):
+                    if r:
+                        s, end = r.span(1)
+                        word_length += end - s
+                        words += 1
+            H_CACHE[x] = H_CACHE[ROTATIONS[x]] = -words * word_length
+            return -words + word_length
+
+
+def try_block(board, index, blocks):
+    tmp, rotated = board[:], ROTATIONS[index]
+    if tmp[index] == tmp[rotated] == PROTECTED:
+        return False
+    if tmp[index] == EMPTY:
+        blocks -= 1
+        if blocks < 0:
+            return False
+        tmp[index] = BLOCK
+    if tmp[rotated] == EMPTY:
+        blocks -= 1
+        if blocks < 0:
+            return False
+        tmp[index] = BLOCK
+    return tmp
 
 
 def place_block(board, index, blocks):
@@ -272,15 +310,6 @@ def is_valid(board):
     return board
 
 
-def debug(board, depth):
-    global BEST_DEPTH, DEBUG
-    if not DEBUG:
-        return
-    if depth > BEST_DEPTH:
-        print(to_string(board), '\n')
-        BEST_DEPTH = depth
-
-
 def solve(board, indices, tried, depth=0):
     global BEST_DEPTH
     for i in indices:
@@ -288,7 +317,6 @@ def solve(board, indices, tried, depth=0):
             return False
     if EMPTY not in board:
         return is_valid(board)
-    debug(board, depth)
 
     i = indices.pop(-1)
     for word in i[6]:
@@ -320,7 +348,6 @@ def main():
         board[CENTER] = BLOCK
         blocks -= 1
     board = finish(create_board(board, blocks))
-    debug(board, 0)
 
     load_words(FILE)
     indices = find_indices(board)
