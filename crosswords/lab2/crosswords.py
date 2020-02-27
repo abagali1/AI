@@ -123,7 +123,7 @@ def implicit_blocks(board, blocks):
     return tried, blocks
 
 
-def create_board(board, num_blocks):
+def create_board(board, num_blocks, sort=False):
     global H_CACHE
     implicit = implicit_blocks(board, num_blocks)
     if not implicit:
@@ -137,15 +137,14 @@ def create_board(board, num_blocks):
     elif num_blocks <= 0:
         return board
 
-    set_of_choices = sorted([pos for pos, elem in enumerate(board) if elem == EMPTY],
-                            key=lambda x: h(board, num_blocks, x))
+    set_of_choices = sorted([i for i in range(AREA) if board[i] == EMPTY], key=lambda x: h(board, num_blocks, x))
     H_CACHE = {}
     tried = set()
     for choice in set_of_choices:
         n = place_block(board, choice, num_blocks)
         if n:
             num_blocks, tried = n[0], tried | n[1]
-            b_f = create_board(board, num_blocks)
+            b_f = create_board(board, num_blocks, sort)
             if b_f:
                 return b_f
             for i in tried:
@@ -347,7 +346,9 @@ def main():
     elif AREA % 2 and blocks % 2:
         board[CENTER] = BLOCK
         blocks -= 1
-    board = finish(create_board(board, blocks))
+    if AREA > 169:
+        sort = True
+    board = finish(create_board(board, blocks, sort=True))
 
     load_words(FILE)
     indices = find_indices(board)
