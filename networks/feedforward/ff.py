@@ -12,14 +12,16 @@ TRANSFERS = {
 
 def read_weights(file, in_nodes):
     weights, count = [], 0
-    for line in open(file).read().splitlines():
+    file = open(file).read().splitlines()
+    for line in file[:-1]:
         w = [float(x) for x in line.split(" ")]
         amt = len(w)
         out_nodes = amt // in_nodes
         weights.append([w[i:i + in_nodes] for i in range(0, amt, in_nodes)])
         in_nodes = out_nodes
         count += 1
-    return weights, count-1
+    weights.append([[float(x)] for x in file[-1].split(" ")])
+    return weights, count
 
 
 def dot(x, y):
@@ -28,8 +30,7 @@ def dot(x, y):
 
 def feedforward(inputs, layers, tf):
     for pos, layer in enumerate(layers[0]):
-        new_inputs = [dot(inputs, weights) for weights in layer]
-        inputs = [tf(x) for x in new_inputs] if pos < layers[1] else new_inputs
+        inputs = [tf(x) for x in [dot(inputs, weights) for weights in layer]] if pos < layers[1] else [dot([inputs[i]], weight) for i, weight in enumerate(layer)]
     return inputs
 
 
