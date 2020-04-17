@@ -35,7 +35,7 @@ def dot(x: list, y: list) -> float:
     :param y: Second matrix
     :return: dot product of two matrices
     """
-    return sum([x[i] * y[i] for i in range(len(y))])
+    return sum(x[i] * y[i] for i in range(len(y)))
 
 
 def feedforward(inputs: list, layers: tuple, tf: callable) -> list:
