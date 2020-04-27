@@ -3,7 +3,6 @@ import io
 import random
 from sys import argv
 from PIL import Image
-from time import time
 from urllib import request
 
 
@@ -43,7 +42,7 @@ def kmeans(k, image):
         else:
             pixel_count[x] = 1
 
-    random_means = random.choices(all_pixels, k=k)
+    random_means = random.sample(all_pixels, k=k)
     organized = {}
     for pixel in all_pixels:
         key = min(random_means, key=lambda x: dist(pixel, x))
@@ -76,8 +75,35 @@ def reconstruct(image, means):
     return image
 
 
+def bfs(pic, start, w, h):
+    queue, visited = [start], {start}
+    color = pic[start]
+
+    for x, y in queue:
+        for neighbor in [(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1), (x + 1, y + 1), (x + 1, y - 1), (x - 1, y + 1),
+                         (x - 1, y - 1)]:
+            if 0 <= neighbor[0] < w and 0 <= neighbor[1] < h and pic[neighbor] == color and neighbor not in visited:
+                queue.append(neighbor)
+                visited.add(neighbor)
+    return visited
+
+
+def connected_components(image):
+    visited, components = set(), []
+    w, h = image.size
+    pix = image.load()
+    for x in range(w):
+        for y in range(h):
+            if (x, y) in visited:
+                continue
+            tmp = bfs(pix, (x, y), w, h)
+            visited |= tmp
+            components.append(tmp)
+    print(len(components))
+    return components
+
+
 def main():
-    start = time()
     random.seed(1738114)
     k, img = int(argv[1]), argv[2]
     img = Image.open(io.BytesIO(request.urlopen(img).read())) if "http" in img else Image.open(open(img, 'rb'))
@@ -91,7 +117,8 @@ def main():
     print("Most common pixel: {} => {}".format(most_common_pixel, pixel_count[most_common_pixel]))
     print("Final means: ")
     for count, kmean in enumerate(kmeanified):
-        print("{}: {} => {}".format(count+1, kmean, sum(pixel_count[x] for x in kmeanified[kmean][1])))
+        print("{}: {} => {}".format(count + 1, kmean, sum(pixel_count[x] for x in kmeanified[kmean][1])))
+    print("Region counts: {}".format(', '.join([str(len(x)) for x in connected_components(img)])))
 
 
 if __name__ == "__main__":
