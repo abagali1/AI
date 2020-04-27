@@ -99,7 +99,6 @@ def connected_components(image):
             tmp = bfs(pix, (x, y), w, h)
             visited |= tmp
             components.append(tmp)
-    print(len(components))
     return components
 
 
@@ -111,8 +110,9 @@ def main():
     reconstruct(img, kmeanified).save("kmeans/2021abagali.png", "PNG")
 
     most_common_pixel = max(pixel_count, key=pixel_count.get)
-    print("Size: {} x {}".format(*img.size))
-    print("Pixels: {}".format(len(img.getdata())))
+    size = img.size
+    print("Size: {} x {}".format(*size))
+    print("Pixels: {}".format(size[0]*size[1]))
     print("Distinct Pixel Count: {}".format(len(pixel_count)))
     print("Most common pixel: {} => {}".format(most_common_pixel, pixel_count[most_common_pixel]))
     print("Final means: ")
