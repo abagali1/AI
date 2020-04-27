@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import io
-import random
 from sys import argv
 from PIL import Image
 from urllib import request
@@ -42,7 +41,7 @@ def kmeans(k, image):
         else:
             pixel_count[x] = 1
 
-    random_means = random.sample(all_pixels, k=k)
+    random_means = [x[0] for x in sorted([*pixel_count.items()], key=lambda x: x[1])[-k:]]
     organized = {}
     for pixel in all_pixels:
         key = min(random_means, key=lambda x: dist(pixel, x))
@@ -53,17 +52,12 @@ def kmeans(k, image):
         else:
             organized[key] = [pixel_count[pixel], {pixel}]
 
-    for m in organized:
-        assert organized[m][0] == sum(pixel_count[x] for x in organized[m][1])
-
-    gen = 0
     while True:
         o = reorganize(organized, pixel_count)
         if o[0]:
             return organized, pixel_count
         else:
             organized = o[1]
-        gen += 1
 
 
 def reconstruct(image, means):
@@ -89,7 +83,7 @@ def bfs(pic, start, w, h):
 
 
 def connected_components(image):
-    visited, components = set(), []
+    visited, components = set(), {}
     w, h = image.size
     pix = image.load()
     for x in range(w):
@@ -98,27 +92,30 @@ def connected_components(image):
                 continue
             tmp = bfs(pix, (x, y), w, h)
             visited |= tmp
-            components.append(tmp)
+            if pix[x, y] in components:
+                components[pix[x, y]] += 1
+            else:
+                components[pix[x, y]] = 1
     return components
 
 
 def main():
-    random.seed(1738114)
     k, img = int(argv[1]), argv[2]
     img = Image.open(io.BytesIO(request.urlopen(img).read())) if "http" in img else Image.open(open(img, 'rb'))
     kmeanified, pixel_count = kmeans(k, img)
-    reconstruct(img, kmeanified).save("kmeans/2021abagali.png", "PNG")
+    new_image = reconstruct(img, kmeanified)
+    new_image.save("kmeans/2021abagali.png", "PNG")
 
     most_common_pixel = max(pixel_count, key=pixel_count.get)
     size = img.size
     print("Size: {} x {}".format(*size))
-    print("Pixels: {}".format(size[0]*size[1]))
+    print("Pixels: {}".format(size[0] * size[1]))
     print("Distinct Pixel Count: {}".format(len(pixel_count)))
     print("Most common pixel: {} => {}".format(most_common_pixel, pixel_count[most_common_pixel]))
     print("Final means: ")
     for count, kmean in enumerate(kmeanified):
         print("{}: {} => {}".format(count + 1, kmean, sum(pixel_count[x] for x in kmeanified[kmean][1])))
-    print("Region counts: {}".format(', '.join([str(len(x)) for x in connected_components(img)])))
+    print("Region counts: {}".format(', '.join([str(x) for x in connected_components(new_image).values()])))
 
 
 if __name__ == "__main__":
