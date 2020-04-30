@@ -58,7 +58,7 @@ def backprop(layers, ff_outputs, t):
         error = [0 for _ in range(len(layer[0]))]
         for pos, weights in enumerate(layer):
             for p2, weight in enumerate(weights):
-                error[pos] += (weight * prev_error[pos]) * derivative(ff_in[p2])
+                error[p2] += (weight * prev_error[pos]) * derivative(ff_in[p2])
         prev_error = error
     return grad[::-1]
 
@@ -72,10 +72,10 @@ def update_weights(network, grad):
 
 
 def train(network, train_in, train_out):
-    while True:
+    for _ in range(75000):
         for inputs, output in zip(train_in, train_out):
             update_weights(network, backprop(network, feedforward(network, inputs), output[0]))
-        print('\n'.join(map(str, ([', '.join(map(str, weights)) for weights in layer] for layer in network[0]))).replace("'", ""), '\n')
+    print('\n'.join(map(str, ([', '.join(map(str, weights)) for weights in layer] for layer in network[0]))).replace("'", ""), '\n')
 
 
 def main():
