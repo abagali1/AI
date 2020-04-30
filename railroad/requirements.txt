@@ -3,7 +3,7 @@ kiwisolver==1.1.0
 matplotlib==3.1.1
 MouseInfo==0.1.2
 numpy==1.17.2
-Pillow==6.2.0
+Pillow>=6.2.2
 PyGetWindow==0.0.7
 PyMsgBox==1.0.7
 pyparsing==2.4.2

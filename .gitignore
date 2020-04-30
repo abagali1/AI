@@ -7,3 +7,5 @@ venv
 *.log
 WTH_*/
 output.txt
+*.jpg
+*.png
