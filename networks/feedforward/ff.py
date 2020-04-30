@@ -46,9 +46,9 @@ def feedforward(inputs: list, layers: tuple, tf: callable) -> list:
     :param tf: transfer function to use
     :return: list of final values outputted after feedforward
     """
-    for pos, layer in enumerate(layers[0]):
-        inputs = [tf(dot(inputs, weights)) for weights in layer] if pos < layers[1] else [dot([inputs[i]], weight) for i, weight in enumerate(layer)]
-    return inputs
+    for i in range(layers[1]):
+        inputs = [tf(dot(inputs, weights)) for weights in layers[0][i]]
+    return [dot([i], weight) for i, weight in zip(inputs, layers[0][-1])]
 
 
 def main():
