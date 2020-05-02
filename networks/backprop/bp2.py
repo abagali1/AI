@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 from math import exp
 from sys import argv
-from random import random, seed
+from random import random, uniform
 
-ALPHA = 0.1
+ALPHA = 0.15
+DATASET_LENGTH = 100000
+EPOCHS = 5
 
 
 def tf(x):
@@ -22,13 +24,14 @@ def dot(x: list, y: list) -> float:
     return sum(hadamard(x, y))
 
 
-def read_data(file):
-    inputs, outputs = [], []
-    for x in open(file).read().splitlines():
-        mid = x.find("=")
-        inputs.append([float(y) for y in x[:mid - 1].split(" ")] + [1.0])
-        outputs.append([float(y) for y in x[mid + 3:].split(" ")])
-    return inputs, outputs, len(inputs[0]) - 1
+def parse_args(s):
+    ineq, val = "", ""
+    for char in s[7:]:
+        if char.isdigit() or char == ".":
+            val += char
+        else:
+            ineq += char
+    return ineq, val
 
 
 def construct_network(in_nodes):
@@ -71,11 +74,16 @@ def update_weights(network, grad):
     return network
 
 
-def train(network, train_in, train_out):
-    for _ in range(75000):
+def train(network, s):
+    while True:
+        train_in, train_out = [], []
+        for i in range(DATASET_LENGTH):
+            x, y = uniform(-1.5, 1.5), uniform(-1.5, 1.5)
+            train_in.append([x, y, 1])
+            train_out.append([int(eval(s.format(x, y)))])
         for inputs, output in zip(train_in, train_out):
             update_weights(network, backprop(network, feedforward(network, inputs), output[0]))
-    return network
+        print('\n'.join(map(str, ([', '.join(map(str, weights)) for weights in layer] for layer in network[0]))).replace("'", ""), '\n')
 
 
 def test(network, *inputs):
@@ -86,13 +94,10 @@ def test(network, *inputs):
 
 
 def main():
-    seed(1738114)
-    train_in, train_out, in_nodes = read_data(argv[1])
-    network = construct_network(in_nodes)
-    print("Layer Counts: {} {}".format(in_nodes + 1, ' '.join(str(len(x)) for x in network[0])))
-    network = train(network, train_in, train_out)
-    print('\n'.join(map(str, ([', '.join(map(str, weights)) for weights in layer] for layer in network[0]))).replace("'", ""), '\n')
-    print(test(network, 0, 0))
+    network = construct_network(2)
+    print("Layer Counts: {} {}".format(2 + 1, ' '.join(str(len(x)) for x in network[0])))
+    ineq, val = parse_args(argv[1])
+    train(network, "({})**2+({})**2" + ineq + val)
 
 
 if __name__ == "__main__":
