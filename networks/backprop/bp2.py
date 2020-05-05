@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from math import exp
 from sys import argv
-from random import random, uniform
+from random import random, uniform, seed
 
 ALPHA = 0.15
 DATASET_LENGTH = 100000
@@ -75,25 +75,21 @@ def update_weights(network, grad):
 
 
 def train(network, s):
+    train_in, train_out = [], []
+    for i in range(DATASET_LENGTH):
+        x, y = uniform(-1.5, 1.5), uniform(-1.5, 1.5)
+        train_in.append([x, y, 1])
+        train_out.append([int(eval(s.format(x, y)))])
     while True:
-        train_in, train_out = [], []
-        for i in range(DATASET_LENGTH):
-            x, y = uniform(-1.5, 1.5), uniform(-1.5, 1.5)
-            train_in.append([x, y, 1])
-            train_out.append([int(eval(s.format(x, y)))])
         for inputs, output in zip(train_in, train_out):
             update_weights(network, backprop(network, feedforward(network, inputs), output[0]))
-        print('\n'.join(map(str, ([', '.join(map(str, weights)) for weights in layer] for layer in network[0]))).replace("'", ""), '\n')
-
-
-def test(network, *inputs):
-    inputs = [*inputs, 1]
-    for i in range(network[1]):
-        inputs = [tf(dot(inputs, weights)) for weights in network[0][i]]
-    return [dot([i], weight) for i, weight in zip(inputs, network[0][-1])]
+        print(
+            '\n'.join(map(str, ([', '.join(map(str, weights)) for weights in layer] for layer in network[0]))).replace(
+                "'", ""), '\n')
 
 
 def main():
+    seed(1738114)
     network = construct_network(2)
     print("Layer Counts: {} {}".format(2 + 1, ' '.join(str(len(x)) for x in network[0])))
     ineq, val = parse_args(argv[1])
