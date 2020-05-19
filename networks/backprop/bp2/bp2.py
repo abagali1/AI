@@ -32,9 +32,9 @@ def parse_args(s):
 
 def construct_network(in_nodes):
     weights = [
-        [[random() for _ in range(in_nodes + 1)] for _ in range(4)],
-        [[random() for _ in range(4)] for _ in range(2)],
-        [[random() for _ in range(2)]],
+        [[random() for _ in range(in_nodes + 1)] for _ in range(7)],
+        [[random() for _ in range(7)] for _ in range(3)],
+        [[random() for _ in range(3)]],
         [[random()]]
     ]
     return weights, len(weights) - 1
