@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
 from math import exp
 from sys import argv
-from random import random, uniform, seed
+from random import random, seed
 
-ALPHA = 0.15
-DATASET_LENGTH = 100000
-EPOCHS = 5
+ALPHA = 0.1
 
 
 def tf(x):
@@ -16,28 +14,22 @@ def derivative(x):
     return x * (1 - x)
 
 
-def hadamard(x: list, y: list) -> list:
-    return [i * j for i, j in zip(x, y)]
-
-
 def dot(x: list, y: list) -> float:
-    return sum(hadamard(x, y))
+    return sum(i * j for i, j in zip(x, y))
 
 
-def parse_args(s):
-    ineq, val = "", ""
-    for char in s[7:]:
-        if char.isdigit() or char == ".":
-            val += char
-        else:
-            ineq += char
-    return ineq, val
+def read_data(file):
+    inputs, outputs = [], []
+    for x in open(file).read().splitlines():
+        mid = x.find("=")
+        inputs.append([float(y) for y in x[:mid - 1].split(" ")] + [1.0])
+        outputs.append([float(y) for y in x[mid + 3:].split(" ")])
+    return inputs, outputs, len(inputs[0]) - 1
 
 
 def construct_network(in_nodes):
     weights = [
-        [[random() for _ in range(in_nodes + 1)] for _ in range(4)],
-        [[random() for _ in range(4)] for _ in range(2)],
+        [[random() for _ in range(in_nodes + 1)] for _ in range(2)],
         [[random() for _ in range(2)]],
         [[random()]]
     ]
@@ -75,26 +67,28 @@ def update_weights(network, grad):
     return network
 
 
-def train(network, s):
-    train_in, train_out = [], []
-    for i in range(DATASET_LENGTH):
-        x, y = uniform(-1.5, 1.5), uniform(-1.5, 1.5)
-        train_in.append([x, y, 1])
-        train_out.append([int(eval(s.format(x, y)))])
-    while True:
+def train(network, train_in, train_out):
+    for _ in range(75000):
         for inputs, output in zip(train_in, train_out):
             update_weights(network, backprop(network, feedforward(network, inputs), output[0]))
-        print(
-            '\n'.join(map(str, ([', '.join(map(str, weights)) for weights in layer] for layer in network[0]))).replace(
-                "'", ""), '\n')
+    return network
+
+
+def test(network, *inputs):
+    inputs = [*inputs, 1]
+    for i in range(network[1]):
+        inputs = [tf(dot(inputs, weights)) for weights in network[0][i]]
+    return [dot([i], weight) for i, weight in zip(inputs, network[0][-1])]
 
 
 def main():
     seed(1738114)
-    network = construct_network(2)
-    print("Layer Counts: {} {}".format(2 + 1, ' '.join(str(len(x)) for x in network[0])))
-    ineq, val = parse_args(argv[1])
-    train(network, "({})**2+({})**2" + ineq + val)
+    train_in, train_out, in_nodes = read_data(argv[1])
+    network = construct_network(in_nodes)
+    print("Layer Counts: {} {}".format(in_nodes + 1, ' '.join(str(len(x)) for x in network[0])))
+    network = train(network, train_in, train_out)
+    print('\n'.join(map(str, ([', '.join(map(str, weights)) for weights in layer] for layer in network[0]))).replace("'", ""), '\n')
+    print(test(network, 0, 0))
 
 
 if __name__ == "__main__":
