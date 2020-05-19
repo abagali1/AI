@@ -88,7 +88,6 @@ def main():
     print("Layer Counts: {} {}".format(in_nodes + 1, ' '.join(str(len(x)) for x in network[0])))
     network = train(network, train_in, train_out)
     print('\n'.join(map(str, ([', '.join(map(str, weights)) for weights in layer] for layer in network[0]))).replace("'", ""), '\n')
-    print(test(network, 0, 0))
 
 
 if __name__ == "__main__":
