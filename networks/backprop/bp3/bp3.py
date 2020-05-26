@@ -56,8 +56,8 @@ def derive_network(n, r, ineq):
                 else:
                     layer.append([*[0 for _ in layer_weights], *layer_weights])
         weights.append(layer)
-    weights.append([[1.0, 1.0]])  # adding weight
-    weights.append([[random()]])  # TODO: Figure out determining weight
+    weights.append([n[0][-1][0]*2])
+    weights.append([[0.68394]])  # TODO: Figure out determining weight
     return weights
 
 
