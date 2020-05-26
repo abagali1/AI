@@ -21,7 +21,7 @@ def parse_args():
                 continue
         if tmp:
             weights.append(tmp)
-    return weights, ineq, val
+    return weights, ineq, float(val)
 
 
 def construct_squaring_network(m, in_nodes=2):
@@ -36,13 +36,40 @@ def construct_squaring_network(m, in_nodes=2):
     return weights, count
 
 
+def derive_network(n, r, ineq):
+    weights = []
+    for pos, x in enumerate(n[0][:-1]):
+        layer = []
+        if pos == 0:
+            nodes = len(x)
+            for y in range(nodes+nodes):
+                layer_weights = x[y % nodes]
+                if y < nodes:
+                    layer.append([layer_weights[0] / r, 0, layer_weights[1] / r])
+                else:
+                    layer.append([0, layer_weights[0] / r, layer_weights[1] / r])
+        else:
+            nodes = len(x)
+            for y in range(nodes+nodes):
+                layer_weights = x[y % nodes]
+                if y < nodes:
+                    layer.append([*layer_weights, 0, 0, 0])
+                else:
+                    layer.append([0, 0, 0, *layer_weights])
+        weights.append(layer)
+    weights.append([[1.0, 1.0]])  # adding weight
+    weights.append([[99999]])  # TODO: Figure out determining weight
+    return weights
 
 
 def main():
     seed(1738114)
     file_weights, inequal, val = parse_args()
-    square_x = construct_squaring_network(file_weights)
-    # square_y = ([[y.copy() for y in x] for x in square_x[0]], square_x[1])
+    network = derive_network(construct_squaring_network(file_weights), val, inequal)
+    print(
+        '\n'.join(map(str, ([', '.join(map(str, weights)) for weights in layer] for layer in network)))
+            .replace("'", ""), '\n'
+    )
 
 
 if __name__ == "__main__":
