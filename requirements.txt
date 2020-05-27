@@ -1,5 +1,10 @@
+appdirs==1.4.3
 astroid==2.3.3
+attrs==19.3.0
+black==19.10b0
+Click==7.0
 cycler==0.10.0
+future==0.18.2
 isort==4.3.21
 kiwisolver==1.1.0
 lazy-object-proxy==1.4.3
@@ -7,7 +12,8 @@ matplotlib==3.1.1
 mccabe==0.6.1
 MouseInfo==0.1.2
 numpy==1.17.2
-Pillow>=6.2.2
+pathspec==0.7.0
+Pillow==7.1.1
 PyGetWindow==0.0.7
 pylint==2.4.4
 PyMsgBox==1.0.7
@@ -20,5 +26,10 @@ pyshp==2.1.0
 python-dateutil==2.8.0
 python3-xlib==0.15
 PyTweening==1.0.3
+regex==2020.1.8
 six==1.12.0
+toml==0.10.0
+torch==1.5.0
+torchvision==0.6.0
+typed-ast==1.4.1
 wrapt==1.11.2
