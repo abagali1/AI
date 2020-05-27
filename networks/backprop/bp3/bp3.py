@@ -20,7 +20,7 @@ def parse_args():
                 continue
         if tmp:
             weights.append(tmp)
-    return weights, ineq, float(val)
+    return weights, ineq, (float(val) ** 0.5)
 
 
 def construct_squaring_network(m, in_nodes=2):
@@ -34,7 +34,6 @@ def construct_squaring_network(m, in_nodes=2):
 
 
 def derive_network(n, r, ineq):
-    print("R: "+str(r))
     weights = []
     for pos, x in enumerate(n[:-1]):
         layer, nodes = [], len(x)
@@ -62,8 +61,6 @@ def derive_network(n, r, ineq):
 
 def main():
     file_weights, ineq, val = parse_args()
-    # print(argv[1:])
-    # print(open(argv[1]).read())
     square_x = construct_squaring_network(file_weights)
     network = derive_network(square_x, val, ineq)
     print("Layer Counts: {} {}".format(2 + 1, ' '.join(str(len(x)) for x in network)))
