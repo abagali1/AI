@@ -1,32 +1,27 @@
 import sys
 import torch
-import torch.nn as nn
+import pickle
 
-device = 'cpu'
 
-zo = [0.0, 1.0]  # zo = zero-one
-ins = torch.tensor([[a, b, c] for a in zo for b in zo for c in zo])
-expected = torch.tensor([[sum(tpl) % 2] for tpl in ins])
-nodeCts = [len(ins[0]), 2, 1]
+def read_data(filename):
+    if '.pkl' in filename:
+        in_val, out_val = pickle.load(open(filename, 'rb'))
+    else:
+        lines = open(filename).read().splitlines()
+        name = filename.split('.')[0]
+        in_val, out_val = [], []
+        for line in lines:
+            parts = line.split(',')
+            in_val.append([float(x) for x in parts[1:]])
+            out_val.append(float(parts[0]))
+        pickle.dump((in_val, out_val), open("{}.pkl".format(name), 'wb'))
+    return torch.tensor(in_val), torch.tensor(out_val)
 
-print(ins, expected, nodeCts)
 
-netSpec = [torch.nn.Sigmoid() if i % 2 else
-           torch.nn.Linear(nodeCts[i // 2], nodeCts[1 + i // 2], bias=i < 1)
-           for i in range(2 * len(nodeCts) - 2)]
+def main():
+    train_in, train_out = read_data(sys.argv[1])
+    print(train_in, train_out)
 
-mynn = torch.nn.Sequential(*netSpec, torch.nn.Linear(1, 1, bias=False))
-criterion = torch.nn.MSELoss()
 
-optimizer = torch.optim.SGD(mynn.parameters(), lr=0.5)
-for epoch in range(40000 + 1):
-    y_pred = mynn(ins)  # Forward propagation
-    loss = criterion(y_pred, expected)  # Compute and print error
-    if not epoch % 500 or epoch < 10:
-        print('epoch: ', epoch, ' loss: ', loss.item())
-    optimizer.zero_grad()  # Zero the gradients
-    loss.backward()  # Back propagation
-    optimizer.step()  # Update the weights
-
-for k, v in mynn.state_dict().items():
-    print(k, v)
+if __name__ == "__main__":
+    main()

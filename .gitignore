@@ -10,3 +10,4 @@ output.txt
 *.jpg
 *.png
 *.csv
+*.pkl
