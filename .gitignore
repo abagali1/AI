@@ -11,3 +11,4 @@ output.txt
 *.png
 *.csv
 *.pkl
+MNIST/

@@ -1,26 +1,16 @@
+#!/usr/bin/env python3
 import sys
 import torch
-import pickle
+from torchvision import datasets
 
 
-def read_data(filename):
-    if '.pkl' in filename:
-        in_val, out_val = pickle.load(open(filename, 'rb'))
-    else:
-        lines = open(filename).read().splitlines()
-        name = filename.split('.')[0]
-        in_val, out_val = [], []
-        for line in lines:
-            parts = line.split(',')
-            in_val.append([float(x) for x in parts[1:]])
-            out_val.append(float(parts[0]))
-        pickle.dump((in_val, out_val), open("{}.pkl".format(name), 'wb'))
-    return torch.tensor(in_val), torch.tensor(out_val)
+def read_data(**kwargs):
+    return datasets.MNIST(".", download=True, **kwargs)
 
 
 def main():
-    train_in, train_out = read_data(sys.argv[1])
-    print(train_in, train_out)
+    training = read_data(train=True)
+    testing = read_data(train=False)
 
 
 if __name__ == "__main__":
