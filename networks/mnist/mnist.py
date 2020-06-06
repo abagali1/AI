@@ -24,12 +24,10 @@ def read_data(filename):
 
 def create_network():
     return torch.nn.Sequential(
-        *[
-            torch.nn.Linear(784, 300, bias=True),
-            torch.nn.Sigmoid(),
-            torch.nn.Linear(300, 100, bias=False),
-            torch.nn.Sigmoid(),
-        ],
+        torch.nn.Linear(784, 300, bias=True),
+        torch.nn.Sigmoid(),
+        torch.nn.Linear(300, 100, bias=False),
+        torch.nn.Sigmoid(),
         torch.nn.Linear(100, 10, bias=False)
     )
 
