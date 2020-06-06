@@ -5,7 +5,6 @@ import pickle
 
 ALPHA = 0.1
 EPOCHS = 10000
-BATCH_SIZE = 128
 
 
 def read_data(filename):
@@ -34,7 +33,7 @@ def create_network():
 
 
 def test(network, test_in, test_out, labels, criterion):
-    network.eval()
+    print(network.eval())
 
     with torch.no_grad():
         output = network(test_in)
