@@ -39,6 +39,13 @@ def main():
 
     criterion = torch.nn.MSELoss()
     optimizer = torch.optim.SGD(network.parameters(), lr=ALPHA)
+
+    if "--gpu" in sys.argv[-1]:
+        dev = torch.device("cuda")
+        train_in = train_in.to(dev)
+        train_out = train_out.to(dev)
+        network = network.cuda()
+
     for epoch in range(EPOCHS + 1):
         y = network(train_in)
         loss = criterion(y, train_out)
@@ -47,7 +54,7 @@ def main():
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-    torch.save(network.state_dict(), "mnist_model.torch")
+    torch.save(network, 'mnist_model.torch')
 
 
 if __name__ == "__main__":
