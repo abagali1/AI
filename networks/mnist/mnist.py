@@ -4,7 +4,7 @@ import torch
 import pickle
 
 ALPHA = 0.1
-EPOCHS = 10000000
+EPOCHS = 10000
 BATCH_SIZE = 128
 
 
@@ -34,14 +34,17 @@ def create_network():
 
 
 def test(network, test_in, test_out, labels, criterion):
-    output = network(test_in)
-    total_loss = criterion(output, test_out).item()
+    network.eval()
 
-    ps = torch.exp(output)
-    equality = (labels.data == ps.max(dim=1)[1])
-    accuracy = equality.type(torch.FloatTensor).mean()
+    with torch.no_grad():
+        output = network(test_in)
+        total_loss = criterion(output, test_out)
+        pred = output.argmax(dim=1, keepdim=True)
+        correct = pred.eq(labels.view_as(pred)).sum().item()
 
-    return total_loss, accuracy
+    print("\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n".format(
+        total_loss, correct, len(test_out),
+        100. * correct / len(test_out)))
 
 
 def main():
@@ -69,8 +72,7 @@ def main():
     print("Finished Training")
     torch.save(network, 'mnist_model.torch')
     print("Saved model to mnist_model.torch")
-    print("Final Total Loss: {}, Model Accuracy: {}".format(*test(network, test_in, test_out, labels, criterion)))
-
+    test(network, test_in, test_out, labels, criterion)
 
 if __name__ == "__main__":
     main()
