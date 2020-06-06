@@ -4,7 +4,7 @@ import torch
 import pickle
 
 ALPHA = 0.1
-EPOCHS = 100000
+EPOCHS = 1000000
 BATCH_SIZE = 128
 
 
