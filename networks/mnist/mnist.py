@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
+import sys
 import torch
+import pickle
 
 ALPHA = 0.1
 EPOCHS = 100000
@@ -7,12 +9,16 @@ BATCH_SIZE = 128
 
 
 def read_data(filename):
-    lines = open(filename).read().splitlines()
-    in_val, out_val = [], []
-    for line in lines:
-        parts = line.split(',')
-        in_val.append([float(x) for x in parts[1:]])
-        out_val.append([0.0 if x == int(parts[0]) else 1.0 for x in range(10)])
+    if filename.endswith(".pkl"):
+        in_val, out_val = pickle.load(open(filename, 'rb'))
+    else:
+        lines = open(filename).read().splitlines()
+        in_val, out_val = [], []
+        for line in lines:
+            parts = line.split(',')
+            in_val.append([float(x) for x in parts[1:]])
+            out_val.append([0.0 if x == int(parts[0]) else 1.0 for x in range(10)])
+        pickle.dump((in_val, out_val), open("{}.pkl".format(filename.split('.')[0]), 'wb'))
     return torch.tensor(in_val), torch.tensor(out_val)
 
 
@@ -30,8 +36,8 @@ def create_network():
 
 def main():
     network = create_network()
-    train_in, train_out = read_data('mnist_train.csv')
-    # test_data = read_data(False)
+    train_in, train_out = read_data(sys.argv[1])
+    test_data = read_data(sys.argv[2])
 
     criterion = torch.nn.MSELoss()
     optimizer = torch.optim.SGD(network.parameters(), lr=ALPHA)
