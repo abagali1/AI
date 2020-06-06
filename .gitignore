@@ -12,3 +12,4 @@ output.txt
 *.csv
 *.pkl
 MNIST/
+*.torch
