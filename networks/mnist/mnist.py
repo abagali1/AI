@@ -17,7 +17,7 @@ def read_data(filename):
         for line in lines:
             parts = line.split(',')
             in_val.append([float(x) for x in parts[1:]])
-            out_val.append([0.0 if x == int(parts[0]) else 1.0 for x in range(10)])
+            out_val.append([1.0 if x == int(parts[0]) else 0.0 for x in range(10)])
         pickle.dump((in_val, out_val), open("{}.pkl".format(filename.split('.')[0]), 'wb'))
     return torch.tensor(in_val), torch.tensor(out_val)
 
@@ -35,26 +35,29 @@ def create_network():
 def main():
     network = create_network()
     train_in, train_out = read_data(sys.argv[1])
-    test_data = read_data(sys.argv[2])
+    test_in, test_out = read_data(sys.argv[2])
 
     criterion = torch.nn.MSELoss()
     optimizer = torch.optim.SGD(network.parameters(), lr=ALPHA)
 
     if "--gpu" in sys.argv[-1]:
         dev = torch.device("cuda")
-        train_in = train_in.to(dev)
-        train_out = train_out.to(dev)
+        train_in, train_out = train_in.to(dev), train_out.to(dev)
+        test_in, test_out = test_in.to(dev), test_out.to(dev)
         network = network.cuda()
 
-    for epoch in range(EPOCHS + 1):
-        y = network(train_in)
-        loss = criterion(y, train_out)
+    for epoch in range(EPOCHS + 1):  # training stuff
+        loss = criterion(network(train_in), train_out)
         if not epoch % 500 or epoch < 10:
             print('epoch: ', epoch, ' loss: ', loss.item())
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
+
+    print("Finished Training")
     torch.save(network, 'mnist_model.torch')
+    print("Saved model to mnist_model.torch")
+    print("Final Total Loss: {}".format(criterion(network(test_in), test_out)))
 
 
 if __name__ == "__main__":
