@@ -3,8 +3,8 @@ import sys
 import torch
 import pickle
 
-ALPHA = 0.1
-EPOCHS = 10000
+ALPHA = 0.5
+EPOCHS = 15000
 
 
 def read_data(filename):
