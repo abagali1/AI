@@ -54,6 +54,15 @@ def main():
     criterion = torch.nn.MSELoss()
     optimizer = torch.optim.SGD(network.parameters(), lr=ALPHA)
 
+    if "--load-existing" in sys.argv[-1]:
+        try:
+            network.load_state_dict(torch.load('mnist_model.torch'))
+        except FileNotFoundError:
+            print("Can't find mnist_model.torch file")
+            return
+        test(network, test_in, test_out, labels, criterion)
+        return
+
     if "--gpu" in sys.argv[-1]:
         dev = torch.device("cuda")
         train_in, train_out = train_in.to(dev), train_out.to(dev)
@@ -69,7 +78,7 @@ def main():
         optimizer.step()
 
     print("Finished Training")
-    torch.save(network, 'mnist_model.torch')
+    torch.save(network.state_dict(), 'mnist_model.torch')
     print("Saved model to mnist_model.torch")
     test(network, test_in, test_out, labels, criterion)
 
